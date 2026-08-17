@@ -201,4 +201,21 @@ public final class HelperClient: ObservableObject {
             }
         }
     }
+
+    public func removeQuarantine(at path: String, deepSign: Bool, completion: @escaping @MainActor (Bool, String?) -> Void) {
+        guard let proxy = getProxy(errorHandler: { err in
+            Task { @MainActor in completion(false, err.localizedDescription) }
+        }) else {
+            completion(false, "Helper 未就绪")
+            return
+        }
+
+        proxy.removeQuarantine(at: path, deepSign: deepSign) { [weak self] success, err in
+            Task { @MainActor in
+                self?.isHelperAvailable = success || (err == nil)
+                completion(success, err)
+            }
+        }
+    }
 }
+

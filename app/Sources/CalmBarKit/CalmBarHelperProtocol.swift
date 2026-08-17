@@ -14,4 +14,6 @@ public enum CalmBarConfig {
     func restoreAuto(reply: @escaping (Bool, String?) -> Void)
     func listFans(reply: @escaping ([Data]?, String?) -> Void)
     func listTemperatures(reply: @escaping ([Data]?, String?) -> Void)
+    func removeQuarantine(at path: String, deepSign: Bool, reply: @escaping (Bool, String?) -> Void)
 }
+

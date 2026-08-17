@@ -11,9 +11,9 @@ public struct PopoverContentView: View {
     @State private var isInstallingHelper = false
     @State private var helperInstallMessage: String?
 
-    public var openSettingsAction: () -> Void = {}
+    public var openSettingsAction: (SettingsTab) -> Void = { _ in }
 
-    public init(openSettingsAction: @escaping () -> Void = {}) {
+    public init(openSettingsAction: @escaping (SettingsTab) -> Void = { _ in }) {
         self.openSettingsAction = openSettingsAction
     }
 
@@ -384,6 +384,32 @@ public struct PopoverContentView: View {
                         .controlSize(.mini)
                         .tint(.accentColor)
                 }
+
+                Divider()
+
+                // Gatekeeper App Unlocker Row
+                HStack {
+                    GatekeeperIconView(size: 20)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("软件去隔离与签名授权")
+                            .font(.system(size: 12, weight: .medium))
+                        Text("修复未签名或损坏应用提示")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Button(action: {
+                        openSettingsAction(.gatekeeper)
+                    }) {
+                        Text("去授权")
+                            .font(.system(size: 11, weight: .medium))
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 3)
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                }
             }
             .padding(4)
         }
@@ -393,7 +419,7 @@ public struct PopoverContentView: View {
     private var footerView: some View {
         HStack {
             Button(action: {
-                openSettingsAction()
+                openSettingsAction(.thermal)
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: "gearshape")

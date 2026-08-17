@@ -93,3 +93,29 @@ public struct NoTunesIconView: View {
         }
     }
 }
+
+public struct GatekeeperIconView: View {
+    public var size: CGFloat = 20
+
+    public init(size: CGFloat = 20) {
+        self.size = size
+    }
+
+    public var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                .fill(LinearGradient(
+                    colors: [Color(red: 0.16, green: 0.52, blue: 0.98), Color(red: 0.05, green: 0.75, blue: 0.82)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .shadow(color: Color.black.opacity(0.12), radius: 1, x: 0, y: 0.5)
+
+            Image(systemName: "lock.shield.fill")
+                .font(.system(size: size * 0.52, weight: .semibold))
+                .foregroundColor(.white)
+        }
+        .frame(width: size, height: size)
+    }
+}
+

@@ -6,6 +6,8 @@ import Combine
 public final class StatusBarManager: ObservableObject {
     public static let shared = StatusBarManager()
 
+    @Published public var selectedSettingsTab: SettingsTab = .thermal
+
     private var statusItem: NSStatusItem?
     private var popover: NSPopover?
     private var settingsWindow: NSWindow?
@@ -39,8 +41,8 @@ public final class StatusBarManager: ObservableObject {
         popover.contentSize = NSSize(width: 320, height: 380)
         popover.behavior = .transient
         popover.contentViewController = NSHostingController(
-            rootView: PopoverContentView(openSettingsAction: { [weak self] in
-                self?.openSettingsWindow()
+            rootView: PopoverContentView(openSettingsAction: { [weak self] tab in
+                self?.openSettingsWindow(tab: tab)
             })
         )
         self.popover = popover
@@ -93,7 +95,8 @@ public final class StatusBarManager: ObservableObject {
         }
     }
 
-    public func openSettingsWindow() {
+    public func openSettingsWindow(tab: SettingsTab = .thermal) {
+        self.selectedSettingsTab = tab
         popover?.performClose(nil)
 
         if let window = settingsWindow, window.isVisible {
@@ -103,7 +106,7 @@ public final class StatusBarManager: ObservableObject {
         }
 
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 520, height: 480),
+            contentRect: NSRect(x: 0, y: 0, width: 550, height: 540),
             styleMask: [.titled, .closable, .miniaturizable],
             backing: .buffered,
             defer: false

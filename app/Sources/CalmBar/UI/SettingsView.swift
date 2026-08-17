@@ -1,12 +1,25 @@
 import SwiftUI
 import CalmBarKit
 
+public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
+    case thermal
+    case menuBar
+    case scroll
+    case noTunes
+    case gatekeeper
+    case general
+
+    public var id: String { rawValue }
+}
+
 public struct SettingsView: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var thermal = ThermalMonitor.shared
     @ObservedObject private var scroll = ScrollReverserManager.shared
     @ObservedObject private var helper = HelperClient.shared
     @ObservedObject private var noTunes = NoTunesManager.shared
+
+    @ObservedObject private var statusBarManager = StatusBarManager.shared
 
     @State private var isInstallingHelper = false
     @State private var helperMessage: String?
@@ -15,33 +28,44 @@ public struct SettingsView: View {
     public init() {}
 
     public var body: some View {
-        TabView {
+        TabView(selection: $statusBarManager.selectedSettingsTab) {
             thermalTab
                 .tabItem {
                     Label("硬件温控", systemImage: "flame")
                 }
+                .tag(SettingsTab.thermal)
 
             menuBarTab
                 .tabItem {
                     Label("菜单栏收纳", systemImage: "menubar.rectangle")
                 }
+                .tag(SettingsTab.menuBar)
 
             scrollTab
                 .tabItem {
                     Label("滚动手势", systemImage: "computermouse")
                 }
+                .tag(SettingsTab.scroll)
 
             noTunesTab
                 .tabItem {
                     Label("音乐拦截", systemImage: "music.note")
                 }
+                .tag(SettingsTab.noTunes)
+
+            GatekeeperUnlockerView()
+                .tabItem {
+                    Label("应用授权", systemImage: "lock.shield")
+                }
+                .tag(SettingsTab.gatekeeper)
 
             generalTab
                 .tabItem {
                     Label("通用设置", systemImage: "gearshape")
                 }
+                .tag(SettingsTab.general)
         }
-        .frame(width: 540, height: 520)
+        .frame(width: 550, height: 540)
         .padding(16)
     }
 

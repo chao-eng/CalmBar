@@ -113,6 +113,50 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
             reply(nil, error.localizedDescription)
         }
     }
+
+    func removeQuarantine(at path: String, deepSign: Bool, reply: @escaping (Bool, String?) -> Void) {
+        guard FileManager.default.fileExists(atPath: path) else {
+            reply(false, "目标文件或目录不存在: \(path)")
+            return
+        }
+
+        let xattrProcess = Process()
+        xattrProcess.executableURL = URL(fileURLWithPath: "/usr/bin/xattr")
+        xattrProcess.arguments = ["-rd", "com.apple.quarantine", path]
+
+        let pipe = Pipe()
+        xattrProcess.standardError = pipe
+        xattrProcess.standardOutput = pipe
+
+        do {
+            try xattrProcess.run()
+            xattrProcess.waitUntilExit()
+
+            // If deepSign is requested, execute codesign --force --deep --sign -
+            if deepSign {
+                let signProcess = Process()
+                signProcess.executableURL = URL(fileURLWithPath: "/usr/bin/codesign")
+                signProcess.arguments = ["--force", "--deep", "--sign", "-", path]
+                let signPipe = Pipe()
+                signProcess.standardError = signPipe
+                signProcess.standardOutput = signPipe
+
+                try signProcess.run()
+                signProcess.waitUntilExit()
+
+                if signProcess.terminationStatus != 0 {
+                    let errData = signPipe.fileHandleForReading.readDataToEndOfFile()
+                    let errMsg = String(data: errData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines)
+                    reply(false, "去隔离已执行，但自签名失败: \(errMsg ?? "未知错误")")
+                    return
+                }
+            }
+
+            reply(true, nil)
+        } catch {
+            reply(false, error.localizedDescription)
+        }
+    }
 }
 
 @main

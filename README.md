@@ -1,6 +1,6 @@
 # CalmBar 🌬️
 
-> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截
+> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 应用去隔离授权
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
@@ -17,6 +17,7 @@
 2. **菜单栏杂乱遮挡**：在刘海屏或小屏幕上，过多第三方图标容易溢出或被遮挡，CalmBar 提供一键折叠与自动收纳。
 3. **鼠标与触控板手势绑定**：macOS 原生设置无法对外接鼠标与触控板分开设置滚动方向，CalmBar 完美解耦外接鼠标滚轮与原生触控板手势。
 4. **Apple Music 流氓唤醒**：连接 AirPods / 蓝牙耳机或误触播放键时系统频繁强行弹出 Apple Music，CalmBar 毫秒级静默拦截并支持拉起替代音乐应用或网页。
+5. **未签名与已损坏应用拦截**：外部下载软件常因 Gatekeeper 隔离标记报错无法打开，CalmBar 支持拖拽一键递归去隔离与 Ad-hoc 自签名修复。
 
 ---
 
@@ -51,6 +52,11 @@
   * 支持配置网页版播放器（如 YouTube Music、Spotify Web、SoundCloud 等）。
 * **零后台开销**：基于通知事件驱动，不轮询进程，0% CPU 占用。
 
+### 5. 🛡️ 未签名与已损坏应用一键授权 (Gatekeeper Quarantine Unlocker)
+* **拖拽一键解锁**：直接将报错或未公证的 `.app`、文件夹拖入设置面板，自动执行 `xattr -rd com.apple.quarantine` 解除隔离。
+* **深度自签名修复**：支持勾选「深度修复 (Ad-hoc 重签名)」，针对签名损坏或修改过的应用执行 `codesign --force --deep --sign -`。
+* **免终端无感提权**：结合特权助手 `CalmBarHelper`，处理 `/Applications` 下需要管理员权限的应用时无需反复输入 `sudo` 密码。
+
 ---
 
 ## 🛠️ 技术架构
@@ -63,6 +69,7 @@ CalmBar/
 │   └── Sources/
 │       ├── CalmBar/                     # 主 App 逻辑与 SwiftUI 界面
 │       │   ├── AppDelegate.swift        # App 生命周期与菜单栏初始化
+│       │   ├── Gatekeeper/              # macOS 隔离属性与自签名修复引擎
 │       │   ├── MenuBar/                 # 菜单栏折叠与布局管理器
 │       │   ├── Scroll/                  # CGEventTap 滚轮事件拦截器与权限管理
 │       │   ├── Thermal/                 # 温控轮询引擎与 XPC 通信客户端
