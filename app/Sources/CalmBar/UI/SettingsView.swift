@@ -95,7 +95,7 @@ public struct SettingsView: View {
                                 HStack {
                                     Text("起始加速温度:")
                                         .frame(width: 110, alignment: .leading)
-                                    Slider(value: $settings.smartStartTemp, in: 35...65, step: 1)
+                                    Slider(value: $settings.smartStartTemp, in: 40...75, step: 1)
                                     Text("\(Int(settings.smartStartTemp))°C")
                                         .frame(width: 45, alignment: .trailing)
                                         .font(.system(.body, design: .monospaced))

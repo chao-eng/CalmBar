@@ -81,8 +81,8 @@ public final class AppSettings: ObservableObject {
         let presetStr = defaults.string(forKey: "fanPreset") ?? FanPreset.smart.rawValue
         self.fanPreset = FanPreset(rawValue: presetStr) ?? .smart
         self.customFanFraction = defaults.object(forKey: "customFanFraction") as? Double ?? 0.50
-        self.smartStartTemp = defaults.object(forKey: "smartStartTemp") as? Double ?? 45.0
-        self.smartFullTemp = defaults.object(forKey: "smartFullTemp") as? Double ?? 80.0
+        self.smartStartTemp = defaults.object(forKey: "smartStartTemp") as? Double ?? 65.0
+        self.smartFullTemp = defaults.object(forKey: "smartFullTemp") as? Double ?? 85.0
         self.dualFanLinked = defaults.object(forKey: "dualFanLinked") as? Bool ?? true
         self.fan0CustomFraction = defaults.object(forKey: "fan0CustomFraction") as? Double ?? 0.50
         self.fan1CustomFraction = defaults.object(forKey: "fan1CustomFraction") as? Double ?? 0.50
