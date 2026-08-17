@@ -1,0 +1,37 @@
+# macOS System Files
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon\r
+._*
+.Spotlight-V100
+.Trashes
+
+# Swift Package Manager
+.build/
+Packages/
+Package.pins
+Package.resolved
+*.xcodeproj
+*.xcworkspace
+xcuserdata/
+*.xcuserstate
+
+# Application Build Outputs
+app/build/
+build/
+DerivedData/
+
+# Temporary / Scratch Files
+scratch/
+app/scratch/
+*.log
+*.tmp
+*.ips
+*.crash
+
+# IDE & Tooling
+.idea/
+.vscode/
+.antigravity/
+.gemini/
