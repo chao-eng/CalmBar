@@ -18,24 +18,29 @@ public struct TemperatureGaugeView: View {
         VStack(spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: icon)
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(color)
                 Text(title)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
             }
 
-            Text("\(Int(temp))°")
-                .font(.system(size: 20, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-                .contentTransition(.numericText())
-                .animation(.easeInOut(duration: 0.2), value: temp)
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text("\(Int(temp))")
+                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.2), value: temp)
+                Text("°")
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.primary.opacity(0.04))
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.6))
         )
     }
 }
@@ -53,24 +58,29 @@ public struct FanRPMGaugeView: View {
         VStack(spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: "fanblades.fill")
-                    .font(.system(size: 11, weight: .bold))
+                    .font(.system(size: 11, weight: .semibold))
                     .foregroundStyle(.blue)
                 Text(title)
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
             }
 
-            Text(formattedRPM(Int(fan.actualRPM)))
-                .font(.system(size: 18, weight: .bold, design: .rounded))
-                .foregroundColor(.primary)
-                .contentTransition(.numericText())
-                .animation(.easeInOut(duration: 0.2), value: fan.actualRPM)
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
+                Text(formattedRPM(Int(fan.actualRPM)))
+                    .font(.system(size: 19, weight: .semibold, design: .rounded))
+                    .foregroundColor(.primary)
+                    .contentTransition(.numericText())
+                    .animation(.easeInOut(duration: 0.2), value: fan.actualRPM)
+                Text("RPM")
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                    .foregroundColor(.secondary)
+            }
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.primary.opacity(0.04))
+                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.6))
         )
     }
 
@@ -89,17 +99,11 @@ public struct CardSection<Content: View>: View {
     }
 
     public var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            content
+        GroupBox {
+            VStack(alignment: .leading, spacing: 10) {
+                content
+            }
+            .padding(4)
         }
-        .padding(12)
-        .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.7))
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.secondary.opacity(0.12), lineWidth: 1)
-        )
     }
 }

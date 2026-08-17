@@ -60,7 +60,7 @@ public struct PopoverContentView: View {
         }
         .padding(14)
         .frame(width: 320)
-        .background(.ultraThinMaterial)
+        .background(.regularMaterial)
     }
 
     // MARK: - Header Bar
@@ -129,6 +129,7 @@ public struct PopoverContentView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.mini)
+                .tint(.accentColor)
             }
             .padding(8)
             .background(Color.orange.opacity(0.12))
@@ -153,6 +154,7 @@ public struct PopoverContentView: View {
                 }
                 .buttonStyle(.borderedProminent)
                 .controlSize(.mini)
+                .tint(.accentColor)
             }
             .padding(8)
             .background(Color.yellow.opacity(0.12))
@@ -162,140 +164,103 @@ public struct PopoverContentView: View {
 
     // MARK: - Gauges Row
     private var gaugesSection: some View {
-        CardSection {
-            HStack(spacing: 12) {
+        HStack(spacing: 8) {
+            TemperatureGaugeView(
+                title: "CPU",
+                temp: thermal.cpuTemp,
+                icon: "cpu",
+                color: .orange
+            )
+            TemperatureGaugeView(
+                title: "GPU",
+                temp: thermal.gpuTemp,
+                icon: "square.stack.3d.up.fill",
+                color: .purple
+            )
+            if let firstFan = thermal.fanSnapshots.first {
+                FanRPMGaugeView(fan: firstFan, title: "风扇 1")
+            } else {
                 TemperatureGaugeView(
-                    title: "CPU",
-                    temp: thermal.cpuTemp,
-                    icon: "cpu",
-                    color: .orange
+                    title: "电池",
+                    temp: thermal.batteryTemp > 0 ? thermal.batteryTemp : 32,
+                    icon: "battery.100.bolt",
+                    color: .green
                 )
-                Spacer()
-                TemperatureGaugeView(
-                    title: "GPU",
-                    temp: thermal.gpuTemp,
-                    icon: "square.stack.3d.up.fill",
-                    color: .purple
-                )
-                Spacer()
-                if let firstFan = thermal.fanSnapshots.first {
-                    FanRPMGaugeView(fan: firstFan, title: "风扇 1")
-                } else {
-                    TemperatureGaugeView(
-                        title: "电池",
-                        temp: thermal.batteryTemp > 0 ? thermal.batteryTemp : 32,
-                        icon: "battery.100.bolt",
-                        color: .green
-                    )
-                }
-
-                if thermal.fanSnapshots.count > 1 {
-                    Spacer()
-                    FanRPMGaugeView(fan: thermal.fanSnapshots[1], title: "风扇 2")
-                }
             }
-            .padding(.horizontal, 4)
+
+            if thermal.fanSnapshots.count > 1 {
+                FanRPMGaugeView(fan: thermal.fanSnapshots[1], title: "风扇 2")
+            }
         }
     }
 
-    // MARK: - Fan Control Section (Matching Reference UI)
+    // MARK: - Fan Control Section (Native macOS HIG Style)
     private var fanControlSection: some View {
-        VStack(spacing: 10) {
-            // Segmented Mode Selector (Unambiguous Single Selection)
-            HStack(spacing: 4) {
-                ModePillButton(
-                    title: "自动",
-                    isSelected: settings.fanPreset == .auto
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        settings.fanPreset = .auto
-                    }
-                }
-
-                ModePillButton(
-                    title: "自定义",
-                    isSelected: settings.fanPreset == .manual
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        settings.fanPreset = .manual
-                    }
-                }
-
-                ModePillButton(
-                    title: "智能",
-                    icon: "sparkles",
-                    isSelected: settings.fanPreset == .smart
-                ) {
-                    withAnimation(.easeInOut(duration: 0.2)) {
-                        settings.fanPreset = .smart
-                    }
-                }
-            }
-            .padding(3)
-            .background(
-                RoundedRectangle(cornerRadius: 10)
-                    .fill(Color.primary.opacity(0.06))
-            )
-
-            // Main Linked Fan Control Card
+        GroupBox {
             VStack(alignment: .leading, spacing: 10) {
+                // Native Segmented Picker
+                Picker("风扇模式", selection: $settings.fanPreset) {
+                    Text("自动").tag(FanPreset.auto)
+                    Text("自定义").tag(FanPreset.manual)
+                    Label("智能", systemImage: "sparkles").tag(FanPreset.smart)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+
+                // Linked Fan Toggle & Slider
                 HStack {
                     Text("左右风扇联动")
-                        .font(.system(size: 13, weight: .semibold))
+                        .font(.system(size: 13, weight: .medium))
                     Spacer()
                     Toggle("", isOn: $settings.dualFanLinked)
                         .toggleStyle(.switch)
                         .labelsHidden()
                         .controlSize(.mini)
+                        .tint(.accentColor)
                 }
+                .padding(.top, 2)
 
                 HStack(spacing: 10) {
                     Image(systemName: "fan")
-                        .font(.system(size: 15))
-                        .foregroundColor(settings.fanPreset == .auto ? .secondary : .blue)
+                        .font(.system(size: 14))
+                        .foregroundColor(settings.fanPreset == .auto ? .secondary : .accentColor)
 
                     Slider(value: sliderBinding, in: 0.0...1.0)
-                        .accentColor(.blue)
+                        .tint(.accentColor)
 
                     Text("\(Int(activeFanFraction * 100))%")
-                        .font(.system(size: 13, weight: .medium, design: .rounded))
-                        .foregroundColor(.primary)
-                        .frame(width: 36, alignment: .trailing)
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .frame(width: 38, alignment: .trailing)
                 }
 
+                // RPM Readouts
                 HStack(spacing: 12) {
                     if let firstFan = thermal.fanSnapshots.first {
                         let rpm0 = Int(firstFan.actualRPM)
-                        Text("风扇 0 \(formattedRPM(rpm0))")
+                        Text("风扇 0 \(formattedRPM(rpm0)) RPM")
                             .font(.system(size: 11, design: .rounded))
                             .foregroundColor(.secondary)
                     } else {
-                        Text("风扇 0 3,060")
+                        Text("风扇 0 3,060 RPM")
                             .font(.system(size: 11, design: .rounded))
                             .foregroundColor(.secondary)
                     }
 
                     if thermal.fanSnapshots.count > 1 {
                         let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
-                        Text("风扇 1 \(formattedRPM(rpm1))")
+                        Text("风扇 1 \(formattedRPM(rpm1)) RPM")
                             .font(.system(size: 11, design: .rounded))
                             .foregroundColor(.secondary)
                     }
                 }
-            }
-            .padding(12)
-            .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.primary.opacity(0.05))
-            )
 
-            // Separate Control Section (When Dual Fan Linked is disabled)
-            if !settings.dualFanLinked {
-                VStack(alignment: .leading, spacing: 8) {
+                // Separate Control Section (When Dual Fan Linked is disabled)
+                if !settings.dualFanLinked {
+                    Divider()
+
                     Text("分别控制")
-                        .font(.system(size: 12, weight: .medium))
+                        .font(.system(size: 11, weight: .medium))
                         .foregroundColor(.secondary)
-                        .padding(.top, 2)
 
                     // Fan 0 Slider
                     HStack(spacing: 10) {
@@ -304,7 +269,7 @@ public struct PopoverContentView: View {
                             .frame(width: 48, alignment: .leading)
 
                         Slider(value: $settings.fan0CustomFraction, in: 0.0...1.0)
-                            .accentColor(.blue)
+                            .tint(.accentColor)
 
                         let rpm0 = Int(thermal.fanSnapshots.first?.actualRPM ?? Float(settings.fan0CustomFraction * 5000 + 1200))
                         Text(formattedRPM(rpm0))
@@ -320,7 +285,7 @@ public struct PopoverContentView: View {
                                 .frame(width: 48, alignment: .leading)
 
                             Slider(value: $settings.fan1CustomFraction, in: 0.0...1.0)
-                                .accentColor(.blue)
+                                .tint(.accentColor)
 
                             let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
                             Text(formattedRPM(rpm1))
@@ -329,27 +294,27 @@ public struct PopoverContentView: View {
                         }
                     }
                 }
-                .padding(.horizontal, 4)
-            }
 
-            if settings.fanPreset == .smart {
-                HStack(spacing: 6) {
-                    Image(systemName: "waveform.path.ecg")
-                        .foregroundStyle(.blue)
-                        .font(.system(size: 11))
-                    Text("智能温控加速区间: \(Int(settings.smartStartTemp))°C ~ \(Int(settings.smartFullTemp))°C")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                    Spacer()
+                if settings.fanPreset == .smart {
+                    HStack(spacing: 6) {
+                        Image(systemName: "waveform.path.ecg")
+                            .foregroundStyle(.tint)
+                            .font(.system(size: 11))
+                        Text("加速区间: \(Int(settings.smartStartTemp))°C ~ \(Int(settings.smartFullTemp))°C")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                        Spacer()
+                    }
+                    .padding(.top, 2)
                 }
-                .padding(.horizontal, 4)
             }
+            .padding(4)
         }
     }
 
     // MARK: - Quick Actions: Menu Bar & Scroll Reverser
     private var quickActionsSection: some View {
-        CardSection {
+        GroupBox {
             VStack(spacing: 8) {
                 // Menu Bar Collapse/Expand Row
                 HStack {
@@ -374,6 +339,7 @@ public struct PopoverContentView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.small)
+                    .tint(.accentColor)
                 }
 
                 Divider()
@@ -395,8 +361,10 @@ public struct PopoverContentView: View {
                         .toggleStyle(.switch)
                         .labelsHidden()
                         .controlSize(.mini)
+                        .tint(.accentColor)
                 }
             }
+            .padding(4)
         }
     }
 
@@ -433,41 +401,5 @@ public struct PopoverContentView: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: rpm)) ?? "\(rpm)"
-    }
-}
-
-public struct ModePillButton: View {
-    public let title: String
-    public var icon: String? = nil
-    public let isSelected: Bool
-    public let action: () -> Void
-
-    public init(title: String, icon: String? = nil, isSelected: Bool, action: @escaping () -> Void) {
-        self.title = title
-        self.icon = icon
-        self.isSelected = isSelected
-        self.action = action
-    }
-
-    public var body: some View {
-        Button(action: action) {
-            HStack(spacing: 4) {
-                if let icon = icon {
-                    Image(systemName: icon)
-                        .font(.system(size: 11, weight: .medium))
-                }
-                Text(title)
-                    .font(.system(size: 13, weight: isSelected ? .bold : .medium))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 6)
-            .background(
-                RoundedRectangle(cornerRadius: 8)
-                    .fill(isSelected ? Color.blue : Color.clear)
-            )
-            .foregroundColor(isSelected ? .white : .primary.opacity(0.75))
-        }
-        .buttonStyle(.plain)
-        .focusable(false)
     }
 }
