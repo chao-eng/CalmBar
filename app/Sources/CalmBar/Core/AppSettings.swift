@@ -83,6 +83,46 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(noTunesTerminateOnEnable, forKey: "noTunesTerminateOnEnable") }
     }
 
+    // MARK: - Caffeine (Keep Awake) Settings
+    @Published public var caffeineEnabled: Bool {
+        didSet { defaults.set(caffeineEnabled, forKey: "caffeineEnabled") }
+    }
+    @Published public var caffeineDefaultDuration: Int {
+        didSet { defaults.set(caffeineDefaultDuration, forKey: "caffeineDefaultDuration") }
+    }
+    @Published public var caffeineActivateAtLaunch: Bool {
+        didSet { defaults.set(caffeineActivateAtLaunch, forKey: "caffeineActivateAtLaunch") }
+    }
+    @Published public var caffeineDeactivateOnManualSleep: Bool {
+        didSet { defaults.set(caffeineDeactivateOnManualSleep, forKey: "caffeineDeactivateOnManualSleep") }
+    }
+    @Published public var caffeineKeepAppsActive: Bool {
+        didSet { defaults.set(caffeineKeepAppsActive, forKey: "caffeineKeepAppsActive") }
+    }
+    @Published public var caffeineIdleThreshold: Double {
+        didSet { defaults.set(caffeineIdleThreshold, forKey: "caffeineIdleThreshold") }
+    }
+
+    // MARK: - Battery (Charging Limit) Settings
+    @Published public var batteryChargeLimitEnabled: Bool {
+        didSet { defaults.set(batteryChargeLimitEnabled, forKey: "batteryChargeLimitEnabled") }
+    }
+    @Published public var batteryChargeLimit: Int {
+        didSet { defaults.set(batteryChargeLimit, forKey: "batteryChargeLimit") }
+    }
+    @Published public var batterySailingModeEnabled: Bool {
+        didSet { defaults.set(batterySailingModeEnabled, forKey: "batterySailingModeEnabled") }
+    }
+    @Published public var batterySailingDelta: Int {
+        didSet { defaults.set(batterySailingDelta, forKey: "batterySailingDelta") }
+    }
+    @Published public var batteryTopUpActive: Bool {
+        didSet { defaults.set(batteryTopUpActive, forKey: "batteryTopUpActive") }
+    }
+    @Published public var batteryAutoDischargeEnabled: Bool {
+        didSet { defaults.set(batteryAutoDischargeEnabled, forKey: "batteryAutoDischargeEnabled") }
+    }
+
     // MARK: - General Settings
     @Published public var launchAtLogin: Bool {
         didSet {
@@ -119,6 +159,20 @@ public final class AppSettings: ObservableObject {
         self.noTunesReplacementType = NoTunesReplacementType(rawValue: replacementTypeStr) ?? .none
         self.noTunesReplacementTarget = defaults.string(forKey: "noTunesReplacementTarget") ?? ""
         self.noTunesTerminateOnEnable = defaults.object(forKey: "noTunesTerminateOnEnable") as? Bool ?? true
+
+        self.caffeineEnabled = defaults.object(forKey: "caffeineEnabled") as? Bool ?? false
+        self.caffeineDefaultDuration = defaults.object(forKey: "caffeineDefaultDuration") as? Int ?? 0
+        self.caffeineActivateAtLaunch = defaults.object(forKey: "caffeineActivateAtLaunch") as? Bool ?? false
+        self.caffeineDeactivateOnManualSleep = defaults.object(forKey: "caffeineDeactivateOnManualSleep") as? Bool ?? true
+        self.caffeineKeepAppsActive = defaults.object(forKey: "caffeineKeepAppsActive") as? Bool ?? false
+        self.caffeineIdleThreshold = defaults.object(forKey: "caffeineIdleThreshold") as? Double ?? 90.0
+
+        self.batteryChargeLimitEnabled = defaults.object(forKey: "batteryChargeLimitEnabled") as? Bool ?? false
+        self.batteryChargeLimit = defaults.object(forKey: "batteryChargeLimit") as? Int ?? 80
+        self.batterySailingModeEnabled = defaults.object(forKey: "batterySailingModeEnabled") as? Bool ?? true
+        self.batterySailingDelta = defaults.object(forKey: "batterySailingDelta") as? Int ?? 5
+        self.batteryTopUpActive = defaults.object(forKey: "batteryTopUpActive") as? Bool ?? false
+        self.batteryAutoDischargeEnabled = defaults.object(forKey: "batteryAutoDischargeEnabled") as? Bool ?? false
 
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
     }

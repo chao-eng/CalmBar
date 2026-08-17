@@ -119,3 +119,78 @@ public struct GatekeeperIconView: View {
     }
 }
 
+public struct CaffeineIconView: View {
+    public var size: CGFloat = 20
+    public var isActive: Bool = true
+
+    public init(size: CGFloat = 20, isActive: Bool = true) {
+        self.size = size
+        self.isActive = isActive
+    }
+
+    public var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                .fill(isActive ? LinearGradient(
+                    colors: [Color(red: 0.62, green: 0.44, blue: 0.32), Color(red: 0.48, green: 0.30, blue: 0.18)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ) : LinearGradient(
+                    colors: [Color.gray.opacity(0.4), Color.gray.opacity(0.6)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .shadow(color: Color.black.opacity(0.10), radius: 1, x: 0, y: 0.5)
+
+            Image(systemName: "cup.and.saucer.fill")
+                .font(.system(size: size * 0.50, weight: .semibold))
+                .foregroundColor(.white)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+public struct BatteryIconView: View {
+    public var size: CGFloat = 20
+    public var isCharging: Bool = false
+    public var isBypassed: Bool = false
+    public var isDischarging: Bool = false
+
+    public init(size: CGFloat = 20, isCharging: Bool = false, isBypassed: Bool = false, isDischarging: Bool = false) {
+        self.size = size
+        self.isCharging = isCharging
+        self.isBypassed = isBypassed
+        self.isDischarging = isDischarging
+    }
+
+    public var body: some View {
+        ZStack {
+            RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                .fill(isDischarging ? LinearGradient(
+                    colors: [Color(red: 0.78, green: 0.45, blue: 0.20), Color(red: 0.62, green: 0.32, blue: 0.12)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ) : isBypassed ? LinearGradient(
+                    colors: [Color(red: 0.16, green: 0.50, blue: 0.72), Color(red: 0.10, green: 0.38, blue: 0.58)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ) : isCharging ? LinearGradient(
+                    colors: [Color(red: 0.18, green: 0.52, blue: 0.90), Color(red: 0.10, green: 0.40, blue: 0.75)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ) : LinearGradient(
+                    colors: [Color(red: 0.25, green: 0.48, blue: 0.68), Color(red: 0.18, green: 0.38, blue: 0.55)],
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
+                ))
+                .shadow(color: Color.black.opacity(0.10), radius: 1, x: 0, y: 0.5)
+
+            Image(systemName: isDischarging ? "arrow.down.to.line.compact" : (isBypassed ? "powerplug.fill" : (isCharging ? "bolt.fill" : "battery.100")))
+                .font(.system(size: size * 0.50, weight: .semibold))
+                .foregroundColor(.white)
+        }
+        .frame(width: size, height: size)
+    }
+}
+
+

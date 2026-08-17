@@ -1,6 +1,6 @@
 # CalmBar 🌬️
 
-> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 应用去隔离授权
+> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 系统防休眠防离开 · 充电管理与电池上限 · 应用去隔离授权
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
@@ -17,7 +17,9 @@
 2. **菜单栏杂乱遮挡**：在刘海屏或小屏幕上，过多第三方图标容易溢出或被遮挡，CalmBar 提供一键折叠与自动收纳。
 3. **鼠标与触控板手势绑定**：macOS 原生设置无法对外接鼠标与触控板分开设置滚动方向，CalmBar 完美解耦外接鼠标滚轮与原生触控板手势。
 4. **Apple Music 流氓唤醒**：连接 AirPods / 蓝牙耳机或误触播放键时系统频繁强行弹出 Apple Music，CalmBar 毫秒级静默拦截并支持拉起替代音乐应用或网页。
-5. **未签名与已损坏应用拦截**：外部下载软件常因 Gatekeeper 隔离标记报错无法打开，CalmBar 支持拖拽一键递归去隔离与 Ad-hoc 自签名修复。
+5. **任务中断与通讯软件误判离开**：长任务、文件传输或挂机时屏幕自动熄屏休眠，且办公软件（Teams/Slack/飞书/钉钉）自动切 Away 状态，CalmBar 提供一键防休眠断言与智能防离开仿真。
+6. **插电满电高压损伤电池**：长期插电使用电量持续处于 100% 极易导致电池损耗老化与鼓包，CalmBar 提供精准硬件级 80% 充电上限与适配器旁路供电。
+7. **未签名与已损坏应用拦截**：外部下载软件常因 Gatekeeper 隔离标记报错无法打开，CalmBar 支持拖拽一键递归去隔离与 Ad-hoc 自签名修复。
 
 ---
 
@@ -52,7 +54,19 @@
   * 支持配置网页版播放器（如 YouTube Music、Spotify Web、SoundCloud 等）。
 * **零后台开销**：基于通知事件驱动，不轮询进程，0% CPU 占用。
 
-### 5. 🛡️ 未签名与已损坏应用一键授权 (Gatekeeper Quarantine Unlocker)
+### 5. ☕ 系统防休眠与办公软件防离开 (Caffeine / Keep Awake)
+* **IOKit 原生电源断言**：通过 `kIOPMAssertPreventUserIdleDisplaySleep` 阻止显示器休眠、屏幕保护程序与系统睡眠，保障长耗时渲染、编译及下载任务不中断。
+* **丰富定时预设**：支持无限期保持清醒，或设定 5m / 15m / 30m / 1h / 2h / 5h 定时倒计时，实时毫秒级倒计时显示。
+* **办公软件防离开仿真 (Keep Apps Active)**：读取 `IOHIDSystem` 真实系统闲置时间，超时自动发送原地微幅 HID 事件，防止 Microsoft Teams、Slack、飞书、钉钉等协同工具自动判定为 Away/离开状态。
+* **睡眠唤醒与锁屏自适应**：Mac 手动进入睡眠时自动退出，多用户锁屏注销时自动挂起，退出 CalmBar 时安全释放所有断言。
+
+### 6. 🔋 充电管理与电池上限 (Battery Charge Limit)
+* **硬件级充电阻断**：通过向 SMC 写入 `CH0C` / `CHTE` 寄存器精准控制充放电，达到设定阈值（默认 80%）后彻底切断流入电池电流，转由电源适配器直接旁路供电。
+* **回差巡航模式 (Sailing Mode)**：支持配置回差跨度（如 75% ~ 80%），电量自然消耗回落至下限时才恢复涓流补电，避免在 80% 边缘反复高频微充。
+* **临时充至 100% (Top Up)**：提供一键临时充满模式，放开限制充至满电后自动恢复设定上限，适合出门前临时蓄电。
+* **电池健康监控**：实时展示电池健康度 (Health %)、循环计数 (Cycle Count)、电池实时温度及供电功率。
+
+### 7. 🛡️ 未签名与已损坏应用一键授权 (Gatekeeper Quarantine Unlocker)
 * **拖拽一键解锁**：直接将报错或未公证的 `.app`、文件夹拖入设置面板，自动执行 `xattr -rd com.apple.quarantine` 解除隔离。
 * **深度自签名修复**：支持勾选「深度修复 (Ad-hoc 重签名)」，针对签名损坏或修改过的应用执行 `codesign --force --deep --sign -`。
 * **免终端无感提权**：结合特权助手 `CalmBarHelper`，处理 `/Applications` 下需要管理员权限的应用时无需反复输入 `sudo` 密码。
@@ -69,6 +83,8 @@ CalmBar/
 │   └── Sources/
 │       ├── CalmBar/                     # 主 App 逻辑与 SwiftUI 界面
 │       │   ├── AppDelegate.swift        # App 生命周期与菜单栏初始化
+│       │   ├── Battery/                 # IOPowerSources 电池监听与充电上限状态机
+│       │   ├── Caffeine/                # IOKit 电源断言与 HID 微动防离开引擎
 │       │   ├── Gatekeeper/              # macOS 隔离属性与自签名修复引擎
 │       │   ├── MenuBar/                 # 菜单栏折叠与布局管理器
 │       │   ├── Scroll/                  # CGEventTap 滚轮事件拦截器与权限管理
@@ -108,10 +124,10 @@ open ./build/CalmBar.app
 为保证功能正常运作，首次运行需授予以下权限：
 
 1. **辅助功能权限 (Accessibility)**：
-   * 用于系统级拦截并翻转外接鼠标的滚轮事件。
+   * 用于系统级拦截并翻转外接鼠标滚轮事件，以及办公软件防离开 (Activity Simulator) 微动仿真。
    * 前往 **系统设置 -> 隐私与安全性 -> 辅助功能**，确保 **CalmBar** 处于开启状态。
-2. **SMC 特权助手 (Fan Control Helper)**：
-   * 用于向系统 SMC 寄存器写入风扇目标转速。
+2. **SMC 特权助手 (Fan Control & Battery Helper)**：
+   * 用于向系统 SMC 寄存器写入风扇目标转速及电池充电阻断状态。
    * 点击 CalmBar 面板中的 **「一键激活」** 按钮，按系统提示输入开机密码即可一键安装特权服务。
 
 ---
@@ -121,7 +137,10 @@ open ./build/CalmBar.app
 本项目基于 [Apache License 2.0](LICENSE) 许可证开源。
 
 特别致谢开源社区优秀项目的启发与参考：
+* [Aidente](https://github.com/aidente) (SMC Battery Charging Control)
+* [Caffeine](https://github.com/caffeine-app) (by Tomas Franzén & Dominic Rodemer)
 * [noTunes](https://github.com/tombonez/noTunes) (by Tom Taylor)
 * [Scroll Reverser](https://pilotmoon.com/scrollreverser/) (by Pilotmoon)
 * [Hidden Bar](https://github.com/dwarvesf/hidden) (by Dwarves Foundation)
 * [AirPulse](https://github.com/chaoeng) (SMC Fan Controller)
+

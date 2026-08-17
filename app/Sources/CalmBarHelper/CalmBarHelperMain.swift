@@ -57,8 +57,18 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
         return c
     }
 
+    private var battery: SMCBattery?
+
+    private func getBattery() throws -> SMCBattery {
+        if let b = battery { return b }
+        let conn = try SMCConnection()
+        let b = SMCBattery(connection: conn)
+        self.battery = b
+        return b
+    }
+
     func ping(reply: @escaping (String) -> Void) {
-        reply("pong:1")
+        reply("pong:\(CalmBarConfig.helperVersion)")
     }
 
     func setLinkedFraction(_ fraction: Double, reply: @escaping (Bool, String?) -> Void) {
@@ -155,6 +165,48 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
             reply(true, nil)
         } catch {
             reply(false, error.localizedDescription)
+        }
+    }
+
+    // MARK: - Battery & Charging Management
+
+    func setBatteryChargingInhibited(_ inhibited: Bool, reply: @escaping (Bool, String?) -> Void) {
+        do {
+            let b = try getBattery()
+            guard b.capabilities.inhibitChargeControl else {
+                reply(false, "当前 Mac 硬件不支持 SMC 充电阻断控制")
+                return
+            }
+            try b.setChargingInhibited(inhibited)
+            reply(true, nil)
+        } catch {
+            reply(false, error.localizedDescription)
+        }
+    }
+
+    func setBatteryForceDischarge(_ enabled: Bool, reply: @escaping (Bool, String?) -> Void) {
+        do {
+            let b = try getBattery()
+            guard b.capabilities.forceDischargeControl else {
+                reply(false, "当前 Mac 硬件不支持 SMC 强制放电控制")
+                return
+            }
+            try b.setForceDischarging(enabled)
+            reply(true, nil)
+        } catch {
+            reply(false, error.localizedDescription)
+        }
+    }
+
+    func getBatterySMCStatus(reply: @escaping (Bool, Bool, Bool, String?) -> Void) {
+        do {
+            let b = try getBattery()
+            let hasSupport = b.capabilities.inhibitChargeControl
+            let isInhibited = (try? b.getChargingInhibited()) ?? false
+            let isForcedDischarge = (try? b.getForceDischarging()) ?? false
+            reply(hasSupport, isInhibited, isForcedDischarge, nil)
+        } catch {
+            reply(false, false, false, error.localizedDescription)
         }
     }
 }

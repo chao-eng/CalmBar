@@ -7,6 +7,9 @@ public struct PopoverContentView: View {
     @ObservedObject private var menuBar = MenuBarOrganizer.shared
     @ObservedObject private var scroll = ScrollReverserManager.shared
     @ObservedObject private var helper = HelperClient.shared
+    @ObservedObject private var caffeine = CaffeineManager.shared
+    @ObservedObject private var batteryMonitor = BatteryMonitor.shared
+    @ObservedObject private var chargeManager = BatteryChargeManager.shared
 
     @State private var isInstallingHelper = false
     @State private var helperInstallMessage: String?
@@ -97,14 +100,14 @@ public struct PopoverContentView: View {
     // MARK: - Permission Banners
     @ViewBuilder
     private var permissionBanners: some View {
-        if !thermal.isFanControlAuthorized {
+        if !helper.isHelperAvailable || helper.needsHelperUpdate {
             HStack {
                 Image(systemName: "lock.shield")
                     .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text("风扇调控未激活")
+                    Text(helper.needsHelperUpdate ? "特权助手需更新" : "特权助手未激活")
                         .font(.system(size: 11, weight: .semibold))
-                    Text("需要特权助手以修改风扇转速")
+                    Text(helper.needsHelperUpdate ? "更新助手以支持电池充电上限阻断" : "温控与充电上限需要特权服务")
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }
@@ -115,6 +118,8 @@ public struct PopoverContentView: View {
                         isInstallingHelper = false
                         if success {
                             thermal.checkAuthorization()
+                            helper.checkHelperStatus()
+                            chargeManager.evaluateChargingPolicy()
                         } else {
                             helperInstallMessage = err
                         }
@@ -123,7 +128,7 @@ public struct PopoverContentView: View {
                     if isInstallingHelper {
                         ProgressView().controlSize(.mini)
                     } else {
-                        Text("一键激活")
+                        Text(helper.needsHelperUpdate ? "一键更新" : "一键激活")
                             .font(.system(size: 10, weight: .semibold))
                     }
                 }
@@ -383,6 +388,150 @@ public struct PopoverContentView: View {
                         .labelsHidden()
                         .controlSize(.mini)
                         .tint(.accentColor)
+                }
+
+                Divider()
+
+                // Caffeine (Keep Awake) Row
+                HStack {
+                    CaffeineIconView(size: 20, isActive: caffeine.isActive)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 1) {
+                        HStack(spacing: 4) {
+                            Text("系统防休眠 (保持清醒)")
+                                .font(.system(size: 12, weight: .medium))
+                            if caffeine.isActive {
+                                Text(caffeine.timeRemaining != nil ? "\(caffeine.formattedTimeRemaining())" : "无限期")
+                                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                                    .padding(.horizontal, 5)
+                                    .padding(.vertical, 1.5)
+                                    .background(Color.brown.opacity(0.12))
+                                    .foregroundStyle(Color.brown)
+                                    .cornerRadius(3)
+                            }
+                        }
+                        Text(caffeine.isActive ? (settings.caffeineKeepAppsActive ? "已阻止系统休眠 · 微动防离开工作中" : "已阻止系统与显示器休眠") : "点击开启防休眠 (支持定时)")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+
+                    Menu {
+                        Button("无限期保持清醒") {
+                            caffeine.activate(withTimeout: nil)
+                        }
+                        Divider()
+                        Button("保持清醒 5 分钟") {
+                            caffeine.activate(withTimeout: 5 * 60)
+                        }
+                        Button("保持清醒 15 分钟") {
+                            caffeine.activate(withTimeout: 15 * 60)
+                        }
+                        Button("保持清醒 30 分钟") {
+                            caffeine.activate(withTimeout: 30 * 60)
+                        }
+                        Button("保持清醒 1 小时") {
+                            caffeine.activate(withTimeout: 60 * 60)
+                        }
+                        Button("保持清醒 2 小时") {
+                            caffeine.activate(withTimeout: 120 * 60)
+                        }
+                        Button("保持清醒 5 小时") {
+                            caffeine.activate(withTimeout: 300 * 60)
+                        }
+                        if caffeine.isActive {
+                            Divider()
+                            Button("停止保持清醒", role: .destructive) {
+                                caffeine.deactivate()
+                            }
+                        }
+                    } label: {
+                        Image(systemName: "timer")
+                            .font(.system(size: 12))
+                    }
+                    .menuStyle(.borderlessButton)
+                    .frame(width: 18)
+                    .help("选择防休眠时长")
+
+                    Toggle("", isOn: Binding(
+                        get: { caffeine.isActive },
+                        set: { if $0 { caffeine.toggle() } else { caffeine.deactivate() } }
+                    ))
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .controlSize(.mini)
+                    .tint(.accentColor)
+                }
+
+                if batteryMonitor.hasBattery {
+                    Divider()
+
+                    // Battery Charge Limit Row
+                    HStack {
+                        BatteryIconView(
+                            size: 20,
+                            isCharging: batteryMonitor.isCharging,
+                            isBypassed: chargeManager.isChargingInhibited,
+                            isDischarging: chargeManager.operationStatus == .discharging
+                        )
+                        .frame(width: 20)
+
+                        VStack(alignment: .leading, spacing: 1) {
+                            HStack(spacing: 4) {
+                                Text("电池充电上限 (\(settings.batteryChargeLimit)%)")
+                                    .font(.system(size: 12, weight: .medium))
+
+                                if settings.batteryTopUpActive {
+                                    Text("临时充至 100%")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 1)
+                                        .background(Color.blue.opacity(0.15))
+                                        .foregroundStyle(.blue)
+                                        .cornerRadius(3)
+                                } else if chargeManager.operationStatus == .discharging {
+                                    Text("正在放电")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 1)
+                                        .background(Color.orange.opacity(0.15))
+                                        .foregroundStyle(.orange)
+                                        .cornerRadius(3)
+                                } else if chargeManager.isChargingInhibited {
+                                    Text("旁路供电")
+                                        .font(.system(size: 9, weight: .semibold))
+                                        .padding(.horizontal, 4)
+                                        .padding(.vertical, 1)
+                                        .background(Color.accentColor.opacity(0.12))
+                                        .foregroundStyle(Color.accentColor)
+                                        .cornerRadius(3)
+                                }
+                            }
+                            Text(chargeManager.lastStatusMessage.isEmpty ? "电量 \(batteryMonitor.currentPercentage)%" : chargeManager.lastStatusMessage)
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+
+                        if settings.batteryChargeLimitEnabled {
+                            Button(action: {
+                                chargeManager.toggleTopUp()
+                            }) {
+                                Text(settings.batteryTopUpActive ? "取消满电" : "充至100%")
+                                    .font(.system(size: 9, weight: .medium))
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 2)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.mini)
+                        }
+
+                        Toggle("", isOn: $settings.batteryChargeLimitEnabled)
+                            .toggleStyle(.switch)
+                            .labelsHidden()
+                            .controlSize(.mini)
+                            .tint(.accentColor)
+                    }
                 }
 
                 Divider()

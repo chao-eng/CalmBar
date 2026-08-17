@@ -1,11 +1,18 @@
 import Foundation
 import CalmBarKit
 
+private enum XPCProxyHelper {
+    static func proxy(for connection: NSXPCConnection, errorHandler: @escaping @Sendable (Error) -> Void) -> CalmBarHelperProtocol? {
+        return connection.remoteObjectProxyWithErrorHandler(errorHandler) as? CalmBarHelperProtocol
+    }
+}
+
 @MainActor
 public final class HelperClient: ObservableObject {
     public static let shared = HelperClient()
 
     @Published public private(set) var isHelperAvailable: Bool = false
+    @Published public private(set) var needsHelperUpdate: Bool = false
     @Published public private(set) var lastError: String? = nil
 
     private var connection: NSXPCConnection?
@@ -22,29 +29,29 @@ public final class HelperClient: ObservableObject {
     public func checkHelperStatus() {
         guard Self.isHelperInstalledOnDisk else {
             self.isHelperAvailable = false
+            self.needsHelperUpdate = false
             return
         }
 
         let conn = NSXPCConnection(machServiceName: CalmBarConfig.helperMachService, options: [.privileged])
         conn.remoteObjectInterface = NSXPCInterface(with: CalmBarHelperProtocol.self)
         conn.invalidationHandler = { [weak self] in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = false
             }
         }
         conn.interruptionHandler = { [weak self] in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = false
             }
         }
         conn.resume()
 
-        let proxy = conn.remoteObjectProxyWithErrorHandler { [weak self] _ in
-            Task { @MainActor in
+        let proxy = XPCProxyHelper.proxy(for: conn) { [weak self] _ in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = false
-                conn.invalidate()
             }
-        } as? CalmBarHelperProtocol
+        }
 
         guard let validProxy = proxy else {
             self.isHelperAvailable = false
@@ -53,9 +60,13 @@ public final class HelperClient: ObservableObject {
         }
 
         validProxy.ping { [weak self] reply in
-            Task { @MainActor in
-                self?.isHelperAvailable = reply.starts(with: "pong")
-                conn.invalidate()
+            DispatchQueue.main.async {
+                let isLatest = (reply == "pong:\(CalmBarConfig.helperVersion)")
+                self?.isHelperAvailable = isLatest
+                self?.needsHelperUpdate = !isLatest
+                if !isLatest {
+                    self?.lastError = "特权服务版本过旧（需更新以支持充电控制），请点击一键激活升级"
+                }
             }
         }
     }
@@ -67,27 +78,27 @@ public final class HelperClient: ObservableObject {
         }
 
         if let existing = connection {
-            if let proxy = existing.remoteObjectProxyWithErrorHandler({ [weak self] error in
-                Task { @MainActor in
-                    self?.isHelperAvailable = false
+            let proxy = XPCProxyHelper.proxy(for: existing) { [weak self] error in
+                DispatchQueue.main.async {
                     self?.lastError = error.localizedDescription
                     errorHandler(error)
                 }
-            }) as? CalmBarHelperProtocol {
-                return proxy
+            }
+            if let valid = proxy {
+                return valid
             }
         }
 
         let conn = NSXPCConnection(machServiceName: CalmBarConfig.helperMachService, options: [.privileged])
         conn.remoteObjectInterface = NSXPCInterface(with: CalmBarHelperProtocol.self)
         conn.invalidationHandler = { [weak self] in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = false
                 self?.connection = nil
             }
         }
         conn.interruptionHandler = { [weak self] in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = false
                 self?.connection = nil
             }
@@ -95,24 +106,23 @@ public final class HelperClient: ObservableObject {
         conn.resume()
         self.connection = conn
 
-        return conn.remoteObjectProxyWithErrorHandler { [weak self] error in
-            Task { @MainActor in
-                self?.isHelperAvailable = false
+        return XPCProxyHelper.proxy(for: conn) { [weak self] error in
+            DispatchQueue.main.async {
                 self?.lastError = error.localizedDescription
                 errorHandler(error)
             }
-        } as? CalmBarHelperProtocol
+        }
     }
 
     public func setLinkedFraction(_ fraction: Double, completion: @escaping @MainActor (Bool, String?) -> Void) {
         guard let proxy = getProxy(errorHandler: { err in
-            Task { @MainActor in completion(false, err.localizedDescription) }
+            DispatchQueue.main.async { completion(false, err.localizedDescription) }
         }) else {
             completion(false, "Helper 未安装或未运行")
             return
         }
         proxy.setLinkedFraction(fraction) { [weak self] success, err in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = success || (err == nil)
                 completion(success, err)
             }
@@ -121,13 +131,13 @@ public final class HelperClient: ObservableObject {
 
     public func restoreAuto(completion: @escaping @MainActor (Bool, String?) -> Void) {
         guard let proxy = getProxy(errorHandler: { err in
-            Task { @MainActor in completion(false, err.localizedDescription) }
+            DispatchQueue.main.async { completion(false, err.localizedDescription) }
         }) else {
             completion(false, "Helper 未安装或未运行")
             return
         }
         proxy.restoreAuto { [weak self] success, err in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = success || (err == nil)
                 completion(success, err)
             }
@@ -167,12 +177,18 @@ public final class HelperClient: ObservableObject {
         EOF
         chmod 644 '\(plistDst)' && \
         launchctl bootout system/com.chaoeng.CalmBar.helper 2>/dev/null || true
+        killall CalmBarHelper 2>/dev/null || true
+        sleep 0.3 && \
         launchctl bootstrap system '\(plistDst)' && \
-        launchctl enable system/com.chaoeng.CalmBar.helper
+        launchctl enable system/com.chaoeng.CalmBar.helper && \
+        launchctl kickstart -k system/com.chaoeng.CalmBar.helper
         """
     }
 
     public func requestInstallHelper(completion: @escaping @MainActor (Bool, String?) -> Void) {
+        self.connection?.invalidate()
+        self.connection = nil
+
         let bundleURL = Bundle.main.bundleURL
         var helperPath = bundleURL.appendingPathComponent("Contents/MacOS/CalmBarHelper").path
         if !FileManager.default.fileExists(atPath: helperPath) {
@@ -204,16 +220,66 @@ public final class HelperClient: ObservableObject {
 
     public func removeQuarantine(at path: String, deepSign: Bool, completion: @escaping @MainActor (Bool, String?) -> Void) {
         guard let proxy = getProxy(errorHandler: { err in
-            Task { @MainActor in completion(false, err.localizedDescription) }
+            DispatchQueue.main.async { completion(false, err.localizedDescription) }
         }) else {
             completion(false, "Helper 未就绪")
             return
         }
 
         proxy.removeQuarantine(at: path, deepSign: deepSign) { [weak self] success, err in
-            Task { @MainActor in
+            DispatchQueue.main.async {
                 self?.isHelperAvailable = success || (err == nil)
                 completion(success, err)
+            }
+        }
+    }
+
+    // MARK: - Battery & Charging Management
+
+    public func setBatteryChargingInhibited(_ inhibited: Bool, completion: @escaping @MainActor (Bool, String?) -> Void) {
+        guard let proxy = getProxy(errorHandler: { err in
+            DispatchQueue.main.async { completion(false, err.localizedDescription) }
+        }) else {
+            completion(false, "Helper 未就绪")
+            return
+        }
+
+        proxy.setBatteryChargingInhibited(inhibited) { [weak self] success, err in
+            DispatchQueue.main.async {
+                self?.isHelperAvailable = success || (err == nil)
+                completion(success, err)
+            }
+        }
+    }
+
+    public func setBatteryForceDischarge(_ enabled: Bool, completion: @escaping @MainActor (Bool, String?) -> Void) {
+        guard let proxy = getProxy(errorHandler: { err in
+            DispatchQueue.main.async { completion(false, err.localizedDescription) }
+        }) else {
+            completion(false, "Helper 未就绪")
+            return
+        }
+
+        proxy.setBatteryForceDischarge(enabled) { [weak self] success, err in
+            DispatchQueue.main.async {
+                self?.isHelperAvailable = success || (err == nil)
+                completion(success, err)
+            }
+        }
+    }
+
+    public func getBatterySMCStatus(completion: @escaping @MainActor (Bool, Bool, Bool, String?) -> Void) {
+        guard let proxy = getProxy(errorHandler: { err in
+            DispatchQueue.main.async { completion(false, false, false, err.localizedDescription) }
+        }) else {
+            completion(false, false, false, "Helper 未就绪")
+            return
+        }
+
+        proxy.getBatterySMCStatus { [weak self] hasSupport, isInhibited, isForcedDischarge, err in
+            DispatchQueue.main.async {
+                self?.isHelperAvailable = hasSupport || (err == nil)
+                completion(hasSupport, isInhibited, isForcedDischarge, err)
             }
         }
     }

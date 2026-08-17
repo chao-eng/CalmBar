@@ -26,6 +26,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         _ = HotKeyManager.shared
         _ = ScrollReverserManager.shared
         _ = NoTunesManager.shared
+        _ = CaffeineManager.shared
+        _ = BatteryChargeManager.shared
 
         // 3. Start background thermal monitoring asynchronously after UI is anchored
         DispatchQueue.main.async {
@@ -46,5 +48,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         HotKeyManager.shared.unregister()
         ScrollReverserManager.shared.stop()
         NoTunesManager.shared.stopMonitoring()
+        CaffeineManager.shared.deactivate()
+        BatteryChargeManager.shared.restoreDefaultCharging()
     }
 }

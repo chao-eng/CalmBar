@@ -24,7 +24,22 @@ public enum SMCResultCode: UInt8, CustomStringConvertible, Sendable {
     case badArgumentError = 0x89
 
     public var description: String {
-        "\(String(describing: self)) (0x\(String(rawValue, radix: 16)))"
+        let name: String
+        switch self {
+        case .success: name = "success"
+        case .error: name = "error"
+        case .commCollision: name = "commCollision"
+        case .spuriousData: name = "spuriousData"
+        case .badCommand: name = "badCommand"
+        case .badParameter: name = "badParameter"
+        case .notFound: name = "notFound"
+        case .notReadable: name = "notReadable"
+        case .notWritable: name = "notWritable"
+        case .keySizeMismatch: name = "keySizeMismatch"
+        case .framingError: name = "framingError"
+        case .badArgumentError: name = "badArgumentError"
+        }
+        return "\(name) (0x\(String(rawValue, radix: 16)))"
     }
 }
 
@@ -228,7 +243,7 @@ public final class SMCConnection: @unchecked Sendable {
         let dataSize = output.keyInfo.dataSize
         guard dataSize > 0 && dataSize <= 32 else { throw SMCError.invalidKey }
         var readParam = param
-        readParam.keyInfo.dataSize = dataSize
+        readParam.keyInfo = output.keyInfo
         readParam.data8 = SMCCommand.readBytes.rawValue
         let readOutput = try callSMC(input: readParam)
         if readOutput.result != SMCResultCode.success.rawValue {
@@ -242,7 +257,12 @@ public final class SMCConnection: @unchecked Sendable {
         let (param, output) = try fetchKeyInfo(key)
         var writeParam = param
         writeParam.data8 = SMCCommand.writeBytes.rawValue
+        // Match Aidente's smc.c SMCWriteKey: only set dataSize, NOT dataType/dataAttributes
+        // in the write command struct. The AppleSMC kernel driver behaves differently
+        // when dataType is included vs omitted.
         writeParam.keyInfo.dataSize = output.keyInfo.dataSize
+        writeParam.keyInfo.dataType = 0
+        writeParam.keyInfo.dataAttributes = 0
         writeParam.bytes = bytesToTuple(bytes)
         let writeOutput = try callSMC(input: writeParam)
         if writeOutput.result != SMCResultCode.success.rawValue {
