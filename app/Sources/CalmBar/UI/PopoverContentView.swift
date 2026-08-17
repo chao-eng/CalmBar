@@ -494,8 +494,8 @@ public struct PopoverContentView: View {
                                         .font(.system(size: 9, weight: .semibold))
                                         .padding(.horizontal, 4)
                                         .padding(.vertical, 1)
-                                        .background(Color.orange.opacity(0.15))
-                                        .foregroundStyle(.orange)
+                                        .background(Color.accentColor.opacity(0.12))
+                                        .foregroundStyle(Color.accentColor)
                                         .cornerRadius(3)
                                 } else if chargeManager.isChargingInhibited {
                                     Text("旁路供电")

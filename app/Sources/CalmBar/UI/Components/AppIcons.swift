@@ -167,7 +167,7 @@ public struct BatteryIconView: View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
                 .fill(isDischarging ? LinearGradient(
-                    colors: [Color(red: 0.78, green: 0.45, blue: 0.20), Color(red: 0.62, green: 0.32, blue: 0.12)],
+                    colors: [Color(red: 0.28, green: 0.42, blue: 0.54), Color(red: 0.18, green: 0.30, blue: 0.42)],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 ) : isBypassed ? LinearGradient(
@@ -185,8 +185,8 @@ public struct BatteryIconView: View {
                 ))
                 .shadow(color: Color.black.opacity(0.10), radius: 1, x: 0, y: 0.5)
 
-            Image(systemName: isDischarging ? "arrow.down.to.line.compact" : (isBypassed ? "powerplug.fill" : (isCharging ? "bolt.fill" : "battery.100")))
-                .font(.system(size: size * 0.50, weight: .semibold))
+            Image(systemName: isDischarging ? "arrow.down.forward.and.arrow.up.backward" : (isBypassed ? "powerplug.fill" : (isCharging ? "bolt.fill" : "battery.100")))
+                .font(.system(size: size * 0.48, weight: .semibold))
                 .foregroundColor(.white)
         }
         .frame(width: size, height: size)
