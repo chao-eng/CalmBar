@@ -363,6 +363,27 @@ public struct PopoverContentView: View {
                         .controlSize(.mini)
                         .tint(.accentColor)
                 }
+
+                Divider()
+
+                // Apple Music Blocker Row
+                HStack {
+                    NoTunesIconView(size: 20)
+                        .frame(width: 20)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text("Apple Music 启动拦截")
+                            .font(.system(size: 12, weight: .medium))
+                        Text(settings.noTunesEnabled ? "已启用防误触拉起" : "已暂停拦截")
+                            .font(.system(size: 10))
+                            .foregroundColor(.secondary)
+                    }
+                    Spacer()
+                    Toggle("", isOn: $settings.noTunesEnabled)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                        .tint(.accentColor)
+                }
             }
             .padding(4)
         }
@@ -376,7 +397,7 @@ public struct PopoverContentView: View {
             }) {
                 HStack(spacing: 4) {
                     Image(systemName: "gearshape")
-                    Text("偏好设置...")
+                    Text("偏好设置")
                 }
                 .font(.system(size: 11))
             }

@@ -24,9 +24,9 @@ cp "$DIR/.build/arm64-apple-macosx/release/$HELPER_NAME" "$MACOS/$HELPER_NAME"
 chmod +x "$MACOS/$APP_NAME"
 chmod +x "$MACOS/$HELPER_NAME"
 
-# Copy AppIcon.icns if available
-if [ -f "$DIR/Resources/AppIcon.icns" ]; then
-    cp "$DIR/Resources/AppIcon.icns" "$RESOURCES/AppIcon.icns"
+# Copy all resources if available
+if [ -d "$DIR/Resources" ]; then
+    cp -R "$DIR/Resources/"* "$RESOURCES/"
 fi
 
 cat <<EOF > "$CONTENTS/Info.plist"

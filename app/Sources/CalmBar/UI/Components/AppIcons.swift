@@ -1,0 +1,95 @@
+import SwiftUI
+import AppKit
+
+public enum AppIcons {
+    /// 加载 noTunes 官方应用图标
+    public static var noTunesAppIcon: NSImage? {
+        if let url = Bundle.main.url(forResource: "noTunesIcon", withExtension: "png"),
+           let img = NSImage(contentsOf: url) {
+            return img
+        }
+        // 开发调试环境相对路径支持
+        let relativePaths = [
+            "Resources/noTunesIcon.png",
+            "app/Resources/noTunesIcon.png",
+            "../Resources/noTunesIcon.png"
+        ]
+        for path in relativePaths {
+            if FileManager.default.fileExists(atPath: path),
+               let img = NSImage(contentsOfFile: path) {
+                return img
+            }
+        }
+        return NSImage(named: "noTunesIcon")
+    }
+
+    /// 加载 noTunes 状态栏/矢量模板图标
+    public static var noTunesStatusIcon: NSImage? {
+        if let url = Bundle.main.url(forResource: "noTunesStatusIcon", withExtension: "png"),
+           let img = NSImage(contentsOf: url) {
+            img.isTemplate = true
+            return img
+        }
+        let relativePaths = [
+            "Resources/noTunesStatusIcon.png",
+            "app/Resources/noTunesStatusIcon.png",
+            "../Resources/noTunesStatusIcon.png"
+        ]
+        for path in relativePaths {
+            if FileManager.default.fileExists(atPath: path),
+               let img = NSImage(contentsOfFile: path) {
+                img.isTemplate = true
+                return img
+            }
+        }
+        return NSImage(named: "noTunesStatusIcon")
+    }
+}
+
+public struct NoTunesIconView: View {
+    public var size: CGFloat = 20
+    public var isStatusTemplate: Bool = false
+
+    public init(size: CGFloat = 20, isStatusTemplate: Bool = false) {
+        self.size = size
+        self.isStatusTemplate = isStatusTemplate
+    }
+
+    public var body: some View {
+        if isStatusTemplate, let templateImg = AppIcons.noTunesStatusIcon {
+            Image(nsImage: templateImg)
+                .resizable()
+                .renderingMode(.template)
+                .scaledToFit()
+                .frame(width: size, height: size)
+        } else if let appImg = AppIcons.noTunesAppIcon {
+            Image(nsImage: appImg)
+                .resizable()
+                .scaledToFit()
+                .frame(width: size, height: size)
+                .clipShape(RoundedRectangle(cornerRadius: size * 0.22, style: .continuous))
+                .shadow(color: Color.black.opacity(0.15), radius: 1, x: 0, y: 0.5)
+        } else {
+            // 原生精美矢量回退绘制：粉红色圆角矩形 + 音符 + 斜杠
+            ZStack {
+                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                    .fill(LinearGradient(
+                        colors: [Color(red: 0.98, green: 0.36, blue: 0.52), Color(red: 0.88, green: 0.18, blue: 0.42)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+
+                Image(systemName: "music.note")
+                    .font(.system(size: size * 0.52, weight: .bold))
+                    .foregroundColor(.white)
+
+                // 禁止斜杠
+                Rectangle()
+                    .fill(Color.white)
+                    .frame(width: size * 0.75, height: 1.5)
+                    .rotationEffect(.degrees(-45))
+            }
+            .frame(width: size, height: size)
+        }
+    }
+}

@@ -69,6 +69,20 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(reverseTrackpadHorizontal, forKey: "reverseTrackpadHorizontal") }
     }
 
+    // MARK: - NoTunes (Apple Music Blocker) Settings
+    @Published public var noTunesEnabled: Bool {
+        didSet { defaults.set(noTunesEnabled, forKey: "noTunesEnabled") }
+    }
+    @Published public var noTunesReplacementType: NoTunesReplacementType {
+        didSet { defaults.set(noTunesReplacementType.rawValue, forKey: "noTunesReplacementType") }
+    }
+    @Published public var noTunesReplacementTarget: String {
+        didSet { defaults.set(noTunesReplacementTarget, forKey: "noTunesReplacementTarget") }
+    }
+    @Published public var noTunesTerminateOnEnable: Bool {
+        didSet { defaults.set(noTunesTerminateOnEnable, forKey: "noTunesTerminateOnEnable") }
+    }
+
     // MARK: - General Settings
     @Published public var launchAtLogin: Bool {
         didSet {
@@ -100,6 +114,28 @@ public final class AppSettings: ObservableObject {
         self.reverseTrackpadVertical = defaults.object(forKey: "reverseTrackpadVertical") as? Bool ?? false
         self.reverseTrackpadHorizontal = defaults.object(forKey: "reverseTrackpadHorizontal") as? Bool ?? false
 
+        self.noTunesEnabled = defaults.object(forKey: "noTunesEnabled") as? Bool ?? true
+        let replacementTypeStr = defaults.string(forKey: "noTunesReplacementType") ?? NoTunesReplacementType.none.rawValue
+        self.noTunesReplacementType = NoTunesReplacementType(rawValue: replacementTypeStr) ?? .none
+        self.noTunesReplacementTarget = defaults.string(forKey: "noTunesReplacementTarget") ?? ""
+        self.noTunesTerminateOnEnable = defaults.object(forKey: "noTunesTerminateOnEnable") as? Bool ?? true
+
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
+    }
+}
+
+public enum NoTunesReplacementType: String, CaseIterable, Identifiable {
+    case none = "none"
+    case app = "app"
+    case url = "url"
+
+    public var id: String { rawValue }
+
+    public var titleZH: String {
+        switch self {
+        case .none: return "仅拦截 (不打开任何替代)"
+        case .app: return "替代打开指定应用 (App)"
+        case .url: return "替代打开网页链接 (Web URL)"
+        }
     }
 }

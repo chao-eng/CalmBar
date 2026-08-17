@@ -1,6 +1,6 @@
 # CalmBar 🌬️
 
-> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦
+> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
@@ -11,11 +11,12 @@
 
 ## 📖 简介
 
-**CalmBar** 是一款使用 **Swift 6 + SwiftUI + AppKit** 打造的轻量级 macOS 菜单栏综合增强套件。旨在解决日常 macOS 体验中的三大痛点：
+**CalmBar** 是一款使用 **Swift 6 + SwiftUI + AppKit** 打造的轻量级 macOS 菜单栏综合增强套件。旨在解决日常 macOS 体验中的核心痛点：
 
 1. **散热策略滞后**：官方 SMC 策略常常在撞温度墙后才大幅提速，CalmBar 提供实时硬件温度监控与灵活的温控加速曲线。
 2. **菜单栏杂乱遮挡**：在刘海屏或小屏幕上，过多第三方图标容易溢出或被遮挡，CalmBar 提供一键折叠与自动收纳。
 3. **鼠标与触控板手势绑定**：macOS 原生设置无法对外接鼠标与触控板分开设置滚动方向，CalmBar 完美解耦外接鼠标滚轮与原生触控板手势。
+4. **Apple Music 流氓唤醒**：连接 AirPods / 蓝牙耳机或误触播放键时系统频繁强行弹出 Apple Music，CalmBar 毫秒级静默拦截并支持拉起替代音乐应用或网页。
 
 ---
 
@@ -43,6 +44,13 @@
   * **内建触控板 / Magic Mouse**：100% 保持 macOS 原生自然滚动方向、双指捏合缩放及惯性平滑滑动。
 * **底层零延迟**：基于系统级 `CGEventTap` 与精确时序算法，平滑无卡顿。
 
+### 4. 🎵 Apple Music / iTunes 启动拦截与替代 (noTunes)
+* **静默拦截防御**：监听系统应用启动事件，瞬间强制终止 `com.apple.Music` 与 `com.apple.iTunes` 的自动唤起（如蓝牙耳机重连、媒体按键触碰等场景）。
+* **无缝替代启动 (Replacement)**：
+  * 支持自定义替代目标：拦截后自动拉起你指定的第三方音乐 App（如 Spotify、网易云音乐、QQ音乐、TIDAL、foobar2000 等）。
+  * 支持配置网页版播放器（如 YouTube Music、Spotify Web、SoundCloud 等）。
+* **零后台开销**：基于通知事件驱动，不轮询进程，0% CPU 占用。
+
 ---
 
 ## 🛠️ 技术架构
@@ -54,10 +62,11 @@ CalmBar/
 │   ├── build_app.sh                     # 自动编译、签名与打包脚本
 │   └── Sources/
 │       ├── CalmBar/                     # 主 App 逻辑与 SwiftUI 界面
-│       │   ├── AppDelegate.swift        # App 声明周期与菜单栏初始化
+│       │   ├── AppDelegate.swift        # App 生命周期与菜单栏初始化
 │       │   ├── MenuBar/                 # 菜单栏折叠与布局管理器
 │       │   ├── Scroll/                  # CGEventTap 滚轮事件拦截器与权限管理
 │       │   ├── Thermal/                 # 温控轮询引擎与 XPC 通信客户端
+│       │   ├── NoTunes/                 # Apple Music / iTunes 启动拦截引擎
 │       │   └── UI/                      # SwiftUI 状态栏面板与偏好设置窗口
 │       ├── CalmBarKit/                  # 硬件 SMC 读写与驱动通信共享库
 │       └── CalmBarHelper/               # Root 特权辅助工具 (Privileged Helper)
@@ -105,6 +114,7 @@ open ./build/CalmBar.app
 本项目基于 [Apache License 2.0](LICENSE) 许可证开源。
 
 特别致谢开源社区优秀项目的启发与参考：
+* [noTunes](https://github.com/tombonez/noTunes) (by Tom Taylor)
 * [Scroll Reverser](https://pilotmoon.com/scrollreverser/) (by Pilotmoon)
 * [Hidden Bar](https://github.com/dwarvesf/hidden) (by Dwarves Foundation)
 * [AirPulse](https://github.com/chaoeng) (SMC Fan Controller)

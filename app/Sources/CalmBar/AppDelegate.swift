@@ -25,6 +25,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         // 2. Setup System Extension Handlers
         _ = HotKeyManager.shared
         _ = ScrollReverserManager.shared
+        _ = NoTunesManager.shared
 
         // 3. Start background thermal monitoring asynchronously after UI is anchored
         DispatchQueue.main.async {
@@ -44,5 +45,6 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         ThermalMonitor.shared.restoreSystemControl()
         HotKeyManager.shared.unregister()
         ScrollReverserManager.shared.stop()
+        NoTunesManager.shared.stopMonitoring()
     }
 }
