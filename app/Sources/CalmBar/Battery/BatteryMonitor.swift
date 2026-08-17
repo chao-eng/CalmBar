@@ -108,10 +108,14 @@ public final class BatteryMonitor: ObservableObject {
             self.cycleCount = cycles
         }
 
-        let maxCapacity = dict["MaxCapacity"] as? Double ?? dict["AppleRawMaxCapacity"] as? Double ?? 0
+        // Health: Use raw mAh capacity (AppleRawMaxCapacity or NominalChargeCapacity) divided by DesignCapacity (mAh).
+        // dict["MaxCapacity"] is a percentage (e.g. 100), not mAh!
+        let fullCapacity = dict["AppleRawMaxCapacity"] as? Double 
+            ?? dict["NominalChargeCapacity"] as? Double 
+            ?? 0
         let designCapacity = dict["DesignCapacity"] as? Double ?? 0
-        if maxCapacity > 0 && designCapacity > 0 {
-            self.healthPercentage = min(100, max(0, Int((maxCapacity / designCapacity) * 100)))
+        if fullCapacity > 0 && designCapacity > 0 {
+            self.healthPercentage = min(100, max(0, Int(round((fullCapacity / designCapacity) * 100))))
         }
 
         if let tempRaw = dict["Temperature"] as? Double {
