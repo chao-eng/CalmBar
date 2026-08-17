@@ -24,6 +24,11 @@ cp "$DIR/.build/arm64-apple-macosx/release/$HELPER_NAME" "$MACOS/$HELPER_NAME"
 chmod +x "$MACOS/$APP_NAME"
 chmod +x "$MACOS/$HELPER_NAME"
 
+# Copy AppIcon.icns if available
+if [ -f "$DIR/Resources/AppIcon.icns" ]; then
+    cp "$DIR/Resources/AppIcon.icns" "$RESOURCES/AppIcon.icns"
+fi
+
 cat <<EOF > "$CONTENTS/Info.plist"
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -31,6 +36,8 @@ cat <<EOF > "$CONTENTS/Info.plist"
 <dict>
     <key>CFBundleExecutable</key>
     <string>CalmBar</string>
+    <key>CFBundleIconFile</key>
+    <string>AppIcon</string>
     <key>CFBundleIdentifier</key>
     <string>com.chaoeng.CalmBar</string>
     <key>CFBundleName</key>
