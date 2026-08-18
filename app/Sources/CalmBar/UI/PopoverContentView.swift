@@ -384,9 +384,9 @@ public struct PopoverContentView: View {
                 .foregroundStyle(.indigo)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
-                Text("菜单栏图标收纳")
+                Text("菜单栏收纳")
                     .font(.system(size: 12, weight: .medium))
-                Text(menuBar.isCollapsed ? "当前处于收纳折叠状态" : "当前处于展开显示状态")
+                Text(menuBar.isCollapsed ? "已收纳折叠" : "已展开显示")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -411,9 +411,9 @@ public struct PopoverContentView: View {
                 .foregroundStyle(.teal)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
-                Text("外接鼠标自然滚动解耦")
+                Text("鼠标自然滚动")
                     .font(.system(size: 12, weight: .medium))
-                Text(settings.scrollReverserEnabled ? "鼠标已反转 (触控板保持原生)" : "已停用")
+                Text(settings.scrollReverserEnabled ? "鼠标反转 · 触控板原生" : "已停用")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -431,9 +431,9 @@ public struct PopoverContentView: View {
             NoTunesIconView(size: 20)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
-                Text("Apple Music 启动拦截")
+                Text("Apple Music 拦截")
                     .font(.system(size: 12, weight: .medium))
-                Text(settings.noTunesEnabled ? "已启用防误触拉起" : "已暂停拦截")
+                Text(settings.noTunesEnabled ? "已开启防误触拦截" : "已暂停拦截")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -452,7 +452,7 @@ public struct PopoverContentView: View {
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
-                    Text("系统防休眠 (保持清醒)")
+                    Text("系统防休眠")
                         .font(.system(size: 12, weight: .medium))
                     if caffeine.isActive {
                         Text(caffeine.timeRemaining != nil ? "\(caffeine.formattedTimeRemaining())" : "无限期")
@@ -464,7 +464,7 @@ public struct PopoverContentView: View {
                             .cornerRadius(3)
                     }
                 }
-                Text(caffeine.isActive ? (settings.caffeineKeepAppsActive ? "已阻止系统休眠 · 微动防离开工作中" : "已阻止系统与显示器休眠") : "点击开启防休眠 (支持定时)")
+                Text(caffeine.isActive ? (settings.caffeineKeepAppsActive ? "防休眠 · 防离开工作中" : "已阻止系统与显示器休眠") : "点击开启防休眠 (支持定时)")
                     .font(.system(size: 10))
                     .foregroundColor(.secondary)
             }
@@ -530,11 +530,11 @@ public struct PopoverContentView: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 HStack(spacing: 4) {
-                    Text("电池充电上限 (\(settings.batteryChargeLimit)%)")
+                    Text("充电上限 \(settings.batteryChargeLimit)%")
                         .font(.system(size: 12, weight: .medium))
 
                     if settings.batteryTopUpActive {
-                        Text("临时充至 100%")
+                        Text("充至100%")
                             .font(.system(size: 9, weight: .semibold))
                             .padding(.horizontal, 4)
                             .padding(.vertical, 1)
@@ -542,7 +542,7 @@ public struct PopoverContentView: View {
                             .foregroundStyle(.blue)
                             .cornerRadius(3)
                     } else if chargeManager.operationStatus == .discharging {
-                        Text("正在放电")
+                        Text("放电中")
                             .font(.system(size: 9, weight: .semibold))
                             .padding(.horizontal, 4)
                             .padding(.vertical, 1)
@@ -569,7 +569,7 @@ public struct PopoverContentView: View {
                 Button(action: {
                     chargeManager.toggleTopUp()
                 }) {
-                    Text(settings.batteryTopUpActive ? "取消满电" : "充至100%")
+                    Text(settings.batteryTopUpActive ? "取消" : "充至100%")
                         .font(.system(size: 9, weight: .medium))
                         .padding(.horizontal, 4)
                         .padding(.vertical, 2)
@@ -591,7 +591,7 @@ public struct PopoverContentView: View {
             GatekeeperIconView(size: 20)
                 .frame(width: 20)
             VStack(alignment: .leading, spacing: 1) {
-                Text("软件去隔离与签名授权")
+                Text("应用去隔离")
                     .font(.system(size: 12, weight: .medium))
                 Text("修复未签名或损坏应用提示")
                     .font(.system(size: 10))

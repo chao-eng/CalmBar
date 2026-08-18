@@ -91,7 +91,7 @@ public final class BatteryChargeManager: ObservableObject {
         // We must check if the adapter is physically connected so we don't accidentally cancel force discharge.
         guard battery.isAdapterPhysicallyConnected else {
             self.operationStatus = .unplugged
-            self.lastStatusMessage = "当前使用电池供电 (\(battery.currentPercentage)%)"
+            self.lastStatusMessage = "电池供电中 (\(battery.currentPercentage)%)"
             applyForceDischarge(false)
             return
         }
@@ -104,7 +104,7 @@ public final class BatteryChargeManager: ObservableObject {
                 return
             }
             self.operationStatus = .topUp
-            self.lastStatusMessage = "临时充至 100% 模式中 (\(battery.currentPercentage)%)"
+            self.lastStatusMessage = "充至 100% 模式 (\(battery.currentPercentage)%)"
             applyInhibition(false)
             applyForceDischarge(false)
             return
@@ -113,7 +113,7 @@ public final class BatteryChargeManager: ObservableObject {
         // Charge Limit disabled
         guard settings.batteryChargeLimitEnabled else {
             self.operationStatus = .disabled
-            self.lastStatusMessage = "默认系统充电托管 (\(battery.currentPercentage)%)"
+            self.lastStatusMessage = "系统默认托管 (\(battery.currentPercentage)%)"
             applyInhibition(false)
             applyForceDischarge(false)
             return
@@ -130,36 +130,36 @@ public final class BatteryChargeManager: ObservableObject {
                 applyInhibition(false)
                 applyForceDischarge(true)
                 self.operationStatus = .discharging
-                self.lastStatusMessage = "电量 \(battery.currentPercentage)% 超出上限 · 正在放电至 \(targetLimit)%"
+                self.lastStatusMessage = "电量 \(battery.currentPercentage)% · 放电至 \(targetLimit)%"
             } else {
                 // Normal bypass mode: keep adapter on, block charging
                 applyForceDischarge(false)
                 applyInhibition(true)
                 self.operationStatus = .limitedAndBypassed
-                self.lastStatusMessage = "电量已达 \(targetLimit)% 上限 · 适配器旁路供电中"
+                self.lastStatusMessage = "已达上限 \(targetLimit)% · 旁路供电"
             }
         } else if battery.currentPercentage == targetLimit {
             // Exactly at limit: stop discharging, keep bypass
             applyForceDischarge(false)
             applyInhibition(true)
             self.operationStatus = .limitedAndBypassed
-            self.lastStatusMessage = "电量已达 \(targetLimit)% 上限 · 适配器旁路供电中"
+            self.lastStatusMessage = "已达上限 \(targetLimit)% · 旁路供电"
         } else if battery.currentPercentage <= lowerBound {
             // Below lower bound: allow charging, stop discharge
             applyForceDischarge(false)
             applyInhibition(false)
             self.operationStatus = .charging
-            self.lastStatusMessage = "电量低于 \(lowerBound)% · 正在补电至 \(targetLimit)%"
+            self.lastStatusMessage = "低于 \(lowerBound)% · 补电至 \(targetLimit)%"
         } else {
             // In sailing window (lowerBound < currentPercentage < targetLimit)
             applyForceDischarge(false)
             if isChargingInhibited {
                 self.operationStatus = .sailing
-                self.lastStatusMessage = "巡航保护中 (\(battery.currentPercentage)% / 上限 \(targetLimit)%)"
+                self.lastStatusMessage = "巡航保护 (\(battery.currentPercentage)% / \(targetLimit)%)"
                 applyInhibition(true)
             } else {
                 self.operationStatus = .charging
-                self.lastStatusMessage = "正在充电至 \(targetLimit)% (\(battery.currentPercentage)%)"
+                self.lastStatusMessage = "充电中 (\(battery.currentPercentage)% → \(targetLimit)%)"
                 applyInhibition(false)
             }
         }
