@@ -48,7 +48,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         HotKeyManager.shared.unregister()
         ScrollReverserManager.shared.stop()
         NoTunesManager.shared.stopMonitoring()
-        CaffeineManager.shared.deactivate()
+        CaffeineManager.shared.cleanupOnExit()
         BatteryChargeManager.shared.restoreDefaultCharging()
     }
 }

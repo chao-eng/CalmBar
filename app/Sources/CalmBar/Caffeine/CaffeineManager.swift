@@ -96,13 +96,23 @@ public final class CaffeineManager: ObservableObject {
         }
     }
 
-    /// Deactivates Caffeine
+    /// Deactivates Caffeine (user action or timer expiration)
     public func deactivate() {
         cancelTimers()
         self.timeRemaining = nil
         self.totalDuration = nil
         self.isActive = false
         AppSettings.shared.caffeineEnabled = false
+        SleepPreventionManager.shared.allowSleep()
+        ActivitySimulator.shared.stopMonitoring()
+    }
+
+    /// Releases IOKit power assertions when CalmBar terminates without erasing user preference
+    public func cleanupOnExit() {
+        cancelTimers()
+        self.timeRemaining = nil
+        self.totalDuration = nil
+        self.isActive = false
         SleepPreventionManager.shared.allowSleep()
         ActivitySimulator.shared.stopMonitoring()
     }

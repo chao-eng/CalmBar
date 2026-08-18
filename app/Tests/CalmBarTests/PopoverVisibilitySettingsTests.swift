@@ -47,4 +47,22 @@ struct PopoverVisibilitySettingsTests {
         #expect(settings.popoverShowGatekeeper == false)
         settings.popoverShowGatekeeper = originalGatekeeper
     }
+
+    @Test("Test Caffeine cleanup on exit preserves user preference")
+    @MainActor
+    func testCaffeineCleanupPreservesPreference() {
+        let caffeine = CaffeineManager.shared
+        let settings = AppSettings.shared
+
+        caffeine.activate()
+        #expect(settings.caffeineEnabled == true)
+
+        // Exit cleanup must NOT turn off user preference
+        caffeine.cleanupOnExit()
+        #expect(settings.caffeineEnabled == true)
+
+        // Manual deactivation DOES update user preference
+        caffeine.deactivate()
+        #expect(settings.caffeineEnabled == false)
+    }
 }
