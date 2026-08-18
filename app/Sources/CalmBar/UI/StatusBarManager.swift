@@ -95,9 +95,13 @@ public final class StatusBarManager: ObservableObject {
         }
     }
 
+    public func closePopover() {
+        popover?.performClose(nil)
+    }
+
     public func openSettingsWindow(tab: SettingsTab = .thermal) {
         self.selectedSettingsTab = tab
-        popover?.performClose(nil)
+        closePopover()
 
         if let window = settingsWindow, window.isVisible {
             window.makeKeyAndOrderFront(nil)

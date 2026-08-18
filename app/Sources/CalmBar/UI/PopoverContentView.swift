@@ -10,6 +10,8 @@ public struct PopoverContentView: View {
     @ObservedObject private var caffeine = CaffeineManager.shared
     @ObservedObject private var batteryMonitor = BatteryMonitor.shared
     @ObservedObject private var chargeManager = BatteryChargeManager.shared
+    @ObservedObject private var ocr = OCRManager.shared
+    @ObservedObject private var ocrHistory = OCRHistoryManager.shared
 
     @State private var isInstallingHelper = false
     @State private var helperInstallMessage: String?
@@ -327,6 +329,7 @@ public struct PopoverContentView: View {
         case caffeine
         case battery
         case gatekeeper
+        case ocr
     }
 
     private var activeQuickActions: [QuickActionItem] {
@@ -337,6 +340,7 @@ public struct PopoverContentView: View {
         if settings.popoverShowCaffeine { items.append(.caffeine) }
         if settings.popoverShowBattery && batteryMonitor.hasBattery { items.append(.battery) }
         if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
+        if settings.popoverShowOCR { items.append(.ocr) }
         return items
     }
 
@@ -374,6 +378,61 @@ public struct PopoverContentView: View {
             batteryChargeLimitRow
         case .gatekeeper:
             gatekeeperRow
+        case .ocr:
+            ocrRow
+        }
+    }
+
+    // MARK: - Quick Action Row Views
+    private var ocrRow: some View {
+        HStack {
+            Image(systemName: "text.viewfinder")
+                .foregroundStyle(.blue)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("屏幕文字识别")
+                    .font(.system(size: 12, weight: .medium))
+                if let status = ocr.statusMessage {
+                    Text(status)
+                        .font(.system(size: 10))
+                        .foregroundColor(.blue)
+                } else if let latest = ocr.latestResult {
+                    Text(latest.text.replacingOccurrences(of: "\n", with: " "))
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                } else {
+                    Text("选区截图识字 · 二维码解析")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+            Spacer()
+
+            HStack(spacing: 6) {
+                Button(action: {
+                    StatusBarManager.shared.closePopover()
+                    OCRHistoryWindowController.shared.show()
+                }) {
+                    Image(systemName: "clock.arrow.circlepath")
+                        .font(.system(size: 11))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .help("查看识别历史记录")
+
+                Button(action: {
+                    ocr.startCaptureAndRecognize()
+                }) {
+                    Text("截屏识字")
+                        .font(.system(size: 11, weight: .semibold))
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 3)
+                }
+                .buttonStyle(.borderedProminent)
+                .controlSize(.small)
+                .tint(.blue)
+            }
         }
     }
 

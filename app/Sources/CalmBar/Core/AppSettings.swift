@@ -123,6 +123,35 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(batteryAutoDischargeEnabled, forKey: "batteryAutoDischargeEnabled") }
     }
 
+    // MARK: - OCR (Vision Text Recognition) Settings
+    @Published public var ocrQualityAccurate: Bool {
+        didSet { defaults.set(ocrQualityAccurate, forKey: "ocrQualityAccurate") }
+    }
+    @Published public var ocrLanguageCode: String {
+        didSet { defaults.set(ocrLanguageCode, forKey: "ocrLanguageCode") }
+    }
+    @Published public var ocrAutoCopyToClipboard: Bool {
+        didSet { defaults.set(ocrAutoCopyToClipboard, forKey: "ocrAutoCopyToClipboard") }
+    }
+    @Published public var ocrPlaySound: Bool {
+        didSet { defaults.set(ocrPlaySound, forKey: "ocrPlaySound") }
+    }
+    @Published public var ocrShowFloatingPreview: Bool {
+        didSet { defaults.set(ocrShowFloatingPreview, forKey: "ocrShowFloatingPreview") }
+    }
+    @Published public var ocrAutoDismiss: Bool {
+        didSet { defaults.set(ocrAutoDismiss, forKey: "ocrAutoDismiss") }
+    }
+    @Published public var ocrAutoDismissDelay: Double {
+        didSet { defaults.set(ocrAutoDismissDelay, forKey: "ocrAutoDismissDelay") }
+    }
+    @Published public var ocrKeepLineBreaks: Bool {
+        didSet { defaults.set(ocrKeepLineBreaks, forKey: "ocrKeepLineBreaks") }
+    }
+    @Published public var ocrMaxHistoryCount: Int {
+        didSet { defaults.set(ocrMaxHistoryCount, forKey: "ocrMaxHistoryCount") }
+    }
+
     // MARK: - General Settings
     @Published public var launchAtLogin: Bool {
         didSet {
@@ -152,6 +181,9 @@ public final class AppSettings: ObservableObject {
     }
     @Published public var popoverShowGatekeeper: Bool {
         didSet { defaults.set(popoverShowGatekeeper, forKey: "popoverShowGatekeeper") }
+    }
+    @Published public var popoverShowOCR: Bool {
+        didSet { defaults.set(popoverShowOCR, forKey: "popoverShowOCR") }
     }
 
     private init() {
@@ -197,6 +229,16 @@ public final class AppSettings: ObservableObject {
         self.batteryTopUpActive = defaults.object(forKey: "batteryTopUpActive") as? Bool ?? false
         self.batteryAutoDischargeEnabled = defaults.object(forKey: "batteryAutoDischargeEnabled") as? Bool ?? false
 
+        self.ocrQualityAccurate = defaults.object(forKey: "ocrQualityAccurate") as? Bool ?? true
+        self.ocrLanguageCode = defaults.string(forKey: "ocrLanguageCode") ?? "auto"
+        self.ocrAutoCopyToClipboard = defaults.object(forKey: "ocrAutoCopyToClipboard") as? Bool ?? true
+        self.ocrPlaySound = defaults.object(forKey: "ocrPlaySound") as? Bool ?? true
+        self.ocrShowFloatingPreview = defaults.object(forKey: "ocrShowFloatingPreview") as? Bool ?? true
+        self.ocrAutoDismiss = defaults.object(forKey: "ocrAutoDismiss") as? Bool ?? true
+        self.ocrAutoDismissDelay = defaults.object(forKey: "ocrAutoDismissDelay") as? Double ?? 10.0
+        self.ocrKeepLineBreaks = defaults.object(forKey: "ocrKeepLineBreaks") as? Bool ?? true
+        self.ocrMaxHistoryCount = defaults.object(forKey: "ocrMaxHistoryCount") as? Int ?? 100
+
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
 
         self.popoverShowGauges = defaults.object(forKey: "popoverShowGauges") as? Bool ?? true
@@ -206,6 +248,7 @@ public final class AppSettings: ObservableObject {
         self.popoverShowCaffeine = defaults.object(forKey: "popoverShowCaffeine") as? Bool ?? true
         self.popoverShowBattery = defaults.object(forKey: "popoverShowBattery") as? Bool ?? true
         self.popoverShowGatekeeper = defaults.object(forKey: "popoverShowGatekeeper") as? Bool ?? true
+        self.popoverShowOCR = defaults.object(forKey: "popoverShowOCR") as? Bool ?? true
     }
 }
 
