@@ -99,23 +99,23 @@ CalmBar/
 
 ---
 
-## 🚀 编译与运行指南
+## 🚀 安装与启动方式
 
-### 环境要求
-* macOS 14.0 (Sonoma) 或更高版本 (兼容 macOS 15 Sequoia)
-* Xcode 15.0+ 或 Swift 6.0+ 命令行工具
+### 1. 下载与安装
+下载 Release 发布的 `CalmBar.app`，将其拖入 `/Applications`（应用程序）文件夹中即可。
 
-### 一键构建与启动
+### 2. 首次运行授权（绕过 Gatekeeper 隔离）
+由于本项目为个人独立开源软件，未集成 Apple 商业付费证书，在 macOS 上直接双击打开时，系统安全机制（Gatekeeper）可能会拦截并提示 **“应用程序已损坏，无法打开”** 或 **“无法验证开发者”**。
 
-在项目终端中执行以下命令即可完成 Release 构建与 App 打包：
+在终端（Terminal）中执行以下命令移除系统的隔离属性即可正常运行：
 
 ```bash
-cd app
-./build_app.sh
-open ./build/CalmBar.app
+sudo xattr -rd com.apple.quarantine /Applications/CalmBar.app
 ```
 
-构建脚本会自动生成 `./build/CalmBar.app` 并完成本地安全签名。
+> 💡 **提示**：
+> * 若应用放置在其他目录，请将路径替换为实际的 `CalmBar.app` 文件路径。
+> * CalmBar 内部的 **「应用去隔离与签名」** 功能页面也支持直接拖拽任意 App 一键执行该修复操作。
 
 ---
 
