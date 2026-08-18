@@ -1035,6 +1035,24 @@ public struct SettingsView: View {
                         Text("整合硬件温控 (AirPulse)、菜单栏收纳 (Hidden Bar)、滚动手势解耦 (Scroll Reverser)、媒体启动拦截 (noTunes)、防休眠与防离开 (Caffeine)、电池充电上限 (Aidente) 及应用去隔离授权的全能 macOS 菜单栏综合增强套件。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
+
+                        Divider()
+                        HStack(spacing: 6) {
+                            Text("开源项目与源码：")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+
+                            if let url = URL(string: "https://github.com/chao-eng/CalmBar") {
+                                Link(destination: url) {
+                                    HStack(spacing: 4) {
+                                        Text("https://github.com/chao-eng/CalmBar")
+                                            .font(.system(size: 11))
+                                        Image(systemName: "arrow.up.forward.square")
+                                            .font(.system(size: 10))
+                                    }
+                                }
+                            }
+                        }
                     }
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)

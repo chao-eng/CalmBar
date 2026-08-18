@@ -132,9 +132,10 @@ open ./build/CalmBar.app
 
 ---
 
-## 📄 开源许可证
+## 📄 开源许可证与仓库
 
-本项目基于 [Apache License 2.0](LICENSE) 许可证开源。
+* **GitHub 仓库**：[https://github.com/chao-eng/CalmBar](https://github.com/chao-eng/CalmBar)
+* **开源协议**：本项目基于 [Apache License 2.0](LICENSE) 许可证开源。
 
 特别致谢开源社区优秀项目的启发与参考：
 * [Aidente](https://github.com/aidente) (SMC Battery Charging Control)
