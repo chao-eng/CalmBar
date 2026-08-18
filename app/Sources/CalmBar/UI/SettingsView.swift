@@ -60,49 +60,33 @@ public struct SettingsView: View {
     public init() {}
 
     public var body: some View {
-        VStack(spacing: 12) {
-            // Top Tab Navigation Bar (Icons Only)
-            HStack(spacing: 6) {
-                ForEach(SettingsTab.allCases) { tab in
-                    Button(action: {
-                        selectedTab = tab
-                        statusBarManager.selectedSettingsTab = tab
-                    }) {
-                        Image(systemName: tab.icon)
-                            .font(.system(size: 15, weight: selectedTab == tab ? .semibold : .regular))
-                            .frame(maxWidth: .infinity, minHeight: 32)
-                            .background(
-                                selectedTab == tab
-                                    ? Color.accentColor.opacity(0.18)
-                                    : Color.clear
+        VStack(spacing: 14) {
+            // Top Tab Navigation Bar (Dynamic Expandable Capsule)
+            HStack {
+                Spacer()
+                HStack(spacing: 3) {
+                    ForEach(SettingsTab.allCases) { tab in
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                selectedTab = tab
+                                statusBarManager.selectedSettingsTab = tab
+                            }
+                        }) {
+                            SettingsTabItemView(
+                                iconName: tab.icon,
+                                title: tab.titleZH,
+                                isSelected: selectedTab == tab
                             )
-                            .foregroundStyle(
-                                selectedTab == tab
-                                    ? Color.accentColor
-                                    : Color.secondary
-                            )
-                            .cornerRadius(8)
-                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help(tab.titleZH)
                     }
-                    .buttonStyle(.plain)
-                    .help(tab.titleZH)
                 }
-            }
-            .padding(4)
-            .background(Color.primary.opacity(0.04))
-            .cornerRadius(10)
-
-            // Current Active Tab Title
-            HStack(spacing: 6) {
-                Image(systemName: selectedTab.icon)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundStyle(Color.accentColor)
-                Text(selectedTab.titleZH)
-                    .font(.system(size: 13, weight: .bold))
+                .padding(4)
+                .background(Color.primary.opacity(0.05))
+                .clipShape(Capsule())
                 Spacer()
             }
-            .padding(.horizontal, 4)
-            .padding(.top, 2)
 
             Divider()
 
@@ -132,7 +116,9 @@ public struct SettingsView: View {
         .padding(16)
         .frame(width: 660, height: 560)
         .onChange(of: statusBarManager.selectedSettingsTab) { _, newTab in
-            selectedTab = newTab
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                selectedTab = newTab
+            }
         }
     }
 
@@ -1062,4 +1048,35 @@ public struct SettingsView: View {
 private struct AlertItem: Identifiable {
     let id = UUID()
     let message: String
+}
+
+private struct SettingsTabItemView: View {
+    let iconName: String
+    let title: String
+    let isSelected: Bool
+
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: iconName)
+                .font(.system(size: 14, weight: isSelected ? .bold : .medium))
+                .frame(width: 18, height: 18)
+
+            // 只有选中时才显示文字
+            if isSelected {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    // 确保文字在动画收缩时不会截断
+                    .fixedSize()
+                    .transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
+        }
+        .padding(.horizontal, isSelected ? 12 : 8)
+        .padding(.vertical, 6)
+        // 选中的胶囊背景
+        .background(isSelected ? Color.accentColor.opacity(0.15) : Color.clear)
+        .foregroundColor(isSelected ? .accentColor : .secondary)
+        .clipShape(Capsule())
+        // 给整个 HStack 加上春天的回弹动画，极具苹果原生质感
+        .animation(.spring(response: 0.3, dampingFraction: 0.7), value: isSelected)
+    }
 }
