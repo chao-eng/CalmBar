@@ -119,8 +119,13 @@ public final class BatteryMonitor: ObservableObject {
         }
 
         if let tempRaw = dict["Temperature"] as? Double {
-            // Temperature is in 1/100 of Celsius (e.g. 2950 = 29.50°C)
-            self.temperatureCelsius = tempRaw / 100.0
+            // Temperature in IOKit AppleSmartBattery is in DeciKelvin (0.1K), e.g. 2982 = 298.2K = 25.05°C
+            if tempRaw > 500 {
+                let celsius = (tempRaw / 10.0) - 273.15
+                self.temperatureCelsius = max(0, min(100, (celsius * 10).rounded() / 10))
+            } else {
+                self.temperatureCelsius = tempRaw / 100.0
+            }
         }
 
         if let condition = dict["Condition"] as? String {

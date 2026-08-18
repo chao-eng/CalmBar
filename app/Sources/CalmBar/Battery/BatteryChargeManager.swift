@@ -38,6 +38,7 @@ public final class BatteryChargeManager: ObservableObject {
     @Published public private(set) var lastStatusMessage: String = ""
     @Published public private(set) var isSupportedByHardware: Bool = true
 
+    private var hasReachedChargeLimit: Bool = false
     private var cancellables = Set<AnyCancellable>()
     private var evaluateTimer: Timer?
 
@@ -114,6 +115,7 @@ public final class BatteryChargeManager: ObservableObject {
         guard settings.batteryChargeLimitEnabled else {
             self.operationStatus = .disabled
             self.lastStatusMessage = "系统默认托管 (\(battery.currentPercentage)%)"
+            self.hasReachedChargeLimit = false
             applyInhibition(false)
             applyForceDischarge(false)
             return
@@ -125,6 +127,7 @@ public final class BatteryChargeManager: ObservableObject {
         let autoDischarge = settings.batteryAutoDischargeEnabled
 
         if battery.currentPercentage > targetLimit {
+            self.hasReachedChargeLimit = true
             if autoDischarge {
                 // Auto discharge mode: cut adapter power to drain on battery
                 applyInhibition(false)
@@ -139,12 +142,14 @@ public final class BatteryChargeManager: ObservableObject {
                 self.lastStatusMessage = "已达上限 \(targetLimit)% · 旁路供电"
             }
         } else if battery.currentPercentage == targetLimit {
+            self.hasReachedChargeLimit = true
             // Exactly at limit: stop discharging, keep bypass
             applyForceDischarge(false)
             applyInhibition(true)
             self.operationStatus = .limitedAndBypassed
             self.lastStatusMessage = "已达上限 \(targetLimit)% · 旁路供电"
         } else if battery.currentPercentage <= lowerBound {
+            self.hasReachedChargeLimit = false
             // Below lower bound: allow charging, stop discharge
             applyForceDischarge(false)
             applyInhibition(false)
@@ -153,7 +158,8 @@ public final class BatteryChargeManager: ObservableObject {
         } else {
             // In sailing window (lowerBound < currentPercentage < targetLimit)
             applyForceDischarge(false)
-            if isChargingInhibited {
+            if settings.batterySailingModeEnabled && (self.hasReachedChargeLimit || self.isChargingInhibited) {
+                self.hasReachedChargeLimit = true
                 self.operationStatus = .sailing
                 self.lastStatusMessage = "巡航保护 (\(battery.currentPercentage)% / \(targetLimit)%)"
                 applyInhibition(true)

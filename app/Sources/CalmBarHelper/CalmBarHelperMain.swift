@@ -43,6 +43,7 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
             self.lock.unlock()
             if remaining == 0 {
                 try? self.getController().restoreSystemControl()
+                try? self.getBattery().resetToDefaults()
             }
         }
         newConnection.resume()
@@ -178,6 +179,12 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
                 return
             }
             try b.setChargingInhibited(inhibited)
+            // Verify applied value matching Aidente ChargingHelper
+            let applied = (try? b.getChargingInhibited()) ?? inhibited
+            if applied != inhibited {
+                reply(false, "SMC 未接受充电阻断状态变更")
+                return
+            }
             reply(true, nil)
         } catch {
             reply(false, error.localizedDescription)
@@ -192,6 +199,11 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
                 return
             }
             try b.setForceDischarging(enabled)
+            let applied = (try? b.getForceDischarging()) ?? enabled
+            if applied != enabled {
+                reply(false, "SMC 未接受强制放电状态变更")
+                return
+            }
             reply(true, nil)
         } catch {
             reply(false, error.localizedDescription)
