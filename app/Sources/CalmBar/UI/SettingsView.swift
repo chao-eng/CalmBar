@@ -986,40 +986,76 @@ public struct SettingsView: View {
 
     // MARK: - General Tab
     private var generalTab: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            GroupBox(label: Label("启动与外观", systemImage: "gearshape")) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Toggle("登录时自动启动 CalmBar", isOn: $settings.launchAtLogin)
-                    Toggle("在菜单栏图标旁实时显示 SoC 温度", isOn: $settings.showTempInMenuBar)
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                GroupBox(label: Label("启动与外观", systemImage: "gearshape")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("登录时自动启动 CalmBar", isOn: $settings.launchAtLogin)
+                        Toggle("在菜单栏图标旁实时显示 SoC 温度", isOn: $settings.showTempInMenuBar)
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(8)
-            }
 
-            GroupBox(label: Label("关于 CalmBar", systemImage: "info.circle")) {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "wind")
-                            .font(.system(size: 28, weight: .bold))
-                            .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("CalmBar (MacPulse)")
-                                .font(.system(size: 14, weight: .bold))
-                            Text("Version 1.0.0 (Native Swift 6 & SwiftUI)")
-                                .font(.system(size: 11))
-                                .foregroundColor(.secondary)
+                GroupBox(label: Label("任务栏左键面板显示项目", systemImage: "list.bullet.rectangle")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("自定义左键点击菜单栏图标时在面板中展示的功能模块（风扇控制模块作为核心默认常驻）：")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 12) {
+                            Toggle(isOn: $settings.popoverShowGauges) {
+                                Label("硬件温度仪表盘", systemImage: "gauge.with.needle")
+                            }
+                            Toggle(isOn: $settings.popoverShowMenuBar) {
+                                Label("菜单栏图标收纳", systemImage: "menubar.rectangle")
+                            }
+                            Toggle(isOn: $settings.popoverShowScrollReverser) {
+                                Label("鼠标自然滚动解耦", systemImage: "computermouse.fill")
+                            }
+                            Toggle(isOn: $settings.popoverShowNoTunes) {
+                                Label("Apple Music 启动拦截", systemImage: "music.note")
+                            }
+                            Toggle(isOn: $settings.popoverShowCaffeine) {
+                                Label("系统防休眠 (保持清醒)", systemImage: "cup.and.saucer.fill")
+                            }
+                            Toggle(isOn: $settings.popoverShowBattery) {
+                                Label("电池充电上限控制", systemImage: "battery.100.bolt")
+                            }
+                            Toggle(isOn: $settings.popoverShowGatekeeper) {
+                                Label("软件去隔离与签名授权", systemImage: "lock.shield.fill")
+                            }
                         }
                     }
-                    Divider()
-                    Text("整合硬件温控 (AirPulse)、菜单栏收纳 (Hidden Bar)、滚动手势解耦 (Scroll Reverser)、媒体启动拦截 (noTunes)、防休眠与防离开 (Caffeine)、电池充电上限 (Aidente) 及应用去隔离授权的全能 macOS 菜单栏综合增强套件。")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
-                .padding(8)
-            }
 
-            Spacer()
+                GroupBox(label: Label("关于 CalmBar", systemImage: "info.circle")) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: "wind")
+                                .font(.system(size: 28, weight: .bold))
+                                .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("CalmBar (MacPulse)")
+                                    .font(.system(size: 14, weight: .bold))
+                                Text("Version 1.0.0 (Native Swift 6 & SwiftUI)")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        Divider()
+                        Text("整合硬件温控 (AirPulse)、菜单栏收纳 (Hidden Bar)、滚动手势解耦 (Scroll Reverser)、媒体启动拦截 (noTunes)、防休眠与防离开 (Caffeine)、电池充电上限 (Aidente) 及应用去隔离授权的全能 macOS 菜单栏综合增强套件。")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(10)
         }
-        .padding(10)
     }
 }
 

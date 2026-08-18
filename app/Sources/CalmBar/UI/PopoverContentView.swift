@@ -56,7 +56,9 @@ public struct PopoverContentView: View {
         VStack(spacing: 12) {
             headerView
             permissionBanners
-            gaugesSection
+            if settings.popoverShowGauges {
+                gaugesSection
+            }
             fanControlSection
             quickActionsSection
             footerView
@@ -317,250 +319,295 @@ public struct PopoverContentView: View {
         }
     }
 
-    // MARK: - Quick Actions: Menu Bar & Scroll Reverser
+    // MARK: - Quick Action Item Enum
+    private enum QuickActionItem {
+        case menuBar
+        case scrollReverser
+        case noTunes
+        case caffeine
+        case battery
+        case gatekeeper
+    }
+
+    private var activeQuickActions: [QuickActionItem] {
+        var items: [QuickActionItem] = []
+        if settings.popoverShowMenuBar { items.append(.menuBar) }
+        if settings.popoverShowScrollReverser { items.append(.scrollReverser) }
+        if settings.popoverShowNoTunes { items.append(.noTunes) }
+        if settings.popoverShowCaffeine { items.append(.caffeine) }
+        if settings.popoverShowBattery && batteryMonitor.hasBattery { items.append(.battery) }
+        if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
+        return items
+    }
+
+    // MARK: - Quick Actions Section
+    @ViewBuilder
     private var quickActionsSection: some View {
-        GroupBox {
-            VStack(spacing: 8) {
-                // Menu Bar Collapse/Expand Row
-                HStack {
-                    Image(systemName: "menubar.rectangle")
-                        .foregroundStyle(.indigo)
-                        .frame(width: 20)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("菜单栏图标收纳")
-                            .font(.system(size: 12, weight: .medium))
-                        Text(menuBar.isCollapsed ? "当前处于收纳折叠状态" : "当前处于展开显示状态")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Button(action: {
-                        menuBar.toggleExpandCollapse()
-                    }) {
-                        Text(menuBar.isCollapsed ? "展开" : "折叠")
-                            .font(.system(size: 11, weight: .semibold))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                    }
-                    .buttonStyle(.borderedProminent)
-                    .controlSize(.small)
-                    .tint(.accentColor)
-                }
-
-                Divider()
-
-                // Scroll Reverser Row
-                HStack {
-                    Image(systemName: "computermouse.fill")
-                        .foregroundStyle(.teal)
-                        .frame(width: 20)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("外接鼠标自然滚动解耦")
-                            .font(.system(size: 12, weight: .medium))
-                        Text(settings.scrollReverserEnabled ? "鼠标已反转 (触控板保持原生)" : "已停用")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Toggle("", isOn: $settings.scrollReverserEnabled)
-                        .toggleStyle(.switch)
-                        .labelsHidden()
-                        .controlSize(.mini)
-                        .tint(.accentColor)
-                }
-
-                Divider()
-
-                // Apple Music Blocker Row
-                HStack {
-                    NoTunesIconView(size: 20)
-                        .frame(width: 20)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("Apple Music 启动拦截")
-                            .font(.system(size: 12, weight: .medium))
-                        Text(settings.noTunesEnabled ? "已启用防误触拉起" : "已暂停拦截")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Toggle("", isOn: $settings.noTunesEnabled)
-                        .toggleStyle(.switch)
-                        .labelsHidden()
-                        .controlSize(.mini)
-                        .tint(.accentColor)
-                }
-
-                Divider()
-
-                // Caffeine (Keep Awake) Row
-                HStack {
-                    CaffeineIconView(size: 20, isActive: caffeine.isActive)
-                        .frame(width: 20)
-                    VStack(alignment: .leading, spacing: 1) {
-                        HStack(spacing: 4) {
-                            Text("系统防休眠 (保持清醒)")
-                                .font(.system(size: 12, weight: .medium))
-                            if caffeine.isActive {
-                                Text(caffeine.timeRemaining != nil ? "\(caffeine.formattedTimeRemaining())" : "无限期")
-                                    .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                                    .padding(.horizontal, 5)
-                                    .padding(.vertical, 1.5)
-                                    .background(Color.brown.opacity(0.12))
-                                    .foregroundStyle(Color.brown)
-                                    .cornerRadius(3)
-                            }
-                        }
-                        Text(caffeine.isActive ? (settings.caffeineKeepAppsActive ? "已阻止系统休眠 · 微动防离开工作中" : "已阻止系统与显示器休眠") : "点击开启防休眠 (支持定时)")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-
-                    Menu {
-                        Button("无限期保持清醒") {
-                            caffeine.activate(withTimeout: nil)
-                        }
-                        Divider()
-                        Button("保持清醒 5 分钟") {
-                            caffeine.activate(withTimeout: 5 * 60)
-                        }
-                        Button("保持清醒 15 分钟") {
-                            caffeine.activate(withTimeout: 15 * 60)
-                        }
-                        Button("保持清醒 30 分钟") {
-                            caffeine.activate(withTimeout: 30 * 60)
-                        }
-                        Button("保持清醒 1 小时") {
-                            caffeine.activate(withTimeout: 60 * 60)
-                        }
-                        Button("保持清醒 2 小时") {
-                            caffeine.activate(withTimeout: 120 * 60)
-                        }
-                        Button("保持清醒 5 小时") {
-                            caffeine.activate(withTimeout: 300 * 60)
-                        }
-                        if caffeine.isActive {
+        let items = activeQuickActions
+        if !items.isEmpty {
+            GroupBox {
+                VStack(spacing: 8) {
+                    ForEach(Array(items.enumerated()), id: \.offset) { index, item in
+                        if index > 0 {
                             Divider()
-                            Button("停止保持清醒", role: .destructive) {
-                                caffeine.deactivate()
-                            }
                         }
-                    } label: {
-                        Image(systemName: "timer")
-                            .font(.system(size: 12))
-                    }
-                    .menuStyle(.borderlessButton)
-                    .frame(width: 18)
-                    .help("选择防休眠时长")
-
-                    Toggle("", isOn: Binding(
-                        get: { caffeine.isActive },
-                        set: { if $0 { caffeine.toggle() } else { caffeine.deactivate() } }
-                    ))
-                    .toggleStyle(.switch)
-                    .labelsHidden()
-                    .controlSize(.mini)
-                    .tint(.accentColor)
-                }
-
-                if batteryMonitor.hasBattery {
-                    Divider()
-
-                    // Battery Charge Limit Row
-                    HStack {
-                        BatteryIconView(
-                            size: 20,
-                            isCharging: batteryMonitor.isCharging,
-                            isBypassed: chargeManager.isChargingInhibited,
-                            isDischarging: chargeManager.operationStatus == .discharging
-                        )
-                        .frame(width: 20)
-
-                        VStack(alignment: .leading, spacing: 1) {
-                            HStack(spacing: 4) {
-                                Text("电池充电上限 (\(settings.batteryChargeLimit)%)")
-                                    .font(.system(size: 12, weight: .medium))
-
-                                if settings.batteryTopUpActive {
-                                    Text("临时充至 100%")
-                                        .font(.system(size: 9, weight: .semibold))
-                                        .padding(.horizontal, 4)
-                                        .padding(.vertical, 1)
-                                        .background(Color.blue.opacity(0.15))
-                                        .foregroundStyle(.blue)
-                                        .cornerRadius(3)
-                                } else if chargeManager.operationStatus == .discharging {
-                                    Text("正在放电")
-                                        .font(.system(size: 9, weight: .semibold))
-                                        .padding(.horizontal, 4)
-                                        .padding(.vertical, 1)
-                                        .background(Color.accentColor.opacity(0.12))
-                                        .foregroundStyle(Color.accentColor)
-                                        .cornerRadius(3)
-                                } else if chargeManager.isChargingInhibited {
-                                    Text("旁路供电")
-                                        .font(.system(size: 9, weight: .semibold))
-                                        .padding(.horizontal, 4)
-                                        .padding(.vertical, 1)
-                                        .background(Color.accentColor.opacity(0.12))
-                                        .foregroundStyle(Color.accentColor)
-                                        .cornerRadius(3)
-                                }
-                            }
-                            Text(chargeManager.lastStatusMessage.isEmpty ? "电量 \(batteryMonitor.currentPercentage)%" : chargeManager.lastStatusMessage)
-                                .font(.system(size: 10))
-                                .foregroundColor(.secondary)
-                        }
-                        Spacer()
-
-                        if settings.batteryChargeLimitEnabled {
-                            Button(action: {
-                                chargeManager.toggleTopUp()
-                            }) {
-                                Text(settings.batteryTopUpActive ? "取消满电" : "充至100%")
-                                    .font(.system(size: 9, weight: .medium))
-                                    .padding(.horizontal, 4)
-                                    .padding(.vertical, 2)
-                            }
-                            .buttonStyle(.bordered)
-                            .controlSize(.mini)
-                        }
-
-                        Toggle("", isOn: $settings.batteryChargeLimitEnabled)
-                            .toggleStyle(.switch)
-                            .labelsHidden()
-                            .controlSize(.mini)
-                            .tint(.accentColor)
+                        quickActionRowView(for: item)
                     }
                 }
-
-                Divider()
-
-                // Gatekeeper App Unlocker Row
-                HStack {
-                    GatekeeperIconView(size: 20)
-                        .frame(width: 20)
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text("软件去隔离与签名授权")
-                            .font(.system(size: 12, weight: .medium))
-                        Text("修复未签名或损坏应用提示")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                    }
-                    Spacer()
-                    Button(action: {
-                        openSettingsAction(.gatekeeper)
-                    }) {
-                        Text("去授权")
-                            .font(.system(size: 11, weight: .medium))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 3)
-                    }
-                    .buttonStyle(.bordered)
-                    .controlSize(.small)
-                }
+                .padding(4)
             }
-            .padding(4)
+        }
+    }
+
+    @ViewBuilder
+    private func quickActionRowView(for item: QuickActionItem) -> some View {
+        switch item {
+        case .menuBar:
+            menuBarRow
+        case .scrollReverser:
+            scrollReverserRow
+        case .noTunes:
+            noTunesRow
+        case .caffeine:
+            caffeineRow
+        case .battery:
+            batteryChargeLimitRow
+        case .gatekeeper:
+            gatekeeperRow
+        }
+    }
+
+    // MARK: - Quick Action Row Views
+    private var menuBarRow: some View {
+        HStack {
+            Image(systemName: "menubar.rectangle")
+                .foregroundStyle(.indigo)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("菜单栏图标收纳")
+                    .font(.system(size: 12, weight: .medium))
+                Text(menuBar.isCollapsed ? "当前处于收纳折叠状态" : "当前处于展开显示状态")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Button(action: {
+                menuBar.toggleExpandCollapse()
+            }) {
+                Text(menuBar.isCollapsed ? "展开" : "折叠")
+                    .font(.system(size: 11, weight: .semibold))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .tint(.accentColor)
+        }
+    }
+
+    private var scrollReverserRow: some View {
+        HStack {
+            Image(systemName: "computermouse.fill")
+                .foregroundStyle(.teal)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("外接鼠标自然滚动解耦")
+                    .font(.system(size: 12, weight: .medium))
+                Text(settings.scrollReverserEnabled ? "鼠标已反转 (触控板保持原生)" : "已停用")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Toggle("", isOn: $settings.scrollReverserEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
+                .tint(.accentColor)
+        }
+    }
+
+    private var noTunesRow: some View {
+        HStack {
+            NoTunesIconView(size: 20)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Apple Music 启动拦截")
+                    .font(.system(size: 12, weight: .medium))
+                Text(settings.noTunesEnabled ? "已启用防误触拉起" : "已暂停拦截")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Toggle("", isOn: $settings.noTunesEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
+                .tint(.accentColor)
+        }
+    }
+
+    private var caffeineRow: some View {
+        HStack {
+            CaffeineIconView(size: 20, isActive: caffeine.isActive)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 4) {
+                    Text("系统防休眠 (保持清醒)")
+                        .font(.system(size: 12, weight: .medium))
+                    if caffeine.isActive {
+                        Text(caffeine.timeRemaining != nil ? "\(caffeine.formattedTimeRemaining())" : "无限期")
+                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 1.5)
+                            .background(Color.brown.opacity(0.12))
+                            .foregroundStyle(Color.brown)
+                            .cornerRadius(3)
+                    }
+                }
+                Text(caffeine.isActive ? (settings.caffeineKeepAppsActive ? "已阻止系统休眠 · 微动防离开工作中" : "已阻止系统与显示器休眠") : "点击开启防休眠 (支持定时)")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+
+            Menu {
+                Button("无限期保持清醒") {
+                    caffeine.activate(withTimeout: nil)
+                }
+                Divider()
+                Button("保持清醒 5 分钟") {
+                    caffeine.activate(withTimeout: 5 * 60)
+                }
+                Button("保持清醒 15 分钟") {
+                    caffeine.activate(withTimeout: 15 * 60)
+                }
+                Button("保持清醒 30 分钟") {
+                    caffeine.activate(withTimeout: 30 * 60)
+                }
+                Button("保持清醒 1 小时") {
+                    caffeine.activate(withTimeout: 60 * 60)
+                }
+                Button("保持清醒 2 小时") {
+                    caffeine.activate(withTimeout: 120 * 60)
+                }
+                Button("保持清醒 5 小时") {
+                    caffeine.activate(withTimeout: 300 * 60)
+                }
+                if caffeine.isActive {
+                    Divider()
+                    Button("停止保持清醒", role: .destructive) {
+                        caffeine.deactivate()
+                    }
+                }
+            } label: {
+                Image(systemName: "timer")
+                    .font(.system(size: 12))
+            }
+            .menuStyle(.borderlessButton)
+            .frame(width: 18)
+            .help("选择防休眠时长")
+
+            Toggle("", isOn: Binding(
+                get: { caffeine.isActive },
+                set: { if $0 { caffeine.toggle() } else { caffeine.deactivate() } }
+            ))
+            .toggleStyle(.switch)
+            .labelsHidden()
+            .controlSize(.mini)
+            .tint(.accentColor)
+        }
+    }
+
+    private var batteryChargeLimitRow: some View {
+        HStack {
+            BatteryIconView(
+                size: 20,
+                isCharging: batteryMonitor.isCharging,
+                isBypassed: chargeManager.isChargingInhibited,
+                isDischarging: chargeManager.operationStatus == .discharging
+            )
+            .frame(width: 20)
+
+            VStack(alignment: .leading, spacing: 1) {
+                HStack(spacing: 4) {
+                    Text("电池充电上限 (\(settings.batteryChargeLimit)%)")
+                        .font(.system(size: 12, weight: .medium))
+
+                    if settings.batteryTopUpActive {
+                        Text("临时充至 100%")
+                            .font(.system(size: 9, weight: .semibold))
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color.blue.opacity(0.15))
+                            .foregroundStyle(.blue)
+                            .cornerRadius(3)
+                    } else if chargeManager.operationStatus == .discharging {
+                        Text("正在放电")
+                            .font(.system(size: 9, weight: .semibold))
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color.accentColor.opacity(0.12))
+                            .foregroundStyle(Color.accentColor)
+                            .cornerRadius(3)
+                    } else if chargeManager.isChargingInhibited {
+                        Text("旁路供电")
+                            .font(.system(size: 9, weight: .semibold))
+                            .padding(.horizontal, 4)
+                            .padding(.vertical, 1)
+                            .background(Color.accentColor.opacity(0.12))
+                            .foregroundStyle(Color.accentColor)
+                            .cornerRadius(3)
+                    }
+                }
+                Text(chargeManager.lastStatusMessage.isEmpty ? "电量 \(batteryMonitor.currentPercentage)%" : chargeManager.lastStatusMessage)
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+
+            if settings.batteryChargeLimitEnabled {
+                Button(action: {
+                    chargeManager.toggleTopUp()
+                }) {
+                    Text(settings.batteryTopUpActive ? "取消满电" : "充至100%")
+                        .font(.system(size: 9, weight: .medium))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 2)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
+            }
+
+            Toggle("", isOn: $settings.batteryChargeLimitEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
+                .tint(.accentColor)
+        }
+    }
+
+    private var gatekeeperRow: some View {
+        HStack {
+            GatekeeperIconView(size: 20)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("软件去隔离与签名授权")
+                    .font(.system(size: 12, weight: .medium))
+                Text("修复未签名或损坏应用提示")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+            Button(action: {
+                openSettingsAction(.gatekeeper)
+            }) {
+                Text("去授权")
+                    .font(.system(size: 11, weight: .medium))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 3)
+            }
+            .buttonStyle(.bordered)
+            .controlSize(.small)
         }
     }
 

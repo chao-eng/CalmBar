@@ -131,6 +131,29 @@ public final class AppSettings: ObservableObject {
         }
     }
 
+    // MARK: - Popover Left-Click Menu Item Visibility
+    @Published public var popoverShowGauges: Bool {
+        didSet { defaults.set(popoverShowGauges, forKey: "popoverShowGauges") }
+    }
+    @Published public var popoverShowMenuBar: Bool {
+        didSet { defaults.set(popoverShowMenuBar, forKey: "popoverShowMenuBar") }
+    }
+    @Published public var popoverShowScrollReverser: Bool {
+        didSet { defaults.set(popoverShowScrollReverser, forKey: "popoverShowScrollReverser") }
+    }
+    @Published public var popoverShowNoTunes: Bool {
+        didSet { defaults.set(popoverShowNoTunes, forKey: "popoverShowNoTunes") }
+    }
+    @Published public var popoverShowCaffeine: Bool {
+        didSet { defaults.set(popoverShowCaffeine, forKey: "popoverShowCaffeine") }
+    }
+    @Published public var popoverShowBattery: Bool {
+        didSet { defaults.set(popoverShowBattery, forKey: "popoverShowBattery") }
+    }
+    @Published public var popoverShowGatekeeper: Bool {
+        didSet { defaults.set(popoverShowGatekeeper, forKey: "popoverShowGatekeeper") }
+    }
+
     private init() {
         let presetStr = defaults.string(forKey: "fanPreset") ?? FanPreset.smart.rawValue
         self.fanPreset = FanPreset(rawValue: presetStr) ?? .smart
@@ -175,6 +198,14 @@ public final class AppSettings: ObservableObject {
         self.batteryAutoDischargeEnabled = defaults.object(forKey: "batteryAutoDischargeEnabled") as? Bool ?? false
 
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
+
+        self.popoverShowGauges = defaults.object(forKey: "popoverShowGauges") as? Bool ?? true
+        self.popoverShowMenuBar = defaults.object(forKey: "popoverShowMenuBar") as? Bool ?? true
+        self.popoverShowScrollReverser = defaults.object(forKey: "popoverShowScrollReverser") as? Bool ?? true
+        self.popoverShowNoTunes = defaults.object(forKey: "popoverShowNoTunes") as? Bool ?? true
+        self.popoverShowCaffeine = defaults.object(forKey: "popoverShowCaffeine") as? Bool ?? true
+        self.popoverShowBattery = defaults.object(forKey: "popoverShowBattery") as? Bool ?? true
+        self.popoverShowGatekeeper = defaults.object(forKey: "popoverShowGatekeeper") as? Bool ?? true
     }
 }
 
