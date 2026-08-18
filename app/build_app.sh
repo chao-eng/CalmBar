@@ -4,8 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-echo "==> Building CalmBar & CalmBarHelper in Release mode..."
-swift build -c release
+echo "==> Building CalmBar & CalmBarHelper for arm64 (Apple Silicon)..."
+swift build -c release --triple arm64-apple-macosx
+
+echo "==> Building CalmBar & CalmBarHelper for x86_64 (Intel)..."
+swift build -c release --triple x86_64-apple-macosx
 
 APP_NAME="CalmBar"
 HELPER_NAME="CalmBarHelper"
@@ -19,8 +22,17 @@ rm -rf "$APP_BUNDLE"
 mkdir -p "$MACOS"
 mkdir -p "$RESOURCES"
 
-cp "$DIR/.build/arm64-apple-macosx/release/$APP_NAME" "$MACOS/$APP_NAME"
-cp "$DIR/.build/arm64-apple-macosx/release/$HELPER_NAME" "$MACOS/$HELPER_NAME"
+echo "==> Creating Universal Binaries (arm64 + x86_64)..."
+lipo -create \
+    "$DIR/.build/arm64-apple-macosx/release/$APP_NAME" \
+    "$DIR/.build/x86_64-apple-macosx/release/$APP_NAME" \
+    -output "$MACOS/$APP_NAME"
+
+lipo -create \
+    "$DIR/.build/arm64-apple-macosx/release/$HELPER_NAME" \
+    "$DIR/.build/x86_64-apple-macosx/release/$HELPER_NAME" \
+    -output "$MACOS/$HELPER_NAME"
+
 chmod +x "$MACOS/$APP_NAME"
 chmod +x "$MACOS/$HELPER_NAME"
 
