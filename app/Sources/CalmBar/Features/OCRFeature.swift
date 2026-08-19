@@ -24,12 +24,33 @@ public final class OCRFeature: CalmFeature {
             FeatureCommand(
                 id: "ocr.capture",
                 title: "开始屏幕选区识字",
+                subtitle: "框选屏幕区域离线识别文字与二维码",
                 requiredPermission: .screenRecording,
                 action: { [weak self] in
                     self?.manager.startCaptureAndRecognize()
                 }
+            ),
+            FeatureCommand(
+                id: "ocr.history",
+                title: "打开 OCR 历史记录",
+                subtitle: "查看和复制历史识别结果",
+                action: {
+                    OCRHistoryWindowController.shared.show()
+                }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.ocr",
+            featureID: .ocr,
+            title: "屏幕识字",
+            subtitle: manager.isRecognizing ? "识别中" : "就绪",
+            iconName: "text.viewfinder",
+            state: state,
+            isHighlighted: manager.isRecognizing
+        )
     }
 
     public init(manager: OCRManager = .shared) {
@@ -47,6 +68,10 @@ public final class OCRFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {

@@ -54,6 +54,20 @@ public final class FeatureManager: ObservableObject {
         }
     }
 
+    public func refreshAllStates() {
+        for feature in allFeatures() {
+            feature.refreshState()
+        }
+    }
+
+    public func allDashboardItems() -> [FeatureDashboardItem] {
+        allFeatures().compactMap { $0.dashboardItem }
+    }
+
+    public func allCommands() -> [FeatureCommand] {
+        allFeatures().flatMap { $0.commands }
+    }
+
     public func cleanupAll() {
         for feature in allFeatures() {
             feature.cleanup()

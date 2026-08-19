@@ -46,4 +46,31 @@ struct RecoveryCoordinatorTests {
         #expect(coordinator.recentLogs.count == 20)
         #expect(coordinator.recentLogs.allSatisfy { $0.reason == .manual })
     }
+
+    @Test("Test Helper Disconnected Recovery")
+    @MainActor
+    func testHelperDisconnectedRecovery() {
+        let coordinator = RecoveryCoordinator()
+        coordinator.performRecovery(reason: .helperDisconnected)
+
+        #expect(coordinator.recentLogs.count == 1)
+        let log = coordinator.recentLogs.first
+        #expect(log?.reason == .helperDisconnected)
+        #expect(log?.actionsExecuted.contains(.resetHelperConnection) == true)
+        #expect(log?.actionsExecuted.contains(.restoreFanAuto) == true)
+        #expect(log?.actionsExecuted.contains(.restoreBatteryCharging) == true)
+    }
+
+    @Test("Test Feature Level Recovery")
+    @MainActor
+    func testFeatureLevelRecovery() {
+        let coordinator = RecoveryCoordinator()
+        FeatureManager.shared.registerDefaultFeatures()
+
+        coordinator.recoverFeature(id: .thermal)
+        #expect(coordinator.recentLogs.count == 1)
+        let log = coordinator.recentLogs.first
+        #expect(log?.reason == .featureDisabled)
+        #expect(log?.actionsExecuted.contains(.cleanupFeature) == true)
+    }
 }

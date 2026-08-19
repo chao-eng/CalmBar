@@ -24,11 +24,24 @@ public final class CaffeineFeature: CalmFeature {
             FeatureCommand(
                 id: "caffeine.toggle",
                 title: "开启/关闭防休眠",
+                subtitle: "保持系统与显示器常亮",
                 action: { [weak self] in
                     self?.manager.toggle()
                 }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.caffeine",
+            featureID: .caffeine,
+            title: "防休眠",
+            subtitle: manager.isActive ? "已保持清醒" : "已休眠就绪",
+            iconName: "cup.and.saucer.fill",
+            state: state,
+            isHighlighted: manager.isActive
+        )
     }
 
     public init(manager: CaffeineManager = .shared) {
@@ -40,6 +53,10 @@ public final class CaffeineFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {

@@ -24,6 +24,8 @@ public final class BatteryFeature: CalmFeature {
             FeatureCommand(
                 id: "battery.topUp",
                 title: "临时充至 100%",
+                subtitle: "暂时忽略充电限制，充至满电",
+                requiredPermission: .privilegedHelper,
                 action: { [weak self] in
                     self?.manager.toggleTopUp()
                 }
@@ -31,11 +33,25 @@ public final class BatteryFeature: CalmFeature {
             FeatureCommand(
                 id: "battery.restoreDefault",
                 title: "恢复默认充电",
+                subtitle: "恢复系统默认充电逻辑",
+                requiredPermission: .privilegedHelper,
                 action: { [weak self] in
                     self?.manager.restoreDefaultCharging()
                 }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.battery",
+            featureID: .battery,
+            title: "充电保护",
+            subtitle: "\(BatteryMonitor.shared.currentPercentage)%",
+            iconName: "bolt.batteryblock.fill",
+            state: state,
+            isHighlighted: manager.operationStatus == .limitedAndBypassed
+        )
     }
 
     public init(manager: BatteryChargeManager = .shared) {
@@ -47,6 +63,10 @@ public final class BatteryFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {

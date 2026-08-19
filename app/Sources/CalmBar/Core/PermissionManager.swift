@@ -87,6 +87,8 @@ public final class PermissionManager: ObservableObject {
         self.helperInstalled = checkHelper()
         self.screenRecordingGranted = checkScreenRecording()
         self.fullDiskAccessGranted = checkFullDiskAccess()
+
+        FeatureManager.shared.refreshAllStates()
     }
 
     public func isGranted(_ type: PermissionType) -> Bool {

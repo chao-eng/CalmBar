@@ -2,8 +2,10 @@ import SwiftUI
 import CalmBarKit
 
 public struct PopoverContentView: View {
-    @ObservedObject private var thermal = ThermalMonitor.shared
+    @ObservedObject private var dashboard = DashboardViewModel.shared
+    @ObservedObject private var featureManager = FeatureManager.shared
     @ObservedObject private var settings = AppSettings.shared
+    @ObservedObject private var thermal = ThermalMonitor.shared
     @ObservedObject private var menuBar = MenuBarOrganizer.shared
     @ObservedObject private var scroll = ScrollReverserManager.shared
     @ObservedObject private var helper = HelperClient.shared
@@ -11,8 +13,6 @@ public struct PopoverContentView: View {
     @ObservedObject private var batteryMonitor = BatteryMonitor.shared
     @ObservedObject private var chargeManager = BatteryChargeManager.shared
     @ObservedObject private var ocr = OCRManager.shared
-    @ObservedObject private var ocrHistory = OCRHistoryManager.shared
-    @ObservedObject private var clipboardHistory = ClipboardHistoryManager.shared
 
     @State private var isInstallingHelper = false
     @State private var helperInstallMessage: String?
@@ -26,10 +26,10 @@ public struct PopoverContentView: View {
     private var activeFanFraction: Double {
         switch settings.fanPreset {
         case .auto:
-            return thermal.fanSnapshots.first?.percentage ?? 0.25
+            return dashboard.fanSnapshots.first?.percentage ?? 0.25
         case .smart:
             let smart = FanCurveCalculator.fraction(
-                forCelsius: thermal.primaryTemp,
+                forCelsius: dashboard.primaryTemperature,
                 startTemp: Float(settings.smartStartTemp),
                 fullSpeedTemp: Float(settings.smartFullTemp),
                 minFraction: 0.0,
@@ -82,7 +82,7 @@ public struct PopoverContentView: View {
                     .font(.system(size: 14, weight: .bold, design: .rounded))
             }
             Spacer()
-            if !thermal.isSMCConnected {
+            if !dashboard.isSMCConnected {
                 HStack(spacing: 4) {
                     Image(systemName: "exclamationmark.triangle.fill")
                         .foregroundStyle(.orange)
@@ -90,7 +90,7 @@ public struct PopoverContentView: View {
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
-            } else if thermal.currentSafetyAction != .none {
+            } else if dashboard.safetyAction != .none {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill")
                         .foregroundStyle(.red)
@@ -118,14 +118,14 @@ public struct PopoverContentView: View {
     // MARK: - Permission Banners
     @ViewBuilder
     private var permissionBanners: some View {
-        if !helper.isHelperAvailable || helper.needsHelperUpdate {
+        if dashboard.needsHelperAttention {
             HStack {
                 Image(systemName: "lock.shield")
                     .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 1) {
                     Text(helper.needsHelperUpdate ? "特权助手需更新" : "特权助手未激活")
                         .font(.system(size: 11, weight: .semibold))
-                    Text(helper.needsHelperUpdate ? "更新助手以支持电池充电上限阻断" : "温控与充电上限需要特权服务")
+                    Text(dashboard.helperAttentionMessage)
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }
@@ -445,7 +445,7 @@ public struct PopoverContentView: View {
                 Text("剪贴板历史")
                     .font(.system(size: 12, weight: .medium))
                 if settings.clipboardHistoryEnabled {
-                    Text("已记录 \(clipboardHistory.items.count) 条内容")
+                    Text("已记录 \(dashboard.clipboardCount) 条内容")
                         .font(.system(size: 10))
                         .foregroundColor(.secondary)
                 } else {

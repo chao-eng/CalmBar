@@ -18,24 +18,19 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     public func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
 
-        // 1. Setup Status Bar & Popover UI first so macOS knows we are a resident menu bar app
+        // 1. Register and start all default platform features first
+        let featureManager = FeatureManager.shared
+        featureManager.registerDefaultFeatures()
+        featureManager.startAll()
+
+        // 2. Register all commands from Feature layer to CommandCenter
+        CommandCenter.shared.registerFeatureCommands(from: featureManager)
+
+        // 3. Setup Global Coordinators and UI Hosting
         _ = SystemEventCoordinator.shared
         _ = PermissionManager.shared
         _ = StatusBarManager.shared
-        _ = MenuBarOrganizer.shared
-
-        // 2. Setup System Extension Handlers
         _ = HotKeyManager.shared
-        _ = ScrollReverserManager.shared
-        _ = NoTunesManager.shared
-        _ = CaffeineManager.shared
-        _ = BatteryChargeManager.shared
-        _ = ClipboardMonitor.shared
-
-        // 3. Start background thermal monitoring asynchronously after UI is anchored
-        DispatchQueue.main.async {
-            _ = ThermalMonitor.shared
-        }
     }
 
     public func applicationWillTerminate(_ notification: Notification) {

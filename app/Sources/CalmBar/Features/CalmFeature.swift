@@ -10,11 +10,14 @@ public protocol CalmFeature: AnyObject, ObservableObject {
     var state: FeatureState { get }
     var commands: [FeatureCommand] { get }
 
+    var dashboardItem: FeatureDashboardItem? { get }
+
     func start()
     func stop()
     func suspend()
     func resume()
     func cleanup()
+    func refreshState()
 }
 
 public extension CalmFeature {
@@ -23,5 +26,7 @@ public extension CalmFeature {
     func cleanup() {
         stop()
     }
+    func refreshState() {}
     var commands: [FeatureCommand] { [] }
+    var dashboardItem: FeatureDashboardItem? { nil }
 }

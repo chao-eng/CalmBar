@@ -23,13 +23,26 @@ public final class ScrollFeature: CalmFeature {
         [
             FeatureCommand(
                 id: "scroll.toggle",
-                title: "切换滚轮反转",
+                title: "切换鼠标滚轮反转",
+                subtitle: "反转外接鼠标滚轮方向，匹配触控板自然滚动",
                 requiredPermission: .accessibility,
                 action: {
                     AppSettings.shared.scrollReverserEnabled.toggle()
                 }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.scroll",
+            featureID: .scroll,
+            title: "滚轮方向解耦",
+            subtitle: AppSettings.shared.scrollReverserEnabled ? "已启用" : "已停用",
+            iconName: "computermouse.fill",
+            state: state,
+            isHighlighted: AppSettings.shared.scrollReverserEnabled
+        )
     }
 
     public init(manager: ScrollReverserManager = .shared) {
@@ -41,6 +54,10 @@ public final class ScrollFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {

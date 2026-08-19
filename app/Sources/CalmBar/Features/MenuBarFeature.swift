@@ -18,11 +18,24 @@ public final class MenuBarFeature: CalmFeature {
             FeatureCommand(
                 id: "menubar.toggle",
                 title: "展开/折叠菜单栏",
+                subtitle: "隐藏或显示被折叠的副菜单栏图标",
                 action: { [weak self] in
                     self?.manager.toggleExpandCollapse()
                 }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.menubar",
+            featureID: .menuBar,
+            title: "菜单栏收纳",
+            subtitle: manager.isCollapsed ? "已折叠图标" : "已展开全部",
+            iconName: "menubar.rectangle",
+            state: state,
+            isHighlighted: manager.isCollapsed
+        )
     }
 
     public init(manager: MenuBarOrganizer = .shared) {
@@ -34,6 +47,10 @@ public final class MenuBarFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {

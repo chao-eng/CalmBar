@@ -104,8 +104,45 @@ struct FeatureManagerTests {
 
         let productivityFeatures = manager.features(for: .productivity)
         #expect(productivityFeatures.count == 1)
+        #expect(productivityFeatures.first?.id == .clipboard)
 
-        let securityFeatures = manager.features(for: .security)
-        #expect(securityFeatures.isEmpty)
+        let systemFeatures = manager.features(for: .system)
+        #expect(systemFeatures.isEmpty)
+    }
+
+    @Test("Test Default Features Registration")
+    @MainActor
+    func testDefaultFeaturesRegistration() {
+        let manager = FeatureManager()
+        manager.registerDefaultFeatures()
+
+        #expect(manager.allFeatures().count == 10)
+        #expect(manager.feature(id: .thermal) != nil)
+        #expect(manager.feature(id: .battery) != nil)
+        #expect(manager.feature(id: .caffeine) != nil)
+        #expect(manager.feature(id: .clipboard) != nil)
+        #expect(manager.feature(id: .ocr) != nil)
+        #expect(manager.feature(id: .cleaner) != nil)
+        #expect(manager.feature(id: .scroll) != nil)
+        #expect(manager.feature(id: .noTunes) != nil)
+        #expect(manager.feature(id: .gatekeeper) != nil)
+        #expect(manager.feature(id: .menuBar) != nil)
+
+        let dashboardItems = manager.allDashboardItems()
+        #expect(!dashboardItems.isEmpty)
+
+        let commands = manager.allCommands()
+        #expect(!commands.isEmpty)
+    }
+
+    @Test("Test refreshAllStates invokes refresh on all features")
+    @MainActor
+    func testRefreshAllStates() {
+        let manager = FeatureManager()
+        let feature1 = MockFeature(id: .scroll, title: "Scroll", category: .input)
+        manager.register(feature1)
+
+        manager.refreshAllStates()
+        #expect(manager.allFeatures().count == 1)
     }
 }

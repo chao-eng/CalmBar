@@ -16,14 +16,34 @@ public final class ClipboardFeature: CalmFeature {
     public var commands: [FeatureCommand] {
         [
             FeatureCommand(
+                id: "clipboard.history",
+                title: "打开剪贴板历史",
+                subtitle: "查看与搜索剪贴板历史条目",
+                action: {
+                    ClipboardHistoryWindowController.shared.show()
+                }
+            ),
+            FeatureCommand(
                 id: "clipboard.clear",
                 title: "清空剪贴板历史",
+                subtitle: "删除所有未固定的剪贴板记录",
                 isDangerous: true,
                 action: {
                     ClipboardHistoryManager.shared.clearAll()
                 }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.clipboard",
+            featureID: .clipboard,
+            title: "剪贴板",
+            subtitle: "\(ClipboardHistoryManager.shared.items.count) 条记录",
+            iconName: "doc.on.clipboard.fill",
+            state: state
+        )
     }
 
     public init(monitor: ClipboardMonitor = .shared) {
@@ -35,6 +55,10 @@ public final class ClipboardFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {

@@ -24,6 +24,7 @@ public final class CleanerFeature: CalmFeature {
             FeatureCommand(
                 id: "cleaner.scanDev",
                 title: "扫描开发工具链缓存",
+                subtitle: "清理 Xcode, SPM, Gradle, CocoaPods 等缓存",
                 action: { [weak self] in
                     self?.manager.refreshDevCaches()
                 }
@@ -31,11 +32,32 @@ public final class CleanerFeature: CalmFeature {
             FeatureCommand(
                 id: "cleaner.scanApps",
                 title: "扫描已安装应用",
+                subtitle: "分析应用残余与关联数据",
                 action: { [weak self] in
                     self?.manager.refreshAllApps()
                 }
+            ),
+            FeatureCommand(
+                id: "cleaner.scanWorkspaces",
+                title: "扫描孤立工作区",
+                subtitle: "查找无对应代码目录的 IDE 派生数据",
+                action: { [weak self] in
+                    self?.manager.refreshOrphanedWorkspaces()
+                }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.cleaner",
+            featureID: .cleaner,
+            title: "应用与缓存清理",
+            subtitle: manager.isScanningApps || manager.isScanningDev ? "正在扫描" : "就绪",
+            iconName: "trash.fill",
+            state: state,
+            isHighlighted: manager.isScanningApps || manager.isScanningDev
+        )
     }
 
     public init(manager: CleanerManager = .shared) {
@@ -47,6 +69,10 @@ public final class CleanerFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {

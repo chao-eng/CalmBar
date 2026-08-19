@@ -95,12 +95,14 @@ public final class HelperClient: ObservableObject {
             DispatchQueue.main.async {
                 self?.isHelperAvailable = false
                 self?.connection = nil
+                RecoveryCoordinator.shared.performRecovery(reason: .helperDisconnected)
             }
         }
         conn.interruptionHandler = { [weak self] in
             DispatchQueue.main.async {
                 self?.isHelperAvailable = false
                 self?.connection = nil
+                RecoveryCoordinator.shared.performRecovery(reason: .helperDisconnected)
             }
         }
         conn.resume()

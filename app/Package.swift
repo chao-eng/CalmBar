@@ -17,9 +17,14 @@ let package = Package(
             dependencies: [],
             path: "Sources/CalmBarKit"
         ),
+        .target(
+            name: "CommandPaletteKit",
+            dependencies: [],
+            path: "Sources/CommandPaletteKit"
+        ),
         .executableTarget(
             name: "CalmBar",
-            dependencies: ["CalmBarKit"],
+            dependencies: ["CalmBarKit", "CommandPaletteKit"],
             path: "Sources/CalmBar"
         ),
         .executableTarget(
@@ -28,8 +33,13 @@ let package = Package(
             path: "Sources/CalmBarHelper"
         ),
         .testTarget(
+            name: "CommandPaletteKitTests",
+            dependencies: ["CommandPaletteKit"],
+            path: "Tests/CommandPaletteKitTests"
+        ),
+        .testTarget(
             name: "CalmBarTests",
-            dependencies: ["CalmBarKit", "CalmBar"],
+            dependencies: ["CalmBarKit", "CalmBar", "CommandPaletteKit"],
             path: "Tests/CalmBarTests"
         )
     ]

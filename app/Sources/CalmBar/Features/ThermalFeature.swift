@@ -24,12 +24,36 @@ public final class ThermalFeature: CalmFeature {
             FeatureCommand(
                 id: "thermal.restoreAuto",
                 title: "恢复风扇自动控制",
+                subtitle: "将散热策略重置为系统默认",
                 action: { [weak self] in
                     self?.monitor.restoreSystemControl()
                     AppSettings.shared.fanPreset = .auto
                 }
+            ),
+            FeatureCommand(
+                id: "thermal.fanFull",
+                title: "风扇全速运转",
+                subtitle: "紧急降温：将风扇转速设为 100%",
+                isDangerous: true,
+                requiredPermission: .privilegedHelper,
+                action: {
+                    AppSettings.shared.fanPreset = .manual
+                    AppSettings.shared.customFanFraction = 1.0
+                }
             )
         ]
+    }
+
+    public var dashboardItem: FeatureDashboardItem? {
+        FeatureDashboardItem(
+            id: "dashboard.thermal",
+            featureID: .thermal,
+            title: "硬件温控",
+            subtitle: "\(Int(monitor.primaryTemp))°C",
+            iconName: "flame.fill",
+            state: state,
+            isHighlighted: monitor.currentSafetyAction != .none
+        )
     }
 
     public init(monitor: ThermalMonitor = .shared) {
@@ -41,6 +65,10 @@ public final class ThermalFeature: CalmFeature {
                 self?.updateState()
             }
             .store(in: &cancellables)
+    }
+
+    public func refreshState() {
+        updateState()
     }
 
     private func updateState() {
