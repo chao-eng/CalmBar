@@ -27,6 +27,7 @@ public final class CleanerFeature: CalmFeature {
                 subtitle: "清理 Xcode, SPM, Gradle, CocoaPods 等缓存",
                 action: { [weak self] in
                     self?.manager.refreshDevCaches()
+                    CleanerWindowController.shared.show()
                 }
             ),
             FeatureCommand(
@@ -35,6 +36,7 @@ public final class CleanerFeature: CalmFeature {
                 subtitle: "分析应用残余与关联数据",
                 action: { [weak self] in
                     self?.manager.refreshAllApps()
+                    CleanerWindowController.shared.show()
                 }
             ),
             FeatureCommand(
@@ -43,6 +45,7 @@ public final class CleanerFeature: CalmFeature {
                 subtitle: "查找无对应代码目录的 IDE 派生数据",
                 action: { [weak self] in
                     self?.manager.refreshOrphanedWorkspaces()
+                    CleanerWindowController.shared.show()
                 }
             )
         ]

@@ -354,7 +354,7 @@ public final class CommandCenter: ObservableObject {
             featureID: .ocr,
             aliases: ["ocrhistory", "ls", "ocr历史", "识字历史", "ls"],
             run: {
-                StatusBarManager.shared.openSettingsWindow(tab: .ocr)
+                OCRHistoryWindowController.shared.show()
                 return .success("已打开 OCR 历史")
             }
         ))
@@ -369,7 +369,7 @@ public final class CommandCenter: ObservableObject {
             featureID: .clipboard,
             aliases: ["clipboard", "jtb", "history", "剪贴板", "复制", "粘贴", "fz", "zt"],
             run: {
-                StatusBarManager.shared.openSettingsWindow(tab: .clipboard)
+                ClipboardHistoryWindowController.shared.show()
                 return .success("已打开剪贴板历史")
             }
         ))
@@ -447,8 +447,8 @@ public final class CommandCenter: ObservableObject {
             aliases: ["dev", "clean", "xcode", "npm", "cache", "开发缓存", "清理", "垃圾", "ql", "hc"],
             run: {
                 CleanerManager.shared.refreshDevCaches()
-                StatusBarManager.shared.openSettingsWindow(tab: .cleaner)
-                return .success("已开始扫描开发缓存")
+                CleanerWindowController.shared.show()
+                return .success("已打开清理中心并开始扫描开发缓存")
             }
         ))
 
@@ -462,8 +462,8 @@ public final class CommandCenter: ObservableObject {
             aliases: ["app", "clean", "uninstall", "xz", "应用清理", "卸载残留", "yy"],
             run: {
                 CleanerManager.shared.refreshAllApps()
-                StatusBarManager.shared.openSettingsWindow(tab: .cleaner)
-                return .success("已开始扫描应用程序")
+                CleanerWindowController.shared.show()
+                return .success("已打开清理中心并开始扫描应用程序")
             }
         ))
 
