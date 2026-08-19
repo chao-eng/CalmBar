@@ -6,18 +6,14 @@ public final class HotKeyManager {
     public static let shared = HotKeyManager()
 
     private var eventHandler: EventHandlerRef?
-    private var hotKeyRef: EventHotKeyRef?
+    private var hotKeyRefFold: EventHotKeyRef?
+    private var hotKeyRefPalette: EventHotKeyRef?
 
     private init() {
         registerGlobalHotKey()
     }
 
     public func registerGlobalHotKey() {
-        // Register Option + Command + H (or custom key)
-        var hotKeyID = EventHotKeyID()
-        hotKeyID.signature = OSType(0x43424152) // 'CBAR'
-        hotKeyID.id = 1
-
         var eventType = EventTypeSpec()
         eventType.eventClass = OSType(kEventClassKeyboard)
         eventType.eventKind = OSType(kEventHotKeyPressed)
@@ -35,9 +31,15 @@ public final class HotKeyManager {
                     nil,
                     &hotKeyID
                 )
-                if status == noErr && hotKeyID.id == 1 {
-                    Task { @MainActor in
-                        MenuBarOrganizer.shared.toggleExpandCollapse()
+                if status == noErr {
+                    if hotKeyID.id == 1 {
+                        Task { @MainActor in
+                            MenuBarOrganizer.shared.toggleExpandCollapse()
+                        }
+                    } else if hotKeyID.id == 2 {
+                        Task { @MainActor in
+                            CommandPaletteWindowController.shared.toggle()
+                        }
                     }
                 }
                 return noErr
@@ -48,15 +50,25 @@ public final class HotKeyManager {
             &eventHandler
         )
 
-        // Key code for 'H' is 4, Option + Command modifiers = cmdKey | optionKey
         let modifiers = UInt32(cmdKey | optionKey)
-        RegisterEventHotKey(UInt32(kVK_ANSI_H), modifiers, hotKeyID, GetApplicationEventTarget(), 0, &hotKeyRef)
+
+        // 1. Option + Command + H -> MenuBar toggle
+        let hotKeyID1 = EventHotKeyID(signature: OSType(0x43424152), id: 1) // 'CBAR'
+        RegisterEventHotKey(UInt32(kVK_ANSI_H), modifiers, hotKeyID1, GetApplicationEventTarget(), 0, &hotKeyRefFold)
+
+        // 2. Option + Command + K -> Command Palette
+        let hotKeyID2 = EventHotKeyID(signature: OSType(0x43424152), id: 2)
+        RegisterEventHotKey(UInt32(kVK_ANSI_K), modifiers, hotKeyID2, GetApplicationEventTarget(), 0, &hotKeyRefPalette)
     }
 
     public func unregister() {
-        if let ref = hotKeyRef {
+        if let ref = hotKeyRefFold {
             UnregisterEventHotKey(ref)
-            hotKeyRef = nil
+            hotKeyRefFold = nil
+        }
+        if let ref = hotKeyRefPalette {
+            UnregisterEventHotKey(ref)
+            hotKeyRefPalette = nil
         }
         if let handler = eventHandler {
             RemoveEventHandler(handler)

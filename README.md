@@ -130,7 +130,10 @@ CalmBar/
 │       └── CalmBarHelper/               # Root 特权辅助工具 (Privileged Helper)
 └── doc/
     ├── RELEASE.md                       # 版本发布说明与更新日志
-    └── 核心需求.md                       # 产品需求与架构说明文档
+    ├── 核心需求.md                       # 产品需求与架构说明文档
+    ├── CalmBar 2.0 优化方案.md           # 2.0 架构与平台化演进方案
+    ├── CalmBar 2.0 开发任务步骤.md        # 2.0 任务拆解与交付卡片
+    └── CalmBar 新功能接入模板.md          # 2.0 平台化新功能准入与代码模板
 ```
 
 ---

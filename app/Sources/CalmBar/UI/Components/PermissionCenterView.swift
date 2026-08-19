@@ -106,6 +106,25 @@ public struct PermissionCenterView: View {
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
 
+                    // Affected Features Tags
+                    let affected = permissionManager.affectedFeatures(for: type)
+                    if !affected.isEmpty {
+                        HStack(spacing: 4) {
+                            Text("关联功能:")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                            ForEach(affected) { featId in
+                                Text(featId.displayName)
+                                    .font(.system(size: 9, weight: .medium))
+                                    .padding(.horizontal, 4)
+                                    .padding(.vertical, 1)
+                                    .background(Color.secondary.opacity(0.12))
+                                    .cornerRadius(3)
+                            }
+                        }
+                        .padding(.top, 1)
+                    }
+
                     // Action button if not granted
                     if !isGranted {
                         HStack {

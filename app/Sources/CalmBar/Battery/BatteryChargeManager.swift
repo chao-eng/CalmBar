@@ -218,13 +218,13 @@ public final class BatteryChargeManager: ObservableObject {
             return
         }
 
-        HelperClient.shared.setBatteryChargingInhibited(inhibit) { [weak self] success, err in
-            guard let self = self else { return }
-            if success {
+        Task { @MainActor in
+            do {
+                try await BatteryService.shared.setInhibition(inhibit)
                 self.isChargingInhibited = inhibit
                 BatteryMonitor.shared.refreshBatteryInfo()
-            } else if let err = err {
-                self.lastStatusMessage = "SMC 充电控制未响应: \(err)"
+            } catch {
+                self.lastStatusMessage = "SMC 充电控制未响应: \(error.localizedDescription)"
             }
         }
     }
@@ -234,13 +234,13 @@ public final class BatteryChargeManager: ObservableObject {
 
         guard HelperClient.isHelperInstalledOnDisk else { return }
 
-        HelperClient.shared.setBatteryForceDischarge(enabled) { [weak self] success, err in
-            guard let self = self else { return }
-            if success {
+        Task { @MainActor in
+            do {
+                try await BatteryService.shared.setForceDischarge(enabled)
                 self.isForceDischarging = enabled
                 BatteryMonitor.shared.refreshBatteryInfo()
-            } else if let err = err {
-                self.lastStatusMessage = "适配器供电控制未响应: \(err)"
+            } catch {
+                self.lastStatusMessage = "适配器供电控制未响应: \(error.localizedDescription)"
             }
         }
     }

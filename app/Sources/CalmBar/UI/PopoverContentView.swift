@@ -99,6 +99,19 @@ public struct PopoverContentView: View {
                         .foregroundStyle(.red)
                 }
             }
+
+            Button(action: {
+                CommandPaletteWindowController.shared.showWindow()
+            }) {
+                Image(systemName: "command")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.secondary)
+                    .padding(4)
+                    .background(Color.secondary.opacity(0.12))
+                    .clipShape(Circle())
+            }
+            .buttonStyle(.plain)
+            .help("打开命令面板 (Command Palette)")
         }
     }
 

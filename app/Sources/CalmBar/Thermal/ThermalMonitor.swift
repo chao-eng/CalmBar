@@ -152,23 +152,14 @@ public final class ThermalMonitor: ObservableObject {
     }
 
     private func writeFanFraction(_ fraction: Double) {
-        if let controller = fanController {
+        Task { @MainActor in
             do {
-                try controller.setLinkedFraction(fraction)
+                try await FanService.shared.setFanFraction(fraction, fanController: self.fanController)
                 self.isFanControlAuthorized = true
-                return
+                self.errorMessage = nil
             } catch {
-                // Direct write failed (e.g. Non-root), fallback to Helper
-            }
-        }
-
-        HelperClient.shared.setLinkedFraction(fraction) { [weak self] success, err in
-            Task { @MainActor in
-                if success {
-                    self?.isFanControlAuthorized = true
-                    self?.errorMessage = nil
-                } else if getuid() != 0 && !(self?.isFanControlAuthorized ?? false) {
-                    self?.isFanControlAuthorized = false
+                if getuid() != 0 && !self.isFanControlAuthorized {
+                    self.isFanControlAuthorized = false
                 }
             }
         }
@@ -215,9 +206,8 @@ public final class ThermalMonitor: ObservableObject {
     }
 
     public func restoreSystemControl() {
-        if let controller = fanController {
-            try? controller.restoreSystemControl()
+        Task { @MainActor in
+            try? await FanService.shared.restoreAuto(fanController: self.fanController)
         }
-        HelperClient.shared.restoreAuto { _, _ in }
     }
 }

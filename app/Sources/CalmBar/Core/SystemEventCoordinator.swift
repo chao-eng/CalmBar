@@ -94,8 +94,7 @@ public final class SystemEventCoordinator: ObservableObject {
         updateOperationalState()
 
         // Hardware safety: Always restore standard charging and auto fan control before sleeping
-        BatteryChargeManager.shared.restoreDefaultCharging()
-        HelperClient.shared.restoreAuto { _, _ in }
+        RecoveryCoordinator.shared.performRecovery(reason: .systemSleep)
     }
 
     private func handleDidWake() {

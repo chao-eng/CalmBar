@@ -47,12 +47,6 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func cleanup() {
-        ThermalMonitor.shared.restoreSystemControl()
-        HotKeyManager.shared.unregister()
-        ScrollReverserManager.shared.stop()
-        NoTunesManager.shared.stopMonitoring()
-        CaffeineManager.shared.cleanupOnExit()
-        BatteryChargeManager.shared.restoreDefaultCharging()
-        ClipboardMonitor.shared.stopMonitoring()
+        RecoveryCoordinator.shared.performRecovery(reason: .appQuit)
     }
 }

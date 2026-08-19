@@ -98,6 +98,53 @@ public final class PermissionManager: ObservableObject {
         }
     }
 
+    // MARK: - Feature Permission Mapping
+
+    public func requirements(for featureID: FeatureID) -> [FeaturePermissionRequirement] {
+        if let feature = FeatureManager.shared.feature(id: featureID) {
+            return feature.requiredPermissions
+        }
+        return defaultRequirements(for: featureID)
+    }
+
+    public func affectedFeatures(for permission: PermissionType) -> [FeatureID] {
+        FeatureID.allCases.filter { id in
+            let reqs = requirements(for: id)
+            return reqs.contains(where: { $0.type == permission })
+        }
+    }
+
+    public func isFeatureUsable(_ featureID: FeatureID) -> Bool {
+        let reqs = requirements(for: featureID)
+        for req in reqs where req.level == .required {
+            if !isGranted(req.type) {
+                return false
+            }
+        }
+        return true
+    }
+
+    private func defaultRequirements(for featureID: FeatureID) -> [FeaturePermissionRequirement] {
+        switch featureID {
+        case .scroll:
+            return [FeaturePermissionRequirement(type: .accessibility, level: .required, reason: "滚轮反转拦截")]
+        case .caffeine:
+            return [FeaturePermissionRequirement(type: .accessibility, level: .advanced, reason: "防离开微动仿真")]
+        case .thermal:
+            return [FeaturePermissionRequirement(type: .privilegedHelper, level: .required, reason: "SMC 风扇转速控制")]
+        case .battery:
+            return [FeaturePermissionRequirement(type: .privilegedHelper, level: .required, reason: "SMC 电池充电控制")]
+        case .gatekeeper:
+            return [FeaturePermissionRequirement(type: .privilegedHelper, level: .optional, reason: "系统应用免密修复")]
+        case .ocr:
+            return [FeaturePermissionRequirement(type: .screenRecording, level: .required, reason: "屏幕选区截屏")]
+        case .cleaner:
+            return [FeaturePermissionRequirement(type: .fullDiskAccess, level: .advanced, reason: "完整缓存与残留扫描")]
+        case .clipboard, .noTunes, .menuBar:
+            return []
+        }
+    }
+
     // MARK: - Permission Checks
 
     public func checkAccessibility() -> Bool {
