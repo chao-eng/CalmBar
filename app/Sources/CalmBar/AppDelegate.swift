@@ -19,6 +19,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
 
         // 1. Setup Status Bar & Popover UI first so macOS knows we are a resident menu bar app
+        _ = SystemEventCoordinator.shared
+        _ = PermissionManager.shared
         _ = StatusBarManager.shared
         _ = MenuBarOrganizer.shared
 

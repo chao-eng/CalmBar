@@ -136,3 +136,24 @@ public enum FanCurveCalculator {
         return minFraction + ratio * (maxFraction - minFraction)
     }
 }
+
+/// Hardware safety constraints for battery charging & discharge protection
+public struct BatterySafetyPolicy: Sendable {
+    /// Absolute minimum battery percentage below which force discharge must terminate immediately
+    public static let absoluteMinimumPercentage: Int = 15
+
+    /// Maximum safe battery temperature in Celsius; above this, stop inhibiting/discharging to prevent thermal runaway
+    public static let maxBatteryTemperatureCelsius: Double = 45.0
+
+    /// Evaluates whether an active discharge or charging inhibit must be aborted for hardware safety
+    public static func shouldEmergencyAbort(currentPercentage: Int, batteryTempCelsius: Double? = nil) -> (abort: Bool, reason: String?) {
+        if currentPercentage <= absoluteMinimumPercentage {
+            return (true, "电池电量过低 (\(currentPercentage)%)，已触发底层安全熔断，立即恢复充电")
+        }
+        if let temp = batteryTempCelsius, temp >= maxBatteryTemperatureCelsius {
+            return (true, "电池温度过高 (\(String(format: "%.1f", temp))°C)，已触发过热安全保护，恢复官方充电策略")
+        }
+        return (false, nil)
+    }
+}
+

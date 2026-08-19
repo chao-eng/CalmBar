@@ -12,6 +12,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     case ocr
     case clipboard
     case cleaner
+    case permissions
     case general
 
     public var id: String { rawValue }
@@ -28,6 +29,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .ocr: return "文字识别"
         case .clipboard: return "剪贴板"
         case .cleaner: return "清理工具"
+        case .permissions: return "权限安全"
         case .general: return "通用设置"
         }
     }
@@ -44,6 +46,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .ocr: return "text.viewfinder"
         case .clipboard: return "doc.on.clipboard.fill"
         case .cleaner: return "trash.fill"
+        case .permissions: return "shield.lefthalf.filled"
         case .general: return "gearshape.fill"
         }
     }
@@ -126,6 +129,8 @@ public struct SettingsView: View {
                     clipboardTab
                 case .cleaner:
                     cleanerTab
+                case .permissions:
+                    PermissionCenterView()
                 case .general:
                     generalTab
                 }
@@ -133,7 +138,7 @@ public struct SettingsView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .padding(16)
-        .frame(width: 660, height: 560)
+        .frame(width: 680, height: 560)
         .onChange(of: statusBarManager.selectedSettingsTab) { _, newTab in
             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                 selectedTab = newTab
@@ -708,7 +713,7 @@ public struct SettingsView: View {
                         ))
                         .font(.system(size: 13, weight: .medium))
 
-                        Text("当系统闲置超过设定阈值时，自动在鼠标原位产生微小的系统 HID 级微动，阻止 Microsoft Teams、Slack、飞书等协同办公软件将你的状态自动变更为「离开 (Away)」，同时防止屏幕保护程序启动。")
+                        Text("当系统闲置超过设定阈值时，自动在鼠标原位产生微小 HID 微动，重置系统 `IOHIDSystem` 闲置计数器，降低基于系统 idle time 的 Away 判定。（注：若某些协作应用依赖独立服务端心跳或主动按键钩子，可能需要保持窗口前台活动）。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
 
@@ -731,10 +736,10 @@ public struct SettingsView: View {
                 // 4. 底层技术与原理
                 GroupBox(label: Label("系统原理与电源管理说明", systemImage: "info.circle")) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("• **原生 IOKit 电源断言**：通过 macOS 原生 `IOKit.pwr_mgt` 的 `kIOPMAssertPreventUserIdleDisplaySleep` 向电源管理总线注册临时断言，零 CPU 占用且不损伤电池寿命。")
+                        Text("• **原生 IOKit 电源断言**：通过 macOS 原生 `IOKit.pwr_mgt` 的 `kIOPMAssertPreventUserIdleDisplaySleep` 向电源管理总线注册临时断言，超低能耗且不损伤电池寿命。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
-                        Text("• **安全释放机制 (Fail-Safe)**：CalmBar 退出、重启或系统锁屏切换用户时，将自动释放所有电源断言并暂停微动，确保节电策略正常。")
+                        Text("• **安全释放机制 (Fail-Safe)**：CalmBar 退出、重启或系统锁屏切换用户时，将自动释放所有电源断言并暂停微动，确保节能策略正常。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }
@@ -944,12 +949,15 @@ public struct SettingsView: View {
                 }
 
                 // 4. 原理与技术说明
-                GroupBox(label: Label("硬件充电阻断说明", systemImage: "info.circle")) {
+                GroupBox(label: Label("硬件充电阻断与安全熔断机制", systemImage: "info.circle")) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("• **硬件级适配器旁路供电**：通过向 SMC 写入 `CH0C` / `CHTE` 寄存器指令，使 Mac 在接通电源时直接使用适配器电流供电，完全切断流入电池的涓流电流，保护电池化学活性。")
+                        Text("• **SMC 寄存器充电控制**：通过向 SMC 写入 `CH0C` / `CHTE` 寄存器指令，在接通电源且达到目标上限时停止对电池充入电流，直接转由适配器供电。（适配具备相关寄存器的 Apple Silicon 与 Intel Mac 机型）。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
-                        Text("• **安全回退保障 (Fail-Safe)**：CalmBar 退出或系统重启时，特权助手将自动解除阻断，确保 Mac 恢复原生充电逻辑。")
+                        Text("• **底层安全熔断保护 (Safety Melt)**：电量 $\\le 15\\%$ 或电池温度过高时，CalmBar 将立即强行终止放电并取消阻断，确保电芯寿命安全。")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+                        Text("• **安全回退保障 (Fail-Safe)**：CalmBar 退出、系统休眠或关机时，特权助手将自动安全交还控制权，Mac 恢复官方默认充电策略。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }

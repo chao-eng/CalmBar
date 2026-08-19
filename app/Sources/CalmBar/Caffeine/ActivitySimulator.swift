@@ -1,25 +1,56 @@
 import AppKit
+import Combine
 import CoreGraphics
 import Foundation
 import IOKit
 
-/// Simulates subtle user activity when the system has been idle for too long.
-/// This prevents corporate communication apps (e.g. Teams, Slack, Feishu, DingTalk) from switching status to "Away".
+/// Simulates subtle user HID activity when the system has been idle for too long.
+/// This resets the macOS IOHIDSystem idle timer, helping prevent apps that rely on system idle time from switching to Away status.
+/// Note: This targets OS-level idle time; apps with proprietary server heartbeats or active keystroke hooks may behave differently.
 @MainActor
 public final class ActivitySimulator {
     public static let shared = ActivitySimulator()
 
     private var checkTimer: Timer?
     private let checkInterval: TimeInterval = 30 // Check every 30 seconds
+    private var isMonitoringActive: Bool = false
+    private var cancellables = Set<AnyCancellable>()
 
-    private init() {}
+    private init() {
+        // Observe system operational state (display sleep, lock, wake)
+        SystemEventCoordinator.shared.$isOperational
+            .receive(on: RunLoop.main)
+            .sink { [weak self] operational in
+                guard let self = self else { return }
+                if self.isMonitoringActive {
+                    if operational {
+                        self.startTimer()
+                    } else {
+                        self.stopTimer()
+                    }
+                }
+            }
+            .store(in: &cancellables)
+    }
 
     // MARK: - Public Methods
 
     /// Starts monitoring system idle time and simulating activity when needed
     public func startMonitoring() {
-        stopMonitoring()
+        self.isMonitoringActive = true
+        if SystemEventCoordinator.shared.isOperational {
+            startTimer()
+        }
+    }
 
+    /// Stops monitoring and simulating activity
+    public func stopMonitoring() {
+        self.isMonitoringActive = false
+        stopTimer()
+    }
+
+    private func startTimer() {
+        stopTimer()
         checkTimer = Timer.scheduledTimer(
             withTimeInterval: checkInterval,
             repeats: true
@@ -30,8 +61,7 @@ public final class ActivitySimulator {
         }
     }
 
-    /// Stops monitoring and simulating activity
-    public func stopMonitoring() {
+    private func stopTimer() {
         checkTimer?.invalidate()
         checkTimer = nil
     }
@@ -76,6 +106,7 @@ public final class ActivitySimulator {
 
     @MainActor
     private func checkAndSimulateIfNeeded() {
+        guard SystemEventCoordinator.shared.isOperational else { return }
         let threshold = AppSettings.shared.caffeineIdleThreshold
         guard getSystemIdleTime() >= threshold else { return }
         simulateActivity()
@@ -101,3 +132,4 @@ public final class ActivitySimulator {
         }
     }
 }
+

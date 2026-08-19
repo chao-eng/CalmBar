@@ -13,20 +13,58 @@ public final class ClipboardMonitor: ObservableObject {
     private var timer: Timer?
     private var lastChangeCount: Int = 0
     private let pasteboard = NSPasteboard.general
+    private var cancellables = Set<AnyCancellable>()
 
     private init() {
         self.lastChangeCount = pasteboard.changeCount
+
+        // Observe settings changes
+        AppSettings.shared.$clipboardHistoryEnabled
+            .receive(on: RunLoop.main)
+            .sink { [weak self] enabled in
+                if enabled {
+                    self?.startMonitoring()
+                } else {
+                    self?.stopMonitoring()
+                }
+            }
+            .store(in: &cancellables)
+
+        // Observe operational states (screen sleep, lock, wake)
+        SystemEventCoordinator.shared.$isOperational
+            .receive(on: RunLoop.main)
+            .sink { [weak self] operational in
+                guard let self = self else { return }
+                guard AppSettings.shared.clipboardHistoryEnabled else { return }
+                if operational {
+                    self.startTimer()
+                } else {
+                    self.stopTimer()
+                }
+            }
+            .store(in: &cancellables)
+
         if AppSettings.shared.clipboardHistoryEnabled {
             startMonitoring()
         }
     }
 
     public func startMonitoring() {
-        guard !isMonitoring else { return }
         self.lastChangeCount = pasteboard.changeCount
         self.isMonitoring = true
+        if SystemEventCoordinator.shared.isOperational {
+            startTimer()
+        }
+    }
 
-        self.timer?.invalidate()
+    public func stopMonitoring() {
+        self.isMonitoring = false
+        stopTimer()
+    }
+
+    private func startTimer() {
+        stopTimer()
+        self.lastChangeCount = pasteboard.changeCount
         self.timer = Timer.scheduledTimer(withTimeInterval: 0.5, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.checkForChanges()
@@ -34,8 +72,7 @@ public final class ClipboardMonitor: ObservableObject {
         }
     }
 
-    public func stopMonitoring() {
-        self.isMonitoring = false
+    private func stopTimer() {
         self.timer?.invalidate()
         self.timer = nil
     }

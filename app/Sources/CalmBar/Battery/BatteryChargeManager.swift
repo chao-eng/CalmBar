@@ -37,6 +37,7 @@ public final class BatteryChargeManager: ObservableObject {
     @Published public private(set) var isForceDischarging: Bool = false
     @Published public private(set) var lastStatusMessage: String = ""
     @Published public private(set) var isSupportedByHardware: Bool = true
+    @Published public private(set) var safetyTriggered: Bool = false
 
     private var hasReachedChargeLimit: Bool = false
     private var cancellables = Set<AnyCancellable>()
@@ -44,16 +45,31 @@ public final class BatteryChargeManager: ObservableObject {
 
     private init() {
         setupObservers()
-
-        evaluateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
-            Task { @MainActor in
-                self?.evaluateChargingPolicy()
-            }
-        }
+        updateTimerState()
 
         // Initial evaluation
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
             self?.evaluateChargingPolicy()
+        }
+    }
+
+    // MARK: - Timer & Energy Management
+
+    private func updateTimerState() {
+        let isEnabled = AppSettings.shared.batteryChargeLimitEnabled || AppSettings.shared.batteryTopUpActive
+        let isOperational = SystemEventCoordinator.shared.isOperational
+
+        if isEnabled && isOperational {
+            if evaluateTimer == nil {
+                evaluateTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
+                    Task { @MainActor in
+                        self?.evaluateChargingPolicy()
+                    }
+                }
+            }
+        } else {
+            evaluateTimer?.invalidate()
+            evaluateTimer = nil
         }
     }
 
@@ -62,22 +78,24 @@ public final class BatteryChargeManager: ObservableObject {
     /// Toggles the Battery Charge Limit feature
     public func toggleChargeLimit() {
         AppSettings.shared.batteryChargeLimitEnabled.toggle()
+        updateTimerState()
         evaluateChargingPolicy()
     }
 
     /// Sets temporary top-up to 100% (e.g. before traveling)
     public func toggleTopUp() {
         AppSettings.shared.batteryTopUpActive.toggle()
+        updateTimerState()
         evaluateChargingPolicy()
     }
 
-    /// Restores standard macOS charging when exiting CalmBar
+    /// Restores standard macOS charging when exiting CalmBar or sleeping
     public func restoreDefaultCharging() {
         applyInhibition(false)
         applyForceDischarge(false)
     }
 
-    // MARK: - Policy Engine (mirrors Aidente's evaluate() flow)
+    // MARK: - Policy Engine (with Hardware Fail-Safe & Safety Melt)
 
     public func evaluateChargingPolicy() {
         let battery = BatteryMonitor.shared
@@ -85,11 +103,28 @@ public final class BatteryChargeManager: ObservableObject {
 
         guard battery.hasBattery else {
             self.operationStatus = .unsupported
+            self.isSupportedByHardware = false
             return
         }
 
-        // When force discharge is active, macOS will report isACPowered=false (since power is cut).
-        // We must check if the adapter is physically connected so we don't accidentally cancel force discharge.
+        // 1. Hardware Safety Abort Check (15% Critical Low Battery or Overheat)
+        let (shouldAbort, abortReason) = BatterySafetyPolicy.shouldEmergencyAbort(
+            currentPercentage: battery.currentPercentage,
+            batteryTempCelsius: battery.temperatureCelsius > 0 ? battery.temperatureCelsius : nil
+        )
+
+        if shouldAbort {
+            self.safetyTriggered = true
+            self.lastStatusMessage = abortReason ?? "底层安全熔断已触发"
+            applyForceDischarge(false)
+            applyInhibition(false)
+            self.operationStatus = .charging
+            return
+        } else {
+            self.safetyTriggered = false
+        }
+
+        // 2. Physical adapter check
         guard battery.isAdapterPhysicallyConnected else {
             self.operationStatus = .unplugged
             self.lastStatusMessage = "电池供电中 (\(battery.currentPercentage)%)"
@@ -97,7 +132,7 @@ public final class BatteryChargeManager: ObservableObject {
             return
         }
 
-        // Top Up mode active (charge to 100% once)
+        // 3. Top Up mode active (charge to 100% once)
         if settings.batteryTopUpActive {
             if battery.currentPercentage >= 100 {
                 settings.batteryTopUpActive = false
@@ -111,7 +146,7 @@ public final class BatteryChargeManager: ObservableObject {
             return
         }
 
-        // Charge Limit disabled
+        // 4. Charge Limit disabled
         guard settings.batteryChargeLimitEnabled else {
             self.operationStatus = .disabled
             self.lastStatusMessage = "系统默认托管 (\(battery.currentPercentage)%)"
@@ -178,7 +213,7 @@ public final class BatteryChargeManager: ObservableObject {
 
         guard HelperClient.isHelperInstalledOnDisk else {
             if inhibit {
-                self.lastStatusMessage = "需一键激活特权助手以控制充电"
+                self.lastStatusMessage = "需激活特权助手以支持 SMC 充电控制"
             }
             return
         }
@@ -189,7 +224,7 @@ public final class BatteryChargeManager: ObservableObject {
                 self.isChargingInhibited = inhibit
                 BatteryMonitor.shared.refreshBatteryInfo()
             } else if let err = err {
-                self.lastStatusMessage = "充电控制失败: \(err)"
+                self.lastStatusMessage = "SMC 充电控制未响应: \(err)"
             }
         }
     }
@@ -205,7 +240,7 @@ public final class BatteryChargeManager: ObservableObject {
                 self.isForceDischarging = enabled
                 BatteryMonitor.shared.refreshBatteryInfo()
             } else if let err = err {
-                self.lastStatusMessage = "适配器控制失败: \(err)"
+                self.lastStatusMessage = "适配器供电控制未响应: \(err)"
             }
         }
     }
@@ -225,7 +260,10 @@ public final class BatteryChargeManager: ObservableObject {
 
         AppSettings.shared.$batteryChargeLimitEnabled
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.evaluateChargingPolicy() }
+            .sink { [weak self] _ in
+                self?.updateTimerState()
+                self?.evaluateChargingPolicy()
+            }
             .store(in: &cancellables)
 
         AppSettings.shared.$batteryChargeLimit
@@ -240,12 +278,26 @@ public final class BatteryChargeManager: ObservableObject {
 
         AppSettings.shared.$batteryTopUpActive
             .receive(on: RunLoop.main)
-            .sink { [weak self] _ in self?.evaluateChargingPolicy() }
+            .sink { [weak self] _ in
+                self?.updateTimerState()
+                self?.evaluateChargingPolicy()
+            }
             .store(in: &cancellables)
 
         AppSettings.shared.$batteryAutoDischargeEnabled
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in self?.evaluateChargingPolicy() }
             .store(in: &cancellables)
+
+        SystemEventCoordinator.shared.$isOperational
+            .receive(on: RunLoop.main)
+            .sink { [weak self] operational in
+                self?.updateTimerState()
+                if operational {
+                    self?.evaluateChargingPolicy()
+                }
+            }
+            .store(in: &cancellables)
     }
 }
+
