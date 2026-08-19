@@ -54,12 +54,21 @@ struct OCRTests {
         #expect(manager.items[0].text == "Fourth text")
         #expect(manager.items[2].text == "Second text") // "First text" was dropped
 
-        // 3. Remove single item
+        // 3. Add explicit OCRItem instance (used by OCRManager & Floating Preview)
+        let floatingItem = OCRItem(text: "Floating preview text", type: .text)
+        manager.add(item: floatingItem, maxCount: 5)
+        #expect(manager.items.first?.id == floatingItem.id)
+
+        // 4. Remove by floatingItem.id directly
+        manager.remove(id: floatingItem.id)
+        #expect(!manager.items.contains { $0.id == floatingItem.id })
+
+        // 5. Remove single item
         let idToRemove = manager.items[1].id
         manager.remove(id: idToRemove)
         #expect(manager.items.count == 2)
 
-        // 4. Clear all
+        // 6. Clear all
         manager.clearAll()
         #expect(manager.items.isEmpty)
 

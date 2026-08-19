@@ -130,8 +130,8 @@ public final class OCRManager: ObservableObject {
             pasteboard.setString(item.text, forType: .string)
         }
 
-        // 2. 保存到历史记录
-        OCRHistoryManager.shared.add(text: item.text, type: item.type, maxCount: settings.ocrMaxHistoryCount)
+        // 2. 保存到历史记录 (传入相同的 item 实例以保证 UUID 统一)
+        OCRHistoryManager.shared.add(item: item, maxCount: settings.ocrMaxHistoryCount)
 
         // 3. 播放提示音效
         if settings.ocrPlaySound {

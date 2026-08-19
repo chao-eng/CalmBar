@@ -12,6 +12,7 @@ public struct PopoverContentView: View {
     @ObservedObject private var chargeManager = BatteryChargeManager.shared
     @ObservedObject private var ocr = OCRManager.shared
     @ObservedObject private var ocrHistory = OCRHistoryManager.shared
+    @ObservedObject private var clipboardHistory = ClipboardHistoryManager.shared
 
     @State private var isInstallingHelper = false
     @State private var helperInstallMessage: String?
@@ -330,6 +331,7 @@ public struct PopoverContentView: View {
         case battery
         case gatekeeper
         case ocr
+        case clipboard
     }
 
     private var activeQuickActions: [QuickActionItem] {
@@ -341,6 +343,7 @@ public struct PopoverContentView: View {
         if settings.popoverShowBattery && batteryMonitor.hasBattery { items.append(.battery) }
         if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
         if settings.popoverShowOCR { items.append(.ocr) }
+        if settings.popoverShowClipboard { items.append(.clipboard) }
         return items
     }
 
@@ -380,6 +383,45 @@ public struct PopoverContentView: View {
             gatekeeperRow
         case .ocr:
             ocrRow
+        case .clipboard:
+            clipboardRow
+        }
+    }
+
+    // MARK: - Quick Action Row Views
+    private var clipboardRow: some View {
+        HStack {
+            Image(systemName: "doc.on.clipboard")
+                .foregroundStyle(.cyan)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("剪贴板历史")
+                    .font(.system(size: 12, weight: .medium))
+                if settings.clipboardHistoryEnabled {
+                    Text("已记录 \(clipboardHistory.items.count) 条内容")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                } else {
+                    Text("监听已关闭")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                }
+            }
+            Spacer()
+
+            Button(action: {
+                StatusBarManager.shared.closePopover()
+                ClipboardHistoryWindowController.shared.show()
+            }) {
+                Text("浏览历史")
+                    .font(.system(size: 11, weight: .semibold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .tint(.cyan)
+            .help("打开剪贴板历史管理窗口")
         }
     }
 

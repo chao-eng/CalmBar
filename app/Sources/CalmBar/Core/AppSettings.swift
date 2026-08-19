@@ -152,6 +152,23 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(ocrMaxHistoryCount, forKey: "ocrMaxHistoryCount") }
     }
 
+    // MARK: - Clipboard History Settings
+    @Published public var clipboardHistoryEnabled: Bool {
+        didSet { defaults.set(clipboardHistoryEnabled, forKey: "clipboardHistoryEnabled") }
+    }
+    @Published public var clipboardMaxCount: Int {
+        didSet { defaults.set(clipboardMaxCount, forKey: "clipboardMaxCount") }
+    }
+    @Published public var clipboardSaveImages: Bool {
+        didSet { defaults.set(clipboardSaveImages, forKey: "clipboardSaveImages") }
+    }
+    @Published public var clipboardFilterSensitive: Bool {
+        didSet { defaults.set(clipboardFilterSensitive, forKey: "clipboardFilterSensitive") }
+    }
+    @Published public var clipboardIgnoredApps: [String] {
+        didSet { defaults.set(clipboardIgnoredApps, forKey: "clipboardIgnoredApps") }
+    }
+
     // MARK: - General Settings
     @Published public var launchAtLogin: Bool {
         didSet {
@@ -184,6 +201,9 @@ public final class AppSettings: ObservableObject {
     }
     @Published public var popoverShowOCR: Bool {
         didSet { defaults.set(popoverShowOCR, forKey: "popoverShowOCR") }
+    }
+    @Published public var popoverShowClipboard: Bool {
+        didSet { defaults.set(popoverShowClipboard, forKey: "popoverShowClipboard") }
     }
 
     private init() {
@@ -239,6 +259,12 @@ public final class AppSettings: ObservableObject {
         self.ocrKeepLineBreaks = defaults.object(forKey: "ocrKeepLineBreaks") as? Bool ?? true
         self.ocrMaxHistoryCount = defaults.object(forKey: "ocrMaxHistoryCount") as? Int ?? 100
 
+        self.clipboardHistoryEnabled = defaults.object(forKey: "clipboardHistoryEnabled") as? Bool ?? true
+        self.clipboardMaxCount = defaults.object(forKey: "clipboardMaxCount") as? Int ?? 200
+        self.clipboardSaveImages = defaults.object(forKey: "clipboardSaveImages") as? Bool ?? true
+        self.clipboardFilterSensitive = defaults.object(forKey: "clipboardFilterSensitive") as? Bool ?? true
+        self.clipboardIgnoredApps = defaults.stringArray(forKey: "clipboardIgnoredApps") ?? []
+
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
 
         self.popoverShowGauges = defaults.object(forKey: "popoverShowGauges") as? Bool ?? true
@@ -249,6 +275,7 @@ public final class AppSettings: ObservableObject {
         self.popoverShowBattery = defaults.object(forKey: "popoverShowBattery") as? Bool ?? true
         self.popoverShowGatekeeper = defaults.object(forKey: "popoverShowGatekeeper") as? Bool ?? true
         self.popoverShowOCR = defaults.object(forKey: "popoverShowOCR") as? Bool ?? true
+        self.popoverShowClipboard = defaults.object(forKey: "popoverShowClipboard") as? Bool ?? true
     }
 }
 

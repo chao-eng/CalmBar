@@ -28,6 +28,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         _ = NoTunesManager.shared
         _ = CaffeineManager.shared
         _ = BatteryChargeManager.shared
+        _ = ClipboardMonitor.shared
 
         // 3. Start background thermal monitoring asynchronously after UI is anchored
         DispatchQueue.main.async {
@@ -50,5 +51,6 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         NoTunesManager.shared.stopMonitoring()
         CaffeineManager.shared.cleanupOnExit()
         BatteryChargeManager.shared.restoreDefaultCharging()
+        ClipboardMonitor.shared.stopMonitoring()
     }
 }

@@ -10,6 +10,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     case battery
     case gatekeeper
     case ocr
+    case clipboard
     case general
 
     public var id: String { rawValue }
@@ -24,6 +25,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .battery: return "充电管理"
         case .gatekeeper: return "应用授权"
         case .ocr: return "文字识别"
+        case .clipboard: return "剪贴板"
         case .general: return "通用设置"
         }
     }
@@ -38,6 +40,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .battery: return "battery.100.bolt"
         case .gatekeeper: return "lock.shield.fill"
         case .ocr: return "text.viewfinder"
+        case .clipboard: return "doc.on.clipboard.fill"
         case .general: return "gearshape.fill"
         }
     }
@@ -54,6 +57,8 @@ public struct SettingsView: View {
     @ObservedObject private var chargeManager = BatteryChargeManager.shared
     @ObservedObject private var ocrManager = OCRManager.shared
     @ObservedObject private var ocrHistory = OCRHistoryManager.shared
+    @ObservedObject private var clipboardHistory = ClipboardHistoryManager.shared
+    @ObservedObject private var clipboardMonitor = ClipboardMonitor.shared
 
     @ObservedObject private var statusBarManager = StatusBarManager.shared
 
@@ -114,6 +119,8 @@ public struct SettingsView: View {
                     GatekeeperUnlockerView()
                 case .ocr:
                     ocrTab
+                case .clipboard:
+                    clipboardTab
                 case .general:
                     generalTab
                 }
@@ -1129,6 +1136,115 @@ public struct SettingsView: View {
         }
     }
 
+    // MARK: - Clipboard Tab
+    private var clipboardTab: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // 1. 服务开关与隐私拦截
+                GroupBox(label: Label("剪贴板监听与隐私保护", systemImage: "shield.lefthalf.filled")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("启用剪贴板历史记录", isOn: $settings.clipboardHistoryEnabled)
+                            .onChange(of: settings.clipboardHistoryEnabled) { _, enabled in
+                                if enabled {
+                                    clipboardMonitor.startMonitoring()
+                                } else {
+                                    clipboardMonitor.stopMonitoring()
+                                }
+                            }
+
+                        Text("实时在后台监听系统剪贴板更新，自动去重并将文本、富文本、图片与文件安全归档。")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+
+                        Divider()
+
+                        Toggle("保存复制的图片与截图", isOn: $settings.clipboardSaveImages)
+                        Toggle("自动过滤密码管理器与敏感标记 (1Password / Bitwarden / 瞬态剪贴板)", isOn: $settings.clipboardFilterSensitive)
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // 2. 容量上限与归档设置
+                GroupBox(label: Label("存储容量与上限", systemImage: "internaldrive")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("历史记录最大保留条数")
+                                    .font(.system(size: 12, weight: .medium))
+                                Text("当前已存储 \(clipboardHistory.items.count) 条记录（固定项永不自动清除）。")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Picker("", selection: $settings.clipboardMaxCount) {
+                                Text("50 条").tag(50)
+                                Text("100 条").tag(100)
+                                Text("200 条").tag(200)
+                                Text("500 条").tag(500)
+                                Text("1000 条").tag(1000)
+                            }
+                            .frame(width: 110)
+                        }
+
+                        Divider()
+
+                        HStack {
+                            Text("本地存储占用：")
+                                .font(.system(size: 12))
+                                .foregroundColor(.secondary)
+                            Text(clipboardHistory.storageSizeFormatted)
+                                .font(.system(size: 12, weight: .semibold, design: .monospaced))
+                            Spacer()
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // 3. 独立管理窗口与数据清理
+                GroupBox(label: Label("历史管理与快捷操作", systemImage: "clock.arrow.circlepath")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                ClipboardHistoryWindowController.shared.show()
+                            }) {
+                                Label("打开剪贴板历史独立窗口", systemImage: "macwindow.on.rectangle")
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+
+                            Spacer()
+
+                            if !clipboardHistory.items.isEmpty {
+                                Button(role: .destructive, action: {
+                                    clipboardHistory.clearAll(keepPinned: true)
+                                }) {
+                                    Label("清空未固定记录", systemImage: "trash")
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.orange)
+                                .controlSize(.small)
+
+                                Button(role: .destructive, action: {
+                                    clipboardHistory.clearAll(keepPinned: false)
+                                }) {
+                                    Label("清空全部", systemImage: "trash.fill")
+                                }
+                                .buttonStyle(.bordered)
+                                .tint(.red)
+                                .controlSize(.small)
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(10)
+        }
+    }
+
     // MARK: - General Tab
     private var generalTab: some View {
         ScrollView {
@@ -1173,6 +1289,9 @@ public struct SettingsView: View {
                             Toggle(isOn: $settings.popoverShowOCR) {
                                 Label("屏幕文字与二维码识别", systemImage: "text.viewfinder")
                             }
+                            Toggle(isOn: $settings.popoverShowClipboard) {
+                                Label("剪贴板历史快捷入口", systemImage: "doc.on.clipboard")
+                            }
                         }
                     }
                     .padding(8)
@@ -1188,13 +1307,13 @@ public struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("CalmBar (MacPulse)")
                                     .font(.system(size: 14, weight: .bold))
-                                Text("Version 1.2.0 (Native Swift 6 & SwiftUI)")
+                                Text("Version 1.3.0 (Native Swift 6 & SwiftUI)")
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                             }
                         }
                         Divider()
-                        Text("整合硬件温控 (AirPulse)、菜单栏收纳 (Hidden Bar)、滚动手势解耦 (Scroll Reverser)、媒体启动拦截 (noTunes)、防休眠与防离开 (Caffeine)、电池充电上限 (Aidente)、应用去隔离授权及屏幕文字与二维码识别 (Vision OCR) 的全能 macOS 菜单栏综合增强套件。")
+                        Text("整合硬件温控 (AirPulse)、菜单栏收纳 (Hidden Bar)、滚动手势解耦 (Scroll Reverser)、媒体启动拦截 (noTunes)、防休眠与防离开 (Caffeine)、电池充电上限 (Aidente)、应用去隔离授权、屏幕文字与二维码识别 (Vision OCR) 及剪贴板历史记录 (Clipboard History) 的全能 macOS 菜单栏综合增强套件。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
 

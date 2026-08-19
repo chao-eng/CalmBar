@@ -53,14 +53,15 @@ public final class OCRHistoryManager: ObservableObject {
         }
     }
 
-    public func add(text: String, type: OCRType = .text, maxCount: Int = 100) {
-        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+    public func add(item: OCRItem, maxCount: Int = 100) {
+        let trimmed = item.text.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
 
-        let newItem = OCRItem(text: trimmed, type: type)
         // 插入到最前面
         var updated = items
-        updated.insert(newItem, at: 0)
+        // 如果历史中已存在相同 id 则先移除
+        updated.removeAll { $0.id == item.id }
+        updated.insert(item, at: 0)
 
         // 限制最大历史条数
         if updated.count > maxCount {
@@ -68,6 +69,14 @@ public final class OCRHistoryManager: ObservableObject {
         }
 
         self.items = updated
+    }
+
+    public func add(text: String, type: OCRType = .text, maxCount: Int = 100) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+
+        let newItem = OCRItem(text: trimmed, type: type)
+        add(item: newItem, maxCount: maxCount)
     }
 
     public func remove(id: UUID) {
