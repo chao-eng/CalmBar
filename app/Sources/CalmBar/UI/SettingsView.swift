@@ -1386,7 +1386,7 @@ public struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("CalmBar (MacPulse)")
                                     .font(.system(size: 14, weight: .bold))
-                                Text("Version 1.3.0 (Native Swift 6 & SwiftUI)")
+                                Text("Version 1.5.0 (Native Swift 6 & SwiftUI)")
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                             }
