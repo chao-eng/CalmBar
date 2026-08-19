@@ -110,6 +110,8 @@ public struct PopoverContentView: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .focusable(false)
+            .focusEffectDisabled()
             .help("打开命令面板 (Command Palette)")
         }
     }
