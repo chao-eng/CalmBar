@@ -205,6 +205,12 @@ public final class AppSettings: ObservableObject {
     @Published public var popoverShowClipboard: Bool {
         didSet { defaults.set(popoverShowClipboard, forKey: "popoverShowClipboard") }
     }
+    @Published public var popoverShowCleaner: Bool {
+        didSet { defaults.set(popoverShowCleaner, forKey: "popoverShowCleaner") }
+    }
+    @Published public var cleanerSensitivity: SearchSensitivityLevel {
+        didSet { defaults.set(cleanerSensitivity.rawValue, forKey: "cleanerSensitivity") }
+    }
 
     private init() {
         let presetStr = defaults.string(forKey: "fanPreset") ?? FanPreset.smart.rawValue
@@ -276,6 +282,9 @@ public final class AppSettings: ObservableObject {
         self.popoverShowGatekeeper = defaults.object(forKey: "popoverShowGatekeeper") as? Bool ?? true
         self.popoverShowOCR = defaults.object(forKey: "popoverShowOCR") as? Bool ?? true
         self.popoverShowClipboard = defaults.object(forKey: "popoverShowClipboard") as? Bool ?? true
+        self.popoverShowCleaner = defaults.object(forKey: "popoverShowCleaner") as? Bool ?? true
+        let sensStr = defaults.string(forKey: "cleanerSensitivity") ?? SearchSensitivityLevel.balanced.rawValue
+        self.cleanerSensitivity = SearchSensitivityLevel(rawValue: sensStr) ?? .balanced
     }
 }
 

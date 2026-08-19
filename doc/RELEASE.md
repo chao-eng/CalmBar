@@ -6,14 +6,44 @@
 
 | 版本 | 发布重点 | 核心亮点 |
 | :--- | :--- | :--- |
-| **v1.3.0** *(当前最新)* | **剪贴板历史与智能管理** | 多模态剪贴板捕获、访达图片智能识别、Vision OCR 文字/二维码提取与隐私过滤 |
+| **v1.4.0** *(当前最新)* | **软件卸载与开发者环境深度清理** | 应用深层残留嗅探与静默移入废纸篓、24+ 开发工具链缓存清理、IDE 孤立工作区分析与 Pip 包管理 |
+| **v1.3.0** | **剪贴板历史与智能管理** | 多模态剪贴板捕获、访达图片智能识别、Vision OCR 文字/二维码提取与隐私过滤 |
 | **v1.2.0** | **屏幕文字与二维码识别 (Vision OCR)** | 原生 Vision 深度学习识字与二维码解析、悬浮预览卡片与识别历史管理 |
 | **v1.1.0** | **全功能综合套件升级** | 硬件级 80% 充电上限与旁路供电、noTunes 媒体拦截、Caffeine 防休眠防离开与应用去隔离授权 |
 | **v1.0.0** | **初版基石：三大核心功能** | 硬件温控与风扇加速曲线 (AirPulse)、菜单栏图标收纳 (Hidden Bar)、鼠标滚轮解耦 (Scroll Reverser) |
 
 ---
 
-## 🚀 v1.3.0 (Latest) — 2026-08-19
+## 🚀 v1.4.0 (Latest) — 2026-08-19
+
+### 🗑️ 软件卸载与深层残留清理 (App Cleaner)
+- **多线程索引扫描**：并发扫描系统与用户目录下的全部应用，自动提取应用架构（Apple Silicon / Intel / Universal）、图标、Bundle ID、安装体积及运行状态。
+- **深层残留嗅探引擎**：深度扫描 `~/Library` 与 `/Library` 下 20+ 个关键目录（`Application Support`, `Caches`, `Containers`, `Group Containers`, `Preferences`, `Saved Application State`, `HTTPStorages`, `Logs`, `LaunchAgents` 等），基于 Bundle ID 衍生前缀、名称变体及安全黑名单精准匹配应用残留文件。
+- **完全免密静默移入废纸篓**：多层级安全回退机制（系统原生 `trashItem` ➔ 用户态 `.Trash` 移动 ➔ 用户态 `removeItem`），完全避免系统管理员密码弹窗打扰，误删可在废纸篓中随时一键放回原处。
+- **外部应用拖拽即时分析**：支持直接从访达将任意 `.app` 拖入清理窗口，即时分析其在系统中的所有关联文件。
+
+### 🛠️ 开发者专属深度清理 (Developer Cleaner)
+- **24+ 款主流开发工具链缓存**：
+  - **Apple / iOS**：Xcode (`DerivedData`, `Archives`, `CoreSimulator/Devices`, `DeviceSupport`, `DocumentationCache`), CocoaPods, SwiftPM, Carthage；
+  - **Web / JS**：Npm, Pnpm, Yarn, Bun, Deno；
+  - **Python / AI**：Pip, Poetry, Uv, Conda, Pyenv；
+  - **IDE**：VS Code, Cursor, Zed, JetBrains, Android Studio；
+  - **Rust / Go / Java / Flutter**：Cargo, Go Modules, Gradle, Maven, Pub；
+  - 支持一键清空内部缓存、整目录移入废纸篓与在访达中即时定位。
+- **IDE 孤立工作区清理 (Orphaned Workspace Storage)**：
+  - 自动解析 VS Code / Cursor / VSCodium 的 `workspace.json`；
+  - 精准识别工程源码已被删除但缓存依然残留的“孤儿工作区”，支持一键批量清理释放数 GB 磁盘空间。
+- **Pip 全局包管理器 (Pip Packages)**：
+  - 自动探测当前系统的 Python 3 解释器；
+  - 完整读取全局第三方包列表与体积，支持多选批量一键卸载。
+
+### 🎨 交互与系统整合
+- **独立原生双栏清理窗口**：支持应用体积与架构排序、实时搜索、即时加载与流畅的过渡动画。
+- **状态栏与通用设置**：在主面板快捷操作与通用设置中支持自由控制清理模块入口。
+
+---
+
+## 🚀 v1.3.0 — 2026-08-19
 
 ### 📋 剪贴板历史记录 (Clipboard History)
 - **多格式捕获**：支持纯文本、富文本 (RTF/HTML)、截图位图、访达文件、链接及颜色 HEX 码的自动监听。

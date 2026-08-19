@@ -332,6 +332,7 @@ public struct PopoverContentView: View {
         case gatekeeper
         case ocr
         case clipboard
+        case cleaner
     }
 
     private var activeQuickActions: [QuickActionItem] {
@@ -344,6 +345,7 @@ public struct PopoverContentView: View {
         if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
         if settings.popoverShowOCR { items.append(.ocr) }
         if settings.popoverShowClipboard { items.append(.clipboard) }
+        if settings.popoverShowCleaner { items.append(.cleaner) }
         return items
     }
 
@@ -385,6 +387,38 @@ public struct PopoverContentView: View {
             ocrRow
         case .clipboard:
             clipboardRow
+        case .cleaner:
+            cleanerRow
+        }
+    }
+
+    private var cleanerRow: some View {
+        HStack {
+            Image(systemName: "trash.fill")
+                .foregroundStyle(.purple)
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 1) {
+                Text("软件与开发清理")
+                    .font(.system(size: 12, weight: .medium))
+                Text("软件残留 · 开发缓存 · 孤立工作区")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+            }
+            Spacer()
+
+            Button(action: {
+                StatusBarManager.shared.closePopover()
+                CleanerWindowController.shared.show()
+            }) {
+                Text("打开清理")
+                    .font(.system(size: 11, weight: .semibold))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 3)
+            }
+            .buttonStyle(.borderedProminent)
+            .controlSize(.small)
+            .tint(.purple)
+            .help("打开 CalmBar 卸载与清理中心")
         }
     }
 

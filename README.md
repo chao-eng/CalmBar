@@ -1,6 +1,6 @@
 # CalmBar 🌬️
 
-> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 系统防休眠防离开 · 充电管理与电池上限 · 应用去隔离授权
+> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 系统防休眠防离开 · 充电管理与电池上限 · 应用去隔离授权 · 屏幕文字与二维码识别 · 剪贴板历史管理 · 软件卸载与开发者环境深度清理
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
@@ -21,6 +21,8 @@
 6. **插电满电高压损伤电池**：长期插电使用电量持续处于 100% 极易导致电池损耗老化与鼓包，CalmBar 提供精准硬件级 80% 充电上限与适配器旁路供电。
 7. **未签名与已损坏应用拦截**：外部下载软件常因 Gatekeeper 隔离标记报错无法打开，CalmBar 支持拖拽一键递归去隔离与 Ad-hoc 自签名修复。
 8. **屏幕信息快速提取与归档**：无需安装庞大第三方 OCR 软件，CalmBar 原生集成 Apple Vision 深度学习识别引擎，支持屏幕选区识字、二维码/条码解析与历史管理。
+9. **剪贴板碎片化与数据丢失**：原生剪贴板仅保留单次复制，CalmBar 提供多模态格式捕获、图片智能升格、Vision OCR 文字/二维码索引与隐私过滤。
+10. **应用卸载残留与开发缓存积压**：原生拖进废纸篓只带走主程序，散落在 Library 中的几个 GB 偏好与缓存依然霸占硬盘；Xcode/Node/Python 等工具链缓存及已被删除工程的历史工作区日积月累，CalmBar 提供一键应用深层卸载与开发者环境专属清理。
 
 ---
 
@@ -78,7 +80,6 @@
 * **二维码 / 条形码并发解析**：同时检测选区内文本与二维码/条码内容，支持网址识别一键 Safari 直达。
 * **历史持久化与容量控制**：支持搜索、分类筛选、单项删除、一键清空与 50~500 条最大保留上限。
 * **舒适毛玻璃悬浮窗**：高对比度排版、一键复制、删除记录，支持在偏好设置中自由配置自动倒计时消失（5s~60s）或常驻。
-* **智能交互防遮挡**：点击截屏时主面板瞬间平滑收起，确保完整视野框选。
 
 ### 9. 📋 剪贴板历史记录与智能识别 (Clipboard History)
 * **多模态全格式监听**：纯文本、富文本 (RTF/HTML)、系统截图/复制图像、访达图片/文件 URL、网页链接、十六进制颜色代码等。
@@ -86,6 +87,14 @@
 * **Vision OCR 后台索引**：自动提取图片中的多语言文字与二维码内容，配合空间感知隔离算法消除噪点，支持全局关键词检索。
 * **安全隐私过滤**：自动忽略密码管理器（1Password/Bitwarden/KeePassXC）敏感数据及瞬态复制。
 * **独立管理窗口与 Pin 固定**：支持分类筛选、Pin 固定保护、LRU 淘汰与磁盘缓存管理。
+
+### 10. 🗑️ 软件卸载与开发者深度清理 (App & Developer Cleaner)
+* **全量应用索引与架构识别**：多线程并发扫描已安装软件，提取图标、Bundle ID、安装体积、版本号及架构（Apple Silicon / Intel / Universal）。
+* **深层残留嗅探引擎**：扫描 `~/Library` 与 `/Library` 下 20+ 个目录，基于 Bundle ID 衍生前缀、名称变体及安全排除列表精准匹配残留。
+* **完全免密安全移入废纸篓**：多层级静默回退，全流程无需输入密码，误删可直接在废纸篓放回原处。
+* **24+ 款主流开发工具链缓存清理**：覆盖 Xcode（`DerivedData`、`Archives`、`CoreSimulator` 模拟器等）、Node（Npm/Pnpm/Yarn/Bun/Deno）、Python（Pip/Poetry/Uv/Conda）、Rust（Cargo）、Go、Java（Gradle/Maven）、Flutter 等。
+* **IDE 孤立工作区清理**：自动探测 VS Code / Cursor 中工程源码已被删除的历史孤立工作区缓存，支持一键批量清理释放数 GB 磁盘空间。
+* **Pip 全局包管理**：自动探测 Python 3 环境，列出全局第三方包体积并支持多选批量一键卸载。
 
 ---
 
@@ -101,6 +110,7 @@ CalmBar/
 │       │   ├── AppDelegate.swift        # App 生命周期与菜单栏初始化
 │       │   ├── Battery/                 # IOPowerSources 电池监听与充电上限状态机
 │       │   ├── Caffeine/                # IOKit 电源断言与 HID 微动防离开引擎
+│       │   ├── Cleaner/                 # 应用卸载分析、残留嗅探、开发工具链与工作区清理
 │       │   ├── Clipboard/               # 剪贴板监听、安全过滤、OCR 索引与存储管理
 │       │   ├── Gatekeeper/              # macOS 隔离属性与自签名修复引擎
 │       │   ├── MenuBar/                 # 菜单栏折叠与布局管理器
@@ -145,7 +155,9 @@ sudo xattr -rd com.apple.quarantine /Applications/CalmBar.app
 1. **辅助功能权限 (Accessibility)**：
    * 用于系统级拦截并翻转外接鼠标滚轮事件，以及办公软件防离开 (Activity Simulator) 微动仿真。
    * 前往 **系统设置 -> 隐私与安全性 -> 辅助功能**，确保 **CalmBar** 处于开启状态。
-2. **SMC 特权助手 (Fan Control & Battery Helper)**：
+2. **完全磁盘访问权限 (Full Disk Access - 可选建议)**：
+   * 用于完整扫描 `~/Library/Containers` 及受保护目录下的应用残留文件。
+3. **SMC 特权助手 (Fan Control & Battery Helper)**：
    * 用于向系统 SMC 寄存器写入风扇目标转速及电池充电阻断状态。
    * 点击 CalmBar 面板中的 **「一键激活」** 按钮，按系统提示输入开机密码即可一键安装特权服务。
 
@@ -157,10 +169,10 @@ sudo xattr -rd com.apple.quarantine /Applications/CalmBar.app
 * **开源协议**：本项目基于 [Apache License 2.0](LICENSE) 许可证开源。
 
 特别致谢开源社区优秀项目的启发与参考：
+* [Pearcleaner](https://github.com/alienator88/Pearcleaner) (macOS App & Dev Cache Cleaner)
 * [Aidente](https://github.com/aidente) (SMC Battery Charging Control)
 * [Caffeine](https://github.com/caffeine-app) (by Tomas Franzén & Dominic Rodemer)
 * [noTunes](https://github.com/tombonez/noTunes) (by Tom Taylor)
 * [Scroll Reverser](https://pilotmoon.com/scrollreverser/) (by Pilotmoon)
 * [Hidden Bar](https://github.com/dwarvesf/hidden) (by Dwarves Foundation)
 * [AirPulse](https://github.com/chaoeng) (SMC Fan Controller)
-
