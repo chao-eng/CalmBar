@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <title>CalmBar 🌬️ - macOS 全能系统增强套件 | 让你的 Mac 更冷静、更从容</title>
+  <meta name="description"
+    content="CalmBar 是一款专为 macOS 打造的原生全能系统增强套件。支持硬件温控、风扇调速、菜单栏收纳、鼠标滚轮解耦、媒体拦截、80%电池充电上限、防休眠防离开、开发者环境深度清理与离线OCR识字。">
+  <meta name="keywords" content="CalmBar, macOS 增强, 菜单栏管理, Mac风扇控制, 电池80%保护, 开发者清理, macOS OCR, noTunes, Gatekeeper 解锁">
+  <meta name="author" content="chao-eng">
+
+  <!-- Open Graph / Social Media -->
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="CalmBar - macOS 全能系统增强套件">
+  <meta property="og:description" content="原生 Swift 6 打造，让你的 Mac 保持冷静、整洁与极致效率。">
+  <meta property="og:image" content="images/popover_main.png">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="images/app_icon.png">
+  <link rel="apple-touch-icon" href="images/app_icon.png">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body class="apple-theme">
+
+  <!-- Global Apple Header -->
+  <header class="global-nav" id="global-nav">
+    <div class="nav-container">
+      <a href="#" class="nav-brand" aria-label="CalmBar 首页">
+        <img src="images/app_icon.png" alt="CalmBar Icon" class="brand-icon">
+        <span class="brand-name">CalmBar</span>
+      </a>
+
+      <nav class="nav-menu" id="nav-menu">
+        <a href="#overview" class="nav-link">概览</a>
+        <a href="#showcase" class="nav-link">功能演示</a>
+        <a href="#performance" class="nav-link">技术架构</a>
+        <a href="#shortcuts" class="nav-link">快捷键</a>
+        <a href="#download" class="nav-link nav-highlight">立即获取</a>
+      </nav>
+
+      <div class="nav-actions">
+        <a href="https://github.com/chao-eng/CalmBar" target="_blank" rel="noopener noreferrer" class="nav-github"
+          title="在 GitHub 查看源码">
+          <svg class="icon-github" viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          <span class="nav-github-text">GitHub</span>
+        </a>
+        <a href="#download" class="btn btn-pill btn-primary btn-nav">下载</a>
+        <button class="nav-toggle" id="nav-toggle" aria-label="切换菜单">
+          <span></span><span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Hero Section (Apple Dark Keynote Style) -->
+  <section class="section section-hero" id="overview">
+    <div class="container hero-content">
+      <div class="badge-pill">
+        <span class="badge-dot"></span>
+        <span>CalmBar 2.0.2 现已正式发布 · 适配 macOS 14.0+</span>
+      </div>
+
+      <h1 class="hero-headline">让你的 Mac<br><span class="gradient-text">更冷静，更从容。</span></h1>
+      <p class="hero-subheadline">
+        硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 80% 充电上限保护 · 智能防休眠 · 开发者环境深度清理 · 离线 OCR 屏幕识字
+      </p>
+
+      <div class="hero-cta-group">
+        <a href="https://pan.quark.cn/s/43e4bd2be8c5" target="_blank" rel="noopener noreferrer"
+          class="btn btn-pill btn-primary btn-large">
+          <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor"
+            stroke-width="2">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          夸克网盘下载
+        </a>
+        <a href="https://github.com/chao-eng/CalmBar" target="_blank" rel="noopener noreferrer"
+          class="btn btn-pill btn-secondary btn-large">
+          <svg class="btn-icon" viewBox="0 0 24 24" width="20" height="20" fill="currentColor">
+            <path
+              d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z" />
+          </svg>
+          GitHub 源码仓库
+        </a>
+      </div>
+
+      <div class="hero-specs-pill">
+        <span>⚡ Swift 6 原生编译</span>
+        <span class="sep">•</span>
+        <span>🍏 支持 Apple Silicon (M1-M4) & Intel</span>
+        <span class="sep">•</span>
+        <span>🔒 纯离线零外联</span>
+      </div>
+
+      <!-- Hero Visual Device Frame -->
+      <div class="hero-visual">
+        <div class="mac-window-frame">
+          <div class="window-header">
+            <span class="dot red"></span>
+            <span class="dot yellow"></span>
+            <span class="dot green"></span>
+            <span class="window-title">CalmBar Menu Console</span>
+          </div>
+          <div class="window-body">
+            <img src="images/popover_main.png" alt="CalmBar 菜单栏主控制台" class="hero-img img-zoomable" loading="eager">
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Interactive Feature Deep-Dive Showcase (Apple Tabbed Gallery) -->
+  <section class="section section-dark" id="showcase">
+    <div class="container">
+      <div class="section-header text-center">
+        <p class="section-eyebrow">深度探索</p>
+        <h2 class="section-title">每一个细节，皆为精致打造</h2>
+        <p class="section-desc">点击下方功能模块，预览 CalmBar 原生设置与交互界面。</p>
+      </div>
+
+      <!-- Feature Tabs -->
+      <div class="tab-nav-container">
+        <div class="tab-nav" role="tablist">
+          <button class="tab-btn active" data-target="tab-palette">⚡ 命令面板</button>
+          <button class="tab-btn" data-target="tab-thermal">硬件温控</button>
+          <button class="tab-btn" data-target="tab-cleaner">环境清理</button>
+          <button class="tab-btn" data-target="tab-battery">电池管理</button>
+          <button class="tab-btn" data-target="tab-caffeine">防休眠 & 媒体</button>
+          <button class="tab-btn" data-target="tab-clipboard">剪贴板 & OCR</button>
+          <button class="tab-btn" data-target="tab-security">去隔离与权限</button>
+        </div>
+      </div>
+
+      <!-- Tab Contents -->
+      <div class="tab-content-wrapper">
+        <!-- Tab 0: Command Palette Animation -->
+        <div class="tab-pane active" id="tab-palette">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">全局极速调度</span>
+              <h3>Spotlight 风格命令面板</h3>
+              <p>让键盘成为最高效的生产力工具。无需将鼠标移动到菜单栏，只需按下全局热键，随心调起系统温控模式、屏幕识字、剪贴板管理或一键深度清理。</p>
+              <ul class="feature-bullets">
+                <li>✨ 全局快捷键 <strong>⌥ + ⌘ + K</strong> 唤出，居中偏上视线舒适区</li>
+                <li>✨ 支持中文、英文关键词与<strong>拼音首字母模糊匹配</strong>（输入 <code>sz</code> 识字、<code>ql</code> 清理、<code>cd</code> 充电）
+                </li>
+                <li>✨ 键盘上下方向键浏览，按下 <code>Enter</code> 即可秒级执行命令</li>
+              </ul>
+              <div class="shortcut-tip">
+                <span>全局唤起快捷键：</span>
+                <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>K</kbd>
+              </div>
+            </div>
+            <div class="showcase-image">
+              <img src="images/command_gif.webp" alt="Command Palette 命令面板动态演示" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 1: Thermal -->
+        <div class="tab-pane" id="tab-thermal">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">SMC 深度温控</span>
+              <h3>智能平滑插值加速曲线</h3>
+              <p>官方固件经常在温度达到 90°C+ 甚至撞墙时才猛增风扇转速。CalmBar 允许你设定平滑的温度响应曲线，在温度微升时即刻温和提速，保持机身时刻清凉且维持静音。</p>
+              <ul class="feature-bullets">
+                <li>✨ 支持左右风扇联动调速与独立控制</li>
+                <li>✨ 实时监测 CPU 核心温度、SoC 与电池传感器</li>
+                <li>✨ 软件退出或休眠自动交还 SMC 官方托管，安全无风险</li>
+              </ul>
+              <div class="shortcut-tip">
+                <span>控制台快捷唤起：</span>
+                <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>K</kbd>
+              </div>
+            </div>
+            <div class="showcase-image">
+              <img src="images/thermal_settings.png" alt="硬件温控偏好设置" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 2: Cleaner -->
+        <div class="tab-pane" id="tab-cleaner">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">开发者利器</span>
+              <h3>Xcode、Node 与开发缓存深度清理</h3>
+              <p>传统卸载只删除 <code>.app</code>，残留数 GB 的缓存与 Application Support。针对开发者，CalmBar 专项扫描并清理多语言工具链的深层缓存与废弃工程目录。</p>
+              <ul class="feature-bullets">
+                <li>✨ 深度应用卸载：关联缓存、偏好配置、Containers 连根拔起</li>
+                <li>✨ 开发者环境：DerivedData、Archives、node_modules、pip、conda、Cargo、Docker 镜像</li>
+                <li>✨ 扫描安全透明，用户可按需勾选清理项</li>
+              </ul>
+            </div>
+            <div class="showcase-image">
+              <img src="images/cleaner_developer.png" alt="开发者缓存清理" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 3: Battery -->
+        <div class="tab-pane" id="tab-battery">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">电池健康</span>
+              <h3>80% 充电上限与回差巡航保护</h3>
+              <p>笔记本长期连接电源工作，电池常年维持在 100% 满压状态，极易导致锂聚合物电池鼓包。CalmBar 提供硬件级 80% 充电切断，并设置下限回差充电巡航。</p>
+              <ul class="feature-bullets">
+                <li>✨ 自动切断电源输入，维持电池在黄金保养电量</li>
+                <li>✨ 内置 15% 紧急断充熔断机制与底层状态看门狗</li>
+                <li>✨ 即插即用，无需复杂驱动安装</li>
+              </ul>
+            </div>
+            <div class="showcase-image">
+              <img src="images/battery_settings.png" alt="电池设置" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 4: Caffeine & Media -->
+        <div class="tab-pane" id="tab-caffeine">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">工作协同</span>
+              <h3>防休眠、防离开判定与 noTunes 拦截</h3>
+              <p>传输大文件、编译代码或开会展示时防止屏幕意外熄灭。同时彻底终结误触键盘播放键或连接蓝牙耳机时强行弹出 Apple Music 的困扰。</p>
+              <ul class="feature-bullets">
+                <li>✨ 原生 IOKit 断言防休眠，支持定时自动恢复</li>
+                <li>✨ IOHIDSystem 闲置检测微动，避免协同办公软件离开判定</li>
+                <li>✨ noTunes 拦截：拦截系统 Music，支持自动重定向唤起 Spotify、网易云等</li>
+              </ul>
+            </div>
+            <div class="showcase-image">
+              <img src="images/notunes_settings.png" alt="noTunes 媒体拦截设置" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 5: Clipboard & OCR -->
+        <div class="tab-pane" id="tab-clipboard">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">生产力引擎</span>
+              <h3>剪贴板历史与 Apple Vision 屏幕识字</h3>
+              <p>多模态图文剪贴板记录，集成 Apple 神经引擎离线文字识别。无论图片中的文字还是网页上的二维码，框选即可瞬时提取。</p>
+              <ul class="feature-bullets">
+                <li>✨ 剪贴板支持文本、代码、富文本、图片及文件格式</li>
+                <li>✨ 离线 Vision OCR：自动中英分词、去除换行、解析二维码/条形码</li>
+                <li>✨ 智能敏感信息过滤（密码、Token 自动屏蔽）</li>
+              </ul>
+            </div>
+            <div class="showcase-image">
+              <img src="images/clipboard_history.png" alt="剪贴板历史" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 6: Security -->
+        <div class="tab-pane" id="tab-security">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">系统安全</span>
+              <h3>Gatekeeper 去隔离与 Ad-hoc 签名修复</h3>
+              <p>从网络下载的开源或第三方软件常提示“已损坏，无法打开”。CalmBar 支持拖拽一键递归剥离隔离属性（xattr -cr），并自动执行 Ad-hoc 自签名。</p>
+              <ul class="feature-bullets">
+                <li>✨ 一键修复“应用已损坏，移到废纸篓”错误</li>
+                <li>✨ 直观的系统权限仪表盘（无障碍、屏幕录制、SMC 状态）</li>
+                <li>✨ 严格遵循 macOS 沙盒与安全审计规范</li>
+              </ul>
+            </div>
+            <div class="showcase-image">
+              <img src="images/gatekeeper_unlocker.png" alt="Gatekeeper 去隔离" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Technical Specs & Philosophy (Apple Light Style) -->
+  <section class="section section-light" id="performance">
+    <div class="container">
+      <div class="section-header text-center">
+        <p class="section-eyebrow">原生架构</p>
+        <h2 class="section-title">极致轻量，坚如磐石</h2>
+        <p class="section-desc">抛弃沉重的 Web 容器包装，专为 Apple Silicon 架构量身打磨。</p>
+      </div>
+
+      <div class="tech-grid">
+        <div class="tech-item">
+          <div class="tech-num">0.1%</div>
+          <div class="tech-label">后台静默 CPU 占用</div>
+          <div class="tech-sub">事件驱动架构，无操作时完全休眠</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-num">&lt; 30MB</div>
+          <div class="tech-label">超低内存常驻</div>
+          <div class="tech-sub">Swift 6 原生内存管理，告别 Electron 臃肿</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-num">100%</div>
+          <div class="tech-label">离线本地安全</div>
+          <div class="tech-sub">零远程网络外联，零隐私上传，完全开源</div>
+        </div>
+        <div class="tech-item">
+          <div class="tech-num">M1-M4</div>
+          <div class="tech-label">全系 Apple Silicon</div>
+          <div class="tech-sub">原生编译指令集，同步支持 Intel Mac</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Shortcuts Section -->
+  <section class="section section-dark" id="shortcuts">
+    <div class="container">
+      <div class="section-header text-center">
+        <p class="section-eyebrow">高效快捷键</p>
+        <h2 class="section-title">指尖起舞，随心掌控</h2>
+      </div>
+
+      <div class="shortcut-cards">
+        <div class="shortcut-card">
+          <div class="key-combo">
+            <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>K</kbd>
+          </div>
+          <div class="key-name">全局命令面板</div>
+          <div class="key-desc">呼出 Spotlight 风格全功能极速调度器</div>
+        </div>
+        <div class="shortcut-card">
+          <div class="key-combo">
+            <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>H</kbd>
+          </div>
+          <div class="key-name">菜单栏一键折叠</div>
+          <div class="key-desc">瞬间收纳/展开隐藏区域图标</div>
+        </div>
+        <div class="shortcut-card">
+          <div class="key-combo">
+            <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>O</kbd>
+          </div>
+          <div class="key-name">屏幕选区 OCR 识字</div>
+          <div class="key-desc">截取屏幕任意区域并离线提取文字</div>
+        </div>
+        <div class="shortcut-card">
+          <div class="key-combo">
+            <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>V</kbd>
+          </div>
+          <div class="key-name">剪贴板历史唤出</div>
+          <div class="key-desc">在光标位置快速预览与粘贴历史记录</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Download & Installation Section -->
+  <section class="section section-download" id="download">
+    <div class="container">
+      <div class="download-box">
+        <div class="badge-pill mb-4">
+          <span>开源免费 · Apache 2.0 协议</span>
+        </div>
+
+        <h2 class="download-title">立即下载 CalmBar</h2>
+        <p class="download-sub">选择适合你的下载渠道，开启清凉从容的 Mac 体验。</p>
+
+        <div class="download-cards-grid">
+          <!-- Card 1: Quark Netdisk (Recommended for China) -->
+          <div class="download-card highlight-card">
+            <div class="card-tag">国内直链</div>
+            <div class="card-icon">⚡</div>
+            <h3>夸克网盘下载</h3>
+            <p class="card-info">免翻墙下载 DMG 安装包，更新同步。</p>
+            <a href="https://pan.quark.cn/s/43e4bd2be8c5" target="_blank" rel="noopener noreferrer"
+              class="btn btn-pill btn-primary btn-block">
+              前往夸克网盘下载
+            </a>
+            <span class="card-subtext">提取安全码自动填充</span>
+          </div>
+
+          <!-- Card 2: GitHub Releases -->
+          <div class="download-card">
+            <div class="card-tag">官方开源仓库</div>
+            <div class="card-icon">🐙</div>
+            <h3>GitHub 源码与 Releases</h3>
+            <p class="card-info">获取最新版本 Release DMG、查看提交历史与源码。</p>
+            <a href="https://github.com/chao-eng/CalmBar" target="_blank" rel="noopener noreferrer"
+              class="btn btn-pill btn-secondary btn-block">
+              访问 GitHub 仓库
+            </a>
+            <span class="card-subtext">支持 Star & Issue 反馈</span>
+          </div>
+        </div>
+
+        <!-- Installation & Gatekeeper Authorization Guide -->
+        <div class="install-guide-box">
+          <h3 class="install-guide-title">📖 软件安装与授权指南</h3>
+
+          <div class="install-steps-grid">
+            <!-- Step 1 -->
+            <div class="install-step-card">
+              <div class="step-badge">步骤 1</div>
+              <h4>下载与放入应用程序</h4>
+              <p>从 <a href="https://github.com/chao-eng/CalmBar/releases" target="_blank" rel="noopener noreferrer"
+                  class="link-blue">GitHub Releases</a> 或夸克网盘下载发布的 <code>CalmBar.app</code>（或 Zip 压缩包），将其拖入
+                <code>/Applications</code>（应用程序）文件夹中即可。
+              </p>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="install-step-card">
+              <div class="step-badge">步骤 2</div>
+              <h4>首次运行授权（绕过 Gatekeeper 隔离）</h4>
+              <p>由于本项目为个人独立开源软件，未集成 Apple 商业付费证书，在 macOS 上直接双击打开时，系统安全机制（Gatekeeper）可能会拦截并提示
+                <strong>“应用程序已损坏，无法打开”</strong> 或 <strong>“无法验证开发者”</strong>。
+              </p>
+              <p class="step-subtext">在 macOS 终端（Terminal）中执行以下命令移除系统隔离属性即可正常运行：</p>
+
+              <div class="terminal-install-box in-card">
+                <div class="terminal-header">
+                  <span class="terminal-title">移除 Gatekeeper 隔离标记</span>
+                  <button class="btn-copy" id="btn-copy-quarantine"
+                    data-clipboard="sudo xattr -rd com.apple.quarantine /Applications/CalmBar.app">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                    </svg>
+                    <span>复制代码</span>
+                  </button>
+                </div>
+                <pre
+                  class="terminal-body"><code>sudo xattr -rd com.apple.quarantine /Applications/CalmBar.app</code></pre>
+              </div>
+
+              <div class="step-tip">
+                💡 <strong>提示</strong>：CalmBar 内部内置的 <strong>「应用去隔离」</strong> 工具亦支持直接拖拽任意 App 一键执行修复。
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Terminal Quick Install / Clone Tip -->
+        <div class="terminal-install-box">
+          <div class="terminal-header">
+            <span class="terminal-title">源码编译与构建 (针对开发者)</span>
+            <button class="btn-copy" id="btn-copy-cmd"
+              data-clipboard="git clone https://github.com/chao-eng/CalmBar.git && cd CalmBar && bash app/build_app.sh">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+              </svg>
+              <span>复制代码</span>
+            </button>
+          </div>
+          <pre class="terminal-body"><code>git clone https://github.com/chao-eng/CalmBar.git
+cd CalmBar && bash app/build_app.sh</code></pre>
+        </div>
+
+        <!-- System Requirements -->
+        <div class="sys-reqs">
+          <span>系统要求：macOS 14.0 (Sonoma) 或更高版本</span>
+          <span class="sep">•</span>
+          <span>适用芯片：Apple M1 / M2 / M3 / M4 系列及 Intel Mac</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Apple Minimalist Footer -->
+  <footer class="global-footer">
+    <div class="container footer-content">
+      <div class="footer-notes">
+        <p>1. CalmBar 是一款开源非营利项目，所有源代码与构建逻辑完全公开 transparent。</p>
+        <p>2. 硬件温控功能通过直接访问 SMC (System Management Controller) 寄存器读取芯片核心热传感器，退出时自动恢复官方托管。</p>
+      </div>
+      <div class="footer-divider"></div>
+      <div class="footer-bottom">
+        <div class="footer-copyright">
+          Copyright © 2026 CalmBar. 基于 Apache 2.0 开源许可协议发布。
+        </div>
+        <div class="footer-links">
+          <a href="https://github.com/chao-eng/CalmBar" target="_blank" rel="noopener noreferrer">GitHub</a>
+          <a href="https://pan.quark.cn/s/43e4bd2be8c5" target="_blank" rel="noopener noreferrer">夸克下载</a>
+          <a href="https://github.com/chao-eng/CalmBar/issues" target="_blank" rel="noopener noreferrer">提交 Issue</a>
+          <a href="https://github.com/chao-eng/CalmBar/blob/main/LICENSE" target="_blank"
+            rel="noopener noreferrer">开源协议</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Lightbox Modal for Full-res Image Zooming -->
+  <div class="lightbox" id="lightbox" aria-hidden="true">
+    <div class="lightbox-backdrop" id="lightbox-backdrop"></div>
+    <div class="lightbox-content">
+      <img src="" alt="" id="lightbox-img">
+      <button class="lightbox-close" id="lightbox-close" aria-label="关闭预览">&times;</button>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+
+</html>

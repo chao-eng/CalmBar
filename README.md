@@ -5,7 +5,7 @@
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
 [![Language](https://img.shields.io/badge/language-Swift%206-orange.svg)](https://swift.org)
-[![Version](https://img.shields.io/badge/release-v2.0.1-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
+[![Version](https://img.shields.io/badge/release-v2.0.2-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 ---
@@ -145,7 +145,7 @@
 * **二维码 / 条形码并发解析**：同时检测选区内文本与二维码/条码内容，支持网址识别一键 Safari 直达。
 * **舒适毛玻璃悬浮窗**：高对比度排版、一键复制、删除记录，支持在偏好设置中自由配置自动倒计时消失（5s~60s）或常驻。
 * **🕹️ 操作说明**：
-  1. 点击主面板磁贴中的 **「截屏识字」**（或在命令面板输入 `ocr`）。
+  1. 按下全局快捷键 **`⌥ + ⌘ + O`**（或点击主面板磁贴中的 **「截屏识字」** / 在命令面板输入 `ocr`）。
   2. 鼠标框选屏幕任意区域，识别结果将自动复制到剪贴板并弹出半透明结果卡片。
   3. 右键「截屏识字」磁贴可快捷打开 **OCR 历史记录窗口** 检索历史识别内容。
 
@@ -162,7 +162,7 @@
 * **安全隐私过滤**：自动忽略密码管理器（1Password/Bitwarden/KeePassXC）敏感数据及瞬态复制。
 * **独立管理窗口与 Pin 固定**：支持分类筛选（文本/图片/链接/文件/已固定）、Pin 固定保护、LRU 淘汰与磁盘缓存管理。
 * **🕹️ 操作说明**：
-  1. 点击主面板中的 **「剪贴板」** 磁贴，即可唤起独立剪贴板管理窗口。
+  1. 按下全局快捷键 **`⌥ + ⌘ + V`**（或点击主面板中的 **「剪贴板」** 磁贴），即可一键唤出或收起独立剪贴板管理窗口。
   2. 顶部支持按「文本 / 图片 / 链接 / 文件 / 已固定」快速筛选，支持搜索框实时模糊检索。
   3. 点击任意条目右侧的 **「复制」** 即可写回系统剪贴板，点击大头针 📌 即可永久固定防清除。
 

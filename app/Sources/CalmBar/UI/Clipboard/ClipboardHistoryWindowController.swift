@@ -33,6 +33,14 @@ public final class ClipboardHistoryWindowController {
         self.window = win
     }
 
+    public func toggle() {
+        if let existing = window, existing.isVisible {
+            close()
+        } else {
+            show()
+        }
+    }
+
     public func close() {
         window?.close()
         window = nil

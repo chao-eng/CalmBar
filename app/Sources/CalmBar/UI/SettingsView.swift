@@ -1384,15 +1384,16 @@ public struct SettingsView: View {
                                 .font(.system(size: 28, weight: .bold))
                                 .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("CalmBar (MacPulse)")
+                                Text("CalmBar")
                                     .font(.system(size: 14, weight: .bold))
-                                Text("Version 1.5.0 (Native Swift 6 & SwiftUI)")
+                                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.2"
+                                Text("Version \(version) (Native Swift 6 & SwiftUI)")
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                             }
                         }
                         Divider()
-                        Text("整合硬件温控 (AirPulse)、菜单栏收纳 (Hidden Bar)、滚动手势解耦 (Scroll Reverser)、媒体启动拦截 (noTunes)、防休眠与防离开 (Caffeine)、电池充电上限 (Aidente)、应用去隔离授权、屏幕文字与二维码识别 (Vision OCR) 及剪贴板历史记录 (Clipboard History) 的全能 macOS 菜单栏综合增强套件。")
+                        Text("整合硬件温控、菜单栏收纳、滚动手势解耦、媒体启动拦截、防休眠与防离开、电池充电上限保护、应用去隔离授权、屏幕文字与二维码识别 (Vision OCR)、剪贴板历史记录 (Clipboard History) 及应用与开发者环境深度清理 (Developer Cleaner) 的全能 macOS 菜单栏综合增强套件。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
 
