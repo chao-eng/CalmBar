@@ -336,288 +336,172 @@ public struct PopoverContentView: View {
         }
     }
 
-    // MARK: - Quick Action Item Enum
-    private enum QuickActionItem {
-        case menuBar
-        case scrollReverser
-        case noTunes
-        case caffeine
-        case battery
-        case gatekeeper
+    // MARK: - Quick Action Item Enums
+    private enum QuickToolItem: Hashable {
         case ocr
         case clipboard
         case cleaner
+        case gatekeeper
     }
 
-    private var activeQuickActions: [QuickActionItem] {
-        var items: [QuickActionItem] = []
-        if settings.popoverShowMenuBar { items.append(.menuBar) }
-        if settings.popoverShowScrollReverser { items.append(.scrollReverser) }
-        if settings.popoverShowNoTunes { items.append(.noTunes) }
-        if settings.popoverShowCaffeine { items.append(.caffeine) }
-        if settings.popoverShowBattery && batteryMonitor.hasBattery { items.append(.battery) }
-        if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
+    private enum GuardianItem: Hashable {
+        case caffeine
+        case battery
+        case scrollReverser
+        case noTunes
+        case menuBar
+    }
+
+    private var activeQuickTools: [QuickToolItem] {
+        var items: [QuickToolItem] = []
         if settings.popoverShowOCR { items.append(.ocr) }
         if settings.popoverShowClipboard { items.append(.clipboard) }
         if settings.popoverShowCleaner { items.append(.cleaner) }
+        if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
+        return items
+    }
+
+    private var activeGuardians: [GuardianItem] {
+        var items: [GuardianItem] = []
+        if settings.popoverShowCaffeine { items.append(.caffeine) }
+        if settings.popoverShowBattery && batteryMonitor.hasBattery { items.append(.battery) }
+        if settings.popoverShowScrollReverser { items.append(.scrollReverser) }
+        if settings.popoverShowNoTunes { items.append(.noTunes) }
+        if settings.popoverShowMenuBar { items.append(.menuBar) }
         return items
     }
 
     // MARK: - Quick Actions Section
     @ViewBuilder
     private var quickActionsSection: some View {
-        let items = activeQuickActions
-        if !items.isEmpty {
-            GroupBox {
-                VStack(spacing: 8) {
-                    ForEach(Array(items.enumerated()), id: \.offset) { index, item in
-                        if index > 0 {
-                            Divider()
-                        }
-                        quickActionRowView(for: item)
-                    }
+        if !activeQuickTools.isEmpty || !activeGuardians.isEmpty {
+            VStack(spacing: 8) {
+                quickToolsSection
+                guardiansSection
+            }
+        }
+    }
+
+    // MARK: - Quick Tools Grid
+    @ViewBuilder
+    private var quickToolsSection: some View {
+        let tools = activeQuickTools
+        if !tools.isEmpty {
+            HStack(spacing: 6) {
+                ForEach(tools, id: \.self) { tool in
+                    quickToolTileView(for: tool)
                 }
-                .padding(4)
             }
         }
     }
 
     @ViewBuilder
-    private func quickActionRowView(for item: QuickActionItem) -> some View {
+    private func quickToolTileView(for item: QuickToolItem) -> some View {
         switch item {
-        case .menuBar:
-            menuBarRow
-        case .scrollReverser:
-            scrollReverserRow
-        case .noTunes:
-            noTunesRow
-        case .caffeine:
-            caffeineRow
-        case .battery:
-            batteryChargeLimitRow
-        case .gatekeeper:
-            gatekeeperRow
         case .ocr:
-            ocrRow
-        case .clipboard:
-            clipboardRow
-        case .cleaner:
-            cleanerRow
-        }
-    }
-
-    private var cleanerRow: some View {
-        HStack {
-            Image(systemName: "trash.fill")
-                .foregroundStyle(.purple)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("软件与开发清理")
-                    .font(.system(size: 12, weight: .medium))
-                Text("软件残留 · 开发缓存 · 孤立工作区")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-
-            Button(action: {
-                StatusBarManager.shared.closePopover()
-                CleanerWindowController.shared.show()
-            }) {
-                Text("打开清理")
-                    .font(.system(size: 11, weight: .semibold))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .tint(.purple)
-            .help("打开 CalmBar 卸载与清理中心")
-        }
-    }
-
-    // MARK: - Quick Action Row Views
-    private var clipboardRow: some View {
-        HStack {
-            Image(systemName: "doc.on.clipboard")
-                .foregroundStyle(.cyan)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("剪贴板历史")
-                    .font(.system(size: 12, weight: .medium))
-                if settings.clipboardHistoryEnabled {
-                    Text("已记录 \(dashboard.clipboardCount) 条内容")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                } else {
-                    Text("监听已关闭")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
+            ToolTileButton(
+                icon: "text.viewfinder",
+                title: "截屏识字",
+                color: .blue,
+                action: {
+                    ocr.startCaptureAndRecognize()
                 }
-            }
-            Spacer()
-
-            Button(action: {
-                StatusBarManager.shared.closePopover()
-                ClipboardHistoryWindowController.shared.show()
-            }) {
-                Text("浏览历史")
-                    .font(.system(size: 11, weight: .semibold))
-                    .padding(.horizontal, 6)
-                    .padding(.vertical, 3)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .tint(.cyan)
-            .help("打开剪贴板历史管理窗口")
-        }
-    }
-
-    // MARK: - Quick Action Row Views
-    private var ocrRow: some View {
-        HStack {
-            Image(systemName: "text.viewfinder")
-                .foregroundStyle(.blue)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("屏幕文字识别")
-                    .font(.system(size: 12, weight: .medium))
-                if let status = ocr.statusMessage {
-                    Text(status)
-                        .font(.system(size: 10))
-                        .foregroundColor(.blue)
-                } else if let latest = ocr.latestResult {
-                    Text(latest.text.replacingOccurrences(of: "\n", with: " "))
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                        .lineLimit(1)
-                } else {
-                    Text("选区截图识字 · 二维码解析")
-                        .font(.system(size: 10))
-                        .foregroundColor(.secondary)
-                }
-            }
-            Spacer()
-
-            HStack(spacing: 6) {
-                Button(action: {
+            )
+            .contextMenu {
+                Button("打开 OCR 历史记录") {
                     StatusBarManager.shared.closePopover()
                     OCRHistoryWindowController.shared.show()
-                }) {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.system(size: 11))
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-                .help("查看识别历史记录")
+            }
+            .help("选区截图识字与二维码解析 (右键打开历史)")
 
-                Button(action: {
-                    ocr.startCaptureAndRecognize()
-                }) {
-                    Text("截屏识字")
-                        .font(.system(size: 11, weight: .semibold))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
+        case .clipboard:
+            ToolTileButton(
+                icon: "doc.on.clipboard",
+                title: "剪贴板",
+                color: .cyan,
+                action: {
+                    StatusBarManager.shared.closePopover()
+                    ClipboardHistoryWindowController.shared.show()
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.small)
-                .tint(.blue)
-            }
-        }
-    }
+            )
+            .help(settings.clipboardHistoryEnabled ? "浏览剪贴板历史 (已记录 \(dashboard.clipboardCount) 条)" : "打开剪贴板历史 (监听已关闭)")
 
-    // MARK: - Quick Action Row Views
-    private var menuBarRow: some View {
-        HStack {
-            Image(systemName: "menubar.rectangle")
-                .foregroundStyle(.indigo)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("菜单栏收纳")
-                    .font(.system(size: 12, weight: .medium))
-                Text(menuBar.isCollapsed ? "已收纳折叠" : "已展开显示")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            Button(action: {
-                menuBar.toggleExpandCollapse()
-            }) {
-                Text(menuBar.isCollapsed ? "展开" : "折叠")
-                    .font(.system(size: 11, weight: .semibold))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
-            }
-            .buttonStyle(.borderedProminent)
-            .controlSize(.small)
-            .tint(.accentColor)
-        }
-    }
-
-    private var scrollReverserRow: some View {
-        HStack {
-            Image(systemName: "computermouse.fill")
-                .foregroundStyle(.teal)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("鼠标自然滚动")
-                    .font(.system(size: 12, weight: .medium))
-                Text(settings.scrollReverserEnabled ? "鼠标反转 · 触控板原生" : "已停用")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            Toggle("", isOn: $settings.scrollReverserEnabled)
-                .toggleStyle(.switch)
-                .labelsHidden()
-                .controlSize(.mini)
-                .tint(.accentColor)
-        }
-    }
-
-    private var noTunesRow: some View {
-        HStack {
-            NoTunesIconView(size: 20)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                Text("Apple Music 拦截")
-                    .font(.system(size: 12, weight: .medium))
-                Text(settings.noTunesEnabled ? "已开启防误触拦截" : "已暂停拦截")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            Toggle("", isOn: $settings.noTunesEnabled)
-                .toggleStyle(.switch)
-                .labelsHidden()
-                .controlSize(.mini)
-                .tint(.accentColor)
-        }
-    }
-
-    private var caffeineRow: some View {
-        HStack {
-            CaffeineIconView(size: 20, isActive: caffeine.isActive)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 4) {
-                    Text("系统防休眠")
-                        .font(.system(size: 12, weight: .medium))
-                    if caffeine.isActive {
-                        Text(caffeine.timeRemaining != nil ? "\(caffeine.formattedTimeRemaining())" : "无限期")
-                            .font(.system(size: 9, weight: .semibold, design: .monospaced))
-                            .padding(.horizontal, 5)
-                            .padding(.vertical, 1.5)
-                            .background(Color.brown.opacity(0.12))
-                            .foregroundStyle(Color.brown)
-                            .cornerRadius(3)
-                    }
+        case .cleaner:
+            ToolTileButton(
+                icon: "trash.fill",
+                title: "清理中心",
+                color: .purple,
+                action: {
+                    StatusBarManager.shared.closePopover()
+                    CleanerWindowController.shared.show()
                 }
-                Text(caffeine.isActive ? (settings.caffeineKeepAppsActive ? "防休眠 · 防离开工作中" : "已阻止系统与显示器休眠") : "点击开启防休眠 (支持定时)")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+            )
+            .help("软件残留 · 开发缓存 · 孤立工作区清理")
+
+        case .gatekeeper:
+            ToolTileButton(
+                icon: "lock.shield",
+                title: "应用去隔离",
+                color: .teal,
+                action: {
+                    openSettingsAction(.gatekeeper)
+                }
+            )
+            .help("修复未签名或损坏应用提示")
+        }
+    }
+
+    // MARK: - Guardians Grid
+    @ViewBuilder
+    private var guardiansSection: some View {
+        let guardians = activeGuardians
+        if !guardians.isEmpty {
+            LazyVGrid(
+                columns: [
+                    GridItem(.flexible(), spacing: 6),
+                    GridItem(.flexible(), spacing: 6)
+                ],
+                spacing: 6
+            ) {
+                ForEach(guardians, id: \.self) { guardian in
+                    guardianCardView(for: guardian)
+                }
             }
-            Spacer()
+        }
+    }
+
+    @ViewBuilder
+    private func guardianCardView(for item: GuardianItem) -> some View {
+        switch item {
+        case .caffeine:
+            caffeineGuardianCard
+        case .battery:
+            batteryGuardianCard
+        case .scrollReverser:
+            scrollReverserGuardianCard
+        case .noTunes:
+            noTunesGuardianCard
+        case .menuBar:
+            menuBarGuardianCard
+        }
+    }
+
+    private var caffeineGuardianCard: some View {
+        HStack(spacing: 6) {
+            CaffeineIconView(size: 18, isActive: caffeine.isActive)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("防休眠")
+                    .font(.system(size: 11, weight: .medium))
+                    .lineLimit(1)
+                Text(caffeine.isActive ? (caffeine.timeRemaining != nil ? caffeine.formattedTimeRemaining() : "无限期") : "已停用")
+                    .font(.system(size: 9, weight: caffeine.isActive ? .semibold : .regular))
+                    .foregroundColor(caffeine.isActive ? .brown : .secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 2)
 
             Menu {
                 Button("无限期保持清醒") {
@@ -650,10 +534,11 @@ public struct PopoverContentView: View {
                 }
             } label: {
                 Image(systemName: "timer")
-                    .font(.system(size: 12))
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
             }
             .menuStyle(.borderlessButton)
-            .frame(width: 18)
+            .frame(width: 14)
             .help("选择防休眠时长")
 
             Toggle("", isOn: Binding(
@@ -665,66 +550,50 @@ public struct PopoverContentView: View {
             .controlSize(.mini)
             .tint(.accentColor)
         }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
     }
 
-    private var batteryChargeLimitRow: some View {
-        HStack {
+    private var batteryGuardianCard: some View {
+        HStack(spacing: 6) {
             BatteryIconView(
-                size: 20,
+                size: 18,
                 isCharging: batteryMonitor.isCharging,
                 isBypassed: chargeManager.isChargingInhibited,
                 isDischarging: chargeManager.operationStatus == .discharging
             )
-            .frame(width: 20)
 
             VStack(alignment: .leading, spacing: 1) {
-                HStack(spacing: 4) {
-                    Text("充电上限 \(settings.batteryChargeLimit)%")
-                        .font(.system(size: 12, weight: .medium))
-
-                    if settings.batteryTopUpActive {
-                        Text("充至100%")
-                            .font(.system(size: 9, weight: .semibold))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.blue.opacity(0.15))
-                            .foregroundStyle(.blue)
-                            .cornerRadius(3)
-                    } else if chargeManager.operationStatus == .discharging {
-                        Text("放电中")
-                            .font(.system(size: 9, weight: .semibold))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.accentColor.opacity(0.12))
-                            .foregroundStyle(Color.accentColor)
-                            .cornerRadius(3)
-                    } else if chargeManager.isChargingInhibited {
-                        Text("旁路供电")
-                            .font(.system(size: 9, weight: .semibold))
-                            .padding(.horizontal, 4)
-                            .padding(.vertical, 1)
-                            .background(Color.accentColor.opacity(0.12))
-                            .foregroundStyle(Color.accentColor)
-                            .cornerRadius(3)
-                    }
-                }
-                Text(chargeManager.lastStatusMessage.isEmpty ? "电量 \(batteryMonitor.currentPercentage)%" : chargeManager.lastStatusMessage)
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
+                Text("充电保护")
+                    .font(.system(size: 11, weight: .medium))
+                    .lineLimit(1)
+                Text(settings.batteryChargeLimitEnabled ? (settings.batteryTopUpActive ? "临时充满" : "\(settings.batteryChargeLimit)% 旁路") : "已停用")
+                    .font(.system(size: 9, weight: settings.batteryChargeLimitEnabled ? .semibold : .regular))
+                    .foregroundColor(settings.batteryChargeLimitEnabled ? .accentColor : .secondary)
+                    .lineLimit(1)
             }
-            Spacer()
+
+            Spacer(minLength: 2)
 
             if settings.batteryChargeLimitEnabled {
                 Button(action: {
                     chargeManager.toggleTopUp()
                 }) {
-                    Text(settings.batteryTopUpActive ? "取消" : "充至100%")
-                        .font(.system(size: 9, weight: .medium))
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 2)
+                    Image(systemName: settings.batteryTopUpActive ? "bolt.slash" : "bolt.badge.checkmark")
+                        .font(.system(size: 10))
+                        .foregroundColor(settings.batteryTopUpActive ? .orange : .secondary)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.mini)
+                .buttonStyle(.plain)
+                .help(settings.batteryTopUpActive ? "取消单次充至100%" : "临时充至 100%")
             }
 
             Toggle("", isOn: $settings.batteryChargeLimitEnabled)
@@ -733,31 +602,134 @@ public struct PopoverContentView: View {
                 .controlSize(.mini)
                 .tint(.accentColor)
         }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
     }
 
-    private var gatekeeperRow: some View {
-        HStack {
-            GatekeeperIconView(size: 20)
-                .frame(width: 20)
+    private var scrollReverserGuardianCard: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "computermouse.fill")
+                .font(.system(size: 13))
+                .foregroundStyle(.teal)
+                .frame(width: 18, height: 18)
+
             VStack(alignment: .leading, spacing: 1) {
-                Text("应用去隔离")
-                    .font(.system(size: 12, weight: .medium))
-                Text("修复未签名或损坏应用提示")
-                    .font(.system(size: 10))
-                    .foregroundColor(.secondary)
-            }
-            Spacer()
-            Button(action: {
-                openSettingsAction(.gatekeeper)
-            }) {
-                Text("去授权")
+                Text("自然滚动")
                     .font(.system(size: 11, weight: .medium))
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 3)
+                    .lineLimit(1)
+                Text(settings.scrollReverserEnabled ? "鼠标反转" : "已停用")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 2)
+
+            Toggle("", isOn: $settings.scrollReverserEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
+                .tint(.accentColor)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
+    }
+
+    private var noTunesGuardianCard: some View {
+        HStack(spacing: 6) {
+            NoTunesIconView(size: 18)
+                .frame(width: 18, height: 18)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Music 拦截")
+                    .font(.system(size: 11, weight: .medium))
+                    .lineLimit(1)
+                Text(settings.noTunesEnabled ? "拦截中" : "已暂停")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 2)
+
+            Toggle("", isOn: $settings.noTunesEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
+                .tint(.accentColor)
+        }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
+    }
+
+    private var menuBarGuardianCard: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "menubar.rectangle")
+                .font(.system(size: 13))
+                .foregroundStyle(.indigo)
+                .frame(width: 18, height: 18)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("菜单收纳")
+                    .font(.system(size: 11, weight: .medium))
+                    .lineLimit(1)
+                Text(menuBar.isCollapsed ? "已收纳" : "已展开")
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer(minLength: 2)
+
+            Button(action: {
+                menuBar.toggleExpandCollapse()
+            }) {
+                Text(menuBar.isCollapsed ? "展开" : "折叠")
+                    .font(.system(size: 10, weight: .medium))
+                    .padding(.horizontal, 4)
+                    .padding(.vertical, 1)
             }
             .buttonStyle(.bordered)
-            .controlSize(.small)
+            .controlSize(.mini)
         }
+        .padding(.horizontal, 7)
+        .padding(.vertical, 6)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 8, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
     }
 
     // MARK: - Footer View
@@ -793,5 +765,44 @@ public struct PopoverContentView: View {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: rpm)) ?? "\(rpm)"
+    }
+}
+
+// MARK: - Tool Tile Button Component
+private struct ToolTileButton: View {
+    let icon: String
+    let title: String
+    let color: Color
+    let action: () -> Void
+
+    @State private var isHovered = false
+
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(color)
+                    .frame(width: 20, height: 20)
+
+                Text(title)
+                    .font(.system(size: 10.5, weight: .medium))
+                    .foregroundColor(.primary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 7)
+            .background(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(isHovered ? Color.primary.opacity(0.08) : Color.primary.opacity(0.04))
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .stroke(Color.primary.opacity(isHovered ? 0.12 : 0.05), lineWidth: 0.5)
+            )
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .onHover { isHovered = $0 }
     }
 }
