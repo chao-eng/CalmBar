@@ -30,8 +30,7 @@
 ## 📸 界面预览 (UI Showcase)
 
 <p align="center">
-  <img src="doc/images/popover_main.png" width="340" alt="CalmBar 菜单栏主控制台 (控制中心风格)" style="border-radius: 12px; margin: 10px;" />
-  <img src="doc/images/command_palette.png" width="520" alt="CalmBar Command Palette 命令面板" style="border-radius: 12px; margin: 10px;" />
+  <img src="doc/images/popover_main.png" width="360" alt="CalmBar 菜单栏主控制台 (控制中心风格)" style="border-radius: 12px; margin: 10px;" />
 </p>
 
 ---
