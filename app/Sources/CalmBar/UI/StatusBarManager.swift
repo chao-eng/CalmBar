@@ -2,6 +2,15 @@ import AppKit
 import SwiftUI
 import Combine
 
+private final class StatusPanel: NSPanel {
+    override var canBecomeKey: Bool { true }
+    override var canBecomeMain: Bool { true }
+
+    override func cancelOperation(_ sender: Any?) {
+        StatusBarManager.shared.closePopover()
+    }
+}
+
 @MainActor
 public final class StatusBarManager: ObservableObject {
     public static let shared = StatusBarManager()
@@ -9,13 +18,14 @@ public final class StatusBarManager: ObservableObject {
     @Published public var selectedSettingsTab: SettingsTab = .thermal
 
     private var statusItem: NSStatusItem?
-    private var popover: NSPopover?
+    private var panel: StatusPanel?
     private var settingsWindow: NSWindow?
+    private var eventMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
 
     private init() {
         setupStatusItem()
-        setupPopover()
+        setupPanel()
         setupObservers()
     }
 
@@ -36,16 +46,28 @@ public final class StatusBarManager: ObservableObject {
         updateStatusItemTitle()
     }
 
-    private func setupPopover() {
-        let popover = NSPopover()
-        popover.contentSize = NSSize(width: 320, height: 380)
-        popover.behavior = .transient
-        popover.contentViewController = NSHostingController(
+    private func setupPanel() {
+        let panel = StatusPanel(
+            contentRect: NSRect(x: 0, y: 0, width: 320, height: 380),
+            styleMask: [.borderless, .nonactivatingPanel],
+            backing: .buffered,
+            defer: false
+        )
+        panel.isFloatingPanel = true
+        panel.level = .statusBar
+        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        panel.isMovableByWindowBackground = false
+        panel.isReleasedWhenClosed = false
+        panel.backgroundColor = .clear
+        panel.isOpaque = false
+        panel.hasShadow = true
+
+        panel.contentViewController = NSHostingController(
             rootView: PopoverContentView(openSettingsAction: { [weak self] tab in
                 self?.openSettingsWindow(tab: tab)
             })
         )
-        self.popover = popover
+        self.panel = panel
     }
 
     private func setupObservers() {
@@ -79,24 +101,87 @@ public final class StatusBarManager: ObservableObject {
     }
 
     @objc private func togglePopover(_ sender: AnyObject?) {
-        guard let button = statusItem?.button, let popover = popover else { return }
-
         let currentEvent = NSApp.currentEvent
         if currentEvent?.type == .rightMouseUp {
             openSettingsWindow()
             return
         }
 
-        if popover.isShown {
-            popover.performClose(sender)
+        if let panel = panel, panel.isVisible {
+            closePopover()
         } else {
-            popover.show(relativeTo: button.bounds, of: button, preferredEdge: .minY)
-            popover.contentViewController?.view.window?.makeKey()
+            showPopover()
+        }
+    }
+
+    public func showPopover() {
+        guard let button = statusItem?.button else { return }
+
+        if panel == nil {
+            setupPanel()
+        }
+
+        guard let panel = panel else { return }
+
+        positionPanel(panel, relativeTo: button)
+        panel.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+        startMonitoring()
+    }
+
+    private func positionPanel(_ panel: NSPanel, relativeTo button: NSStatusBarButton) {
+        guard let buttonWindow = button.window else { return }
+        let buttonRect = buttonWindow.convertToScreen(button.bounds)
+        let screen = buttonWindow.screen ?? NSScreen.main ?? NSScreen.screens.first
+        let screenFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+
+        let fittingSize = panel.contentViewController?.view.fittingSize ?? NSSize(width: 320, height: 380)
+        let panelWidth = max(320, fittingSize.width)
+        let panelHeight = fittingSize.height > 50 ? fittingSize.height : 380
+
+        var x = buttonRect.midX - (panelWidth / 2.0)
+        if x + panelWidth > screenFrame.maxX - 8 {
+            x = screenFrame.maxX - panelWidth - 8
+        }
+        if x < screenFrame.minX + 8 {
+            x = screenFrame.minX + 8
+        }
+
+        let y = buttonRect.minY - panelHeight - 4
+        panel.setFrame(NSRect(x: x, y: y, width: panelWidth, height: panelHeight), display: true)
+    }
+
+    private func startMonitoring() {
+        stopMonitoring()
+        eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
+            guard let self = self, let panel = self.panel, panel.isVisible else { return }
+            let mouseLocation = NSEvent.mouseLocation
+
+            if panel.frame.contains(mouseLocation) {
+                return
+            }
+
+            if let button = self.statusItem?.button, let buttonWindow = button.window {
+                let buttonRect = buttonWindow.convertToScreen(button.bounds)
+                if buttonRect.contains(mouseLocation) {
+                    return
+                }
+            }
+
+            self.closePopover()
+        }
+    }
+
+    private func stopMonitoring() {
+        if let monitor = eventMonitor {
+            NSEvent.removeMonitor(monitor)
+            eventMonitor = nil
         }
     }
 
     public func closePopover() {
-        popover?.performClose(nil)
+        stopMonitoring()
+        panel?.orderOut(nil)
     }
 
     public func openSettingsWindow(tab: SettingsTab = .thermal) {
