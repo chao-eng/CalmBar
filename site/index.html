@@ -457,9 +457,9 @@ cd doc/HyMT2部署 && chmod +x install.sh && ./install.sh</code></pre>
             <p>基于 GGUF 量化模型与 llama-server，支持 Linux 服务器、家庭群晖 / QNAP / Unraid NAS 及 Windows WSL2 跨平台并发部署。</p>
           </div>
           <div class="hymt2-features">
+            <div class="hymt2-feat-item">📦 <strong>模型下载</strong>：<a href="https://modelscope.cn/models/Tencent-Hunyuan/Hy-MT2-1.8B-GGUF" target="_blank" rel="noopener noreferrer" class="link-blue">魔搭社区 (ModelScope) GGUF 模型下载 ↗</a></div>
             <div class="hymt2-feat-item">🐳 <strong>一键容器化</strong>：Docker 单行指令或 Docker Compose 编排</div>
             <div class="hymt2-feat-item">🚀 <strong>并发批处理</strong>：连续批处理与多线程并发吞吐</div>
-            <div class="hymt2-feat-item">📦 <strong>标准量化</strong>：支持 ModelScope 下载 Q4_K_M 等 GGUF 权重</div>
           </div>
           <div class="terminal-install-box in-card">
             <div class="terminal-header">
@@ -479,7 +479,10 @@ cd doc/HyMT2部署 && chmod +x install.sh && ./install.sh</code></pre>
           </div>
           <div class="hymt2-card-footer">
             <span>CalmBar 配置：<code>http://&lt;局域网IP&gt;:8000/v1</code></span>
-            <a href="https://github.com/chao-eng/CalmBar/blob/main/doc/HyMT2%E9%83%A8%E7%BD%B2/%E5%85%B6%E4%BB%96%E7%B3%BB%E7%BB%9F%E9%83%A8%E7%BD%B2.md" target="_blank" rel="noopener noreferrer" class="link-blue">查看完整 Docker 部署文档 →</a>
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+              <a href="https://modelscope.cn/models/Tencent-Hunyuan/Hy-MT2-1.8B-GGUF" target="_blank" rel="noopener noreferrer" class="link-blue">📥 魔搭 (ModelScope) 模型 ↗</a>
+              <a href="https://github.com/chao-eng/CalmBar/blob/main/doc/HyMT2%E9%83%A8%E7%BD%B2/%E5%85%B6%E4%BB%96%E7%B3%BB%E7%BB%9F%E9%83%A8%E7%BD%B2.md" target="_blank" rel="noopener noreferrer" class="link-blue">查看 Docker 完整文档 →</a>
+            </div>
           </div>
         </div>
       </div>
