@@ -156,7 +156,24 @@
 
 ---
 
-### 9. 📋 剪贴板历史记录与智能识别 (Clipboard History)
+### 9. 🌐 AI 划词翻译与 38 种多语言体系 (AI Translation & HY-MT2)
+* **纯 HTTP OpenAI 兼容协议接入**：零本地重型模型捆绑，轻量快速。深度适配腾讯混元 **Hy-MT2-1.8B** 专用翻译大模型、Ollama、vLLM 及各类 OpenAI 标准兼容端点，毫秒级 SSE 流式打字机响应。
+* **完整支持 38 种多语言体系**：涵盖中文 (zh)、英语 (en)、法语 (fr)、日语 (ja)、韩语 (ko)、繁体中文 (zh-Hant)、**藏语 (bo)**、**维吾尔语 (ug)**、**粤语 (yue)**、**哈萨克语 (kk)**、**蒙古语 (mn)**、印地语 (hi) 等。
+* **多维高频交互触发**：
+  * **双击 ⌘+C 划词就地翻译**：在任意 App（网页、编辑器、PDF、聊天窗口）中划选文字后，连按两次 `⌘+C` 即可直接在鼠标光标处弹出半透明毛玻璃翻译浮窗。
+  * **全局快捷键 `⌥ + ⌘ + T`**：一键快速读取当前剪贴板/选区文本进行翻译。
+  * **OCR 识字与剪贴板历史深度联动**：屏幕选区识字浮窗、OCR 历史记录及剪贴板条目均内置一键【AI 翻译】动作。
+* **极佳悬浮交互体验**：自适应防屏幕边缘越界、支持 Pin 锁定防自动关闭、实时动态倒计时展示（鼠标悬停智能暂停防误触）、快速切换 38 种目标语言与一键复制译文。
+* **📖 专属服务端部署指南**：
+  * 👉 [macOS MLX 硬件加速本地部署指南 (Apple Silicon M1~M4)](doc/HyMT2部署/MacOs%20MLX加速部署.md) —— *利用 Apple Metal GPU 与 4-bit 量化，按需加载 + 20 分钟空闲显存自动释放（显存占用归 0）*
+  * 👉 [Linux / Docker / NAS / Windows 跨平台部署指南](doc/HyMT2部署/其他系统部署.md) —— *支持 Docker 单行命令或 Docker Compose 编排 llama-server GGUF 高性能并发部署*
+* **🕹️ 操作说明**：
+  1. 在偏好设置 **「智能翻译」** 中填入 API 基础地址（如本地 MLX `http://127.0.0.1:8000/v1` 或局域网 Docker `http://10.0.8.2:8000/v1`），点击「测试连接」。
+  2. 划选任意文本连按两次 `⌘+C` 或按下 `⌥ + ⌘ + T`，即刻在光标旁查看流式翻译结果。
+
+---
+
+### 10. 📋 剪贴板历史记录与智能识别 (Clipboard History)
 * **多模态全格式监听**：纯文本、富文本 (RTF/HTML)、系统截图/复制图像、访达图片/文件 URL、网页链接、十六进制颜色代码等。
 * **访达图片智能升格与缩略图**：复制图片文件时自动升格为图片类型并生成高清缩略图与尺寸信息。
 * **Vision OCR 后台索引**：自动提取图片中的多语言文字与二维码内容，配合空间感知隔离算法消除噪点，支持全局关键词检索。
@@ -173,7 +190,7 @@
 
 ---
 
-### 10. 🗑️ 软件卸载与开发者深度清理 (App & Developer Cleaner)
+### 11. 🗑️ 软件卸载与开发者深度清理 (App & Developer Cleaner)
 * **全量应用索引与架构识别**：多线程并发扫描已安装软件，提取图标、Bundle ID、安装体积、版本号及架构（Apple Silicon / Intel / Universal）。
 * **深层残留嗅探引擎**：扫描 `~/Library` 与 `/Library` 下 20+ 个目录，基于 Bundle ID 衍生前缀、名称变体及安全排除列表精准匹配残留文件。
 * **完全免密安全移入废纸篓**：多层级静默回退，全流程无需输入密码，误删可直接在系统废纸篓放回原处。
@@ -194,7 +211,7 @@
 
 ---
 
-### 11. 🛡️ 未签名与已损坏应用一键授权 (Gatekeeper Quarantine Unlocker)
+### 12. 🛡️ 未签名与已损坏应用一键授权 (Gatekeeper Quarantine Unlocker)
 * **拖拽一键解锁**：直接将报错或未公证的 `.app`、文件夹拖入设置面板，自动执行 `xattr -rd com.apple.quarantine` 解除隔离。
 * **深度自签名修复**：支持勾选「深度修复 (Ad-hoc 重签名)」，针对签名损坏或修改过的应用执行 `codesign --force --deep --sign -`。
 * **免终端无感提权**：结合特权助手 `CalmBarHelper`，处理 `/Applications` 下需要管理员权限的应用时无需反复输入 `sudo` 密码。
@@ -206,7 +223,7 @@
 
 ---
 
-### 12. 🔐 统一权限管理看板 (Permission Center)
+### 13. 🔐 统一权限管理看板 (Permission Center)
 * **透明可信的权限管理**：汇总展示辅助功能 (Accessibility)、特权助手 (Privileged Helper)、屏幕录制 (Screen Capture) 与完全磁盘访问权限 (Full Disk Access)。
 * **明确使用目的与实时状态**：逐项说明权限对应功能与使用理由，提供一键激活助手与系统设置跳转引导。
 * **🕹️ 操作说明**：在偏好设置中点击顶部 **「权限安全」** 选项卡，可查看各项底层权限的关联功能与授权状态；点击「刷新权限状态」可即时同步系统设置中的变更。
@@ -241,12 +258,17 @@ CalmBar/
 │       │   ├── Thermal/                 # 温控轮询引擎与 XPC 通信客户端
 │       │   ├── NoTunes/                 # Apple Music / iTunes 启动拦截引擎
 │       │   ├── OCR/                     # Vision 文字与条码识别、历史持久化调度
+│       │   ├── Translation/             # HTTP OpenAI & HY-MT2 翻译引擎、双击复制监听、悬浮浮窗与历史
 │       │   └── UI/                      # SwiftUI 状态栏控制台、权限安全看板与偏好设置
 │       ├── CalmBarKit/                  # 硬件 SMC 读写、安全策略与驱动通信共享库
 │       ├── CommandPaletteKit/           # 独立轻量命令面板核心渲染组件
 │       └── CalmBarHelper/               # Root 特权辅助工具 (Privileged Helper)
 └── doc/
     ├── images/                          # 软件核心功能截图与示例图集
+    ├── HyMT2部署/                       # macOS MLX 硬件加速与 Docker 跨平台部署指南
+    │   ├── MacOs MLX加速部署.md         # Apple Silicon M1~M4 MLX 硬件加速与空闲释放方案
+    │   ├── 其他系统部署.md               # Linux / Docker / NAS llama-server GGUF 部署方案
+    │   └── install.sh                   # macOS 一键自动部署与 launchd 守护进程安装脚本
     ├── RELEASE.md                       # 版本发布说明与更新日志
     ├── 核心需求.md                       # 产品需求与架构说明文档
     ├── CalmBar 2.0 优化方案.md           # 2.0 架构与平台化演进方案
