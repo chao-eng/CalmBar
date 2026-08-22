@@ -171,6 +171,10 @@
   1. 在偏好设置 **「智能翻译」** 中填入 API 基础地址（如本地 MLX `http://127.0.0.1:8000/v1` 或局域网 Docker `http://10.0.8.2:8000/v1`），点击「测试连接」。
   2. 划选任意文本连按两次 `⌘+C` 或按下 `⌥ + ⌘ + T`，即刻在光标旁查看流式翻译结果。
 
+<p align="center">
+  <img src="doc/images/translation_floating.png" width="520" alt="AI 划词翻译悬浮浮窗示例" />
+</p>
+
 ---
 
 ### 10. 📋 剪贴板历史记录与智能识别 (Clipboard History)
