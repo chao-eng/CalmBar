@@ -175,6 +175,10 @@
   <img src="doc/images/translation_floating.png" width="520" alt="AI 划词翻译悬浮浮窗示例" />
 </p>
 
+<p align="center">
+  <img src="doc/images/translation_settings.png" width="600" alt="智能翻译偏好设置面板示例" />
+</p>
+
 ---
 
 ### 10. 📋 剪贴板历史记录与智能识别 (Clipboard History)

@@ -138,6 +138,7 @@
           <button class="tab-btn" data-target="tab-battery">电池管理</button>
           <button class="tab-btn" data-target="tab-caffeine">防休眠 & 媒体</button>
           <button class="tab-btn" data-target="tab-clipboard">剪贴板 & OCR</button>
+          <button class="tab-btn" data-target="tab-translation">AI 划词翻译</button>
           <button class="tab-btn" data-target="tab-security">去隔离与权限</button>
         </div>
       </div>
@@ -267,7 +268,32 @@
           </div>
         </div>
 
-        <!-- Tab 6: Security -->
+        <!-- Tab 6: Translation -->
+        <div class="tab-pane" id="tab-translation">
+          <div class="showcase-grid">
+            <div class="showcase-text">
+              <span class="showcase-tag">大模型极速翻译</span>
+              <h3>双击 ⌘+C 划词就地流式翻译</h3>
+              <p>采用纯 HTTP OpenAI 兼容协议接入腾讯混元 Hy-MT2-1.8B 等专用大模型，零本地重型依赖。在任意应用划选文字连按两次 <code>⌘+C</code> 或按 <code>⌥+⌘+T</code>，即刻在光标旁弹出半透明毛玻璃结果浮窗。</p>
+              <ul class="feature-bullets">
+                <li>✨ 完整支持 38 种多语言体系（含藏语、维吾尔语、粤语、蒙古语、哈萨克语等）</li>
+                <li>✨ 毫秒级 SSE 打字机流式输出，支持 Pin 锁定与鼠标悬停智能暂停倒计时</li>
+                <li>✨ 专属服务端支持 macOS MLX 硬件加速（显存自动释放）与 Docker 高性能并发部署</li>
+              </ul>
+              <div class="shortcut-tip">
+                <span>划词快捷翻译：</span>
+                <kbd>⌘</kbd> + <kbd>C</kbd> <kbd>×2</kbd>
+                <span style="margin: 0 4px; color: var(--text-secondary);">或</span>
+                <kbd>⌥</kbd> + <kbd>⌘</kbd> + <kbd>T</kbd>
+              </div>
+            </div>
+            <div class="showcase-image">
+              <img src="images/translation_floating.png" alt="AI 划词翻译悬浮浮窗" class="img-zoomable">
+            </div>
+          </div>
+        </div>
+
+        <!-- Tab 7: Security -->
         <div class="tab-pane" id="tab-security">
           <div class="showcase-grid">
             <div class="showcase-text">
