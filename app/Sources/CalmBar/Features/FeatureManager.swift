@@ -20,6 +20,7 @@ public final class FeatureManager: ObservableObject {
         register(NoTunesFeature())
         register(GatekeeperFeature())
         register(MenuBarFeature())
+        register(TranslationFeature())
     }
 
     public func register(_ feature: any CalmFeature) {

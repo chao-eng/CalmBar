@@ -1,18 +1,17 @@
 import AppKit
 import SwiftUI
+import Combine
+import CalmBarKit
 
 @MainActor
 public final class OCRFloatingPreviewController {
     public static let shared = OCRFloatingPreviewController()
 
     private var window: NSWindow?
-    private var dismissWorkItem: DispatchWorkItem?
 
     private init() {}
 
     public func show(item: OCRItem) {
-        dismissWorkItem?.cancel()
-
         if let existing = window, existing.isVisible {
             existing.standardWindowButton(.closeButton)?.isHidden = true
             existing.standardWindowButton(.miniaturizeButton)?.isHidden = true
@@ -25,7 +24,6 @@ public final class OCRFloatingPreviewController {
                 .environment(\.colorScheme, .dark)
             )
             existing.makeKeyAndOrderFront(nil)
-            scheduleAutoDismiss()
             return
         }
 
@@ -71,26 +69,11 @@ public final class OCRFloatingPreviewController {
 
         panel.makeKeyAndOrderFront(nil)
         self.window = panel
-
-        scheduleAutoDismiss()
     }
 
     public func close() {
-        dismissWorkItem?.cancel()
         window?.close()
         window = nil
-    }
-
-    private func scheduleAutoDismiss() {
-        let settings = AppSettings.shared
-        guard settings.ocrAutoDismiss else { return }
-
-        let delay = max(1.0, settings.ocrAutoDismissDelay)
-        let work = DispatchWorkItem { [weak self] in
-            self?.close()
-        }
-        self.dismissWorkItem = work
-        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
     }
 }
 
@@ -98,13 +81,21 @@ public struct OCRFloatingPreviewView: View {
     let item: OCRItem
     let onClose: () -> Void
 
+    @ObservedObject private var settings = AppSettings.shared
+
     @State private var copied: Bool = false
     @State private var editedText: String
+    @State private var remainingSeconds: Int
+    @State private var isHovered: Bool = false
+
+    private let timer = Timer.publish(every: 1.0, on: .main, in: .common).autoconnect()
 
     public init(item: OCRItem, onClose: @escaping () -> Void) {
         self.item = item
         self.onClose = onClose
         self._editedText = State(initialValue: item.text)
+        let delay = Int(max(2.0, AppSettings.shared.ocrAutoDismissDelay))
+        self._remainingSeconds = State(initialValue: delay)
     }
 
     public var body: some View {
@@ -128,6 +119,8 @@ public struct OCRFloatingPreviewView: View {
                         .font(.system(size: 15))
                 }
                 .buttonStyle(.plain)
+                .focusable(false)
+                .focusEffectDisabled()
                 .help("关闭悬浮卡片")
             }
 
@@ -160,6 +153,8 @@ public struct OCRFloatingPreviewView: View {
                     }
                     .buttonStyle(.bordered)
                     .controlSize(.small)
+                    .focusable(false)
+                    .focusEffectDisabled()
                 }
 
                 // 从历史中删除此条记录并关闭
@@ -173,9 +168,42 @@ public struct OCRFloatingPreviewView: View {
                 .buttonStyle(.bordered)
                 .tint(.red.opacity(0.8))
                 .controlSize(.small)
+                .focusable(false)
+                .focusEffectDisabled()
                 .help("从本地历史记录中删除此条并关闭浮窗")
 
+                // 一键 AI 翻译
+                Button(action: {
+                    let textToTranslate = editedText.isEmpty ? item.text : editedText
+                    TranslationManager.shared.translate(text: textToTranslate)
+                }) {
+                    Label("AI 翻译", systemImage: "character.bubble.fill")
+                        .font(.system(size: 11))
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+                .focusable(false)
+                .focusEffectDisabled()
+                .help("使用 AI 翻译当前识别出的文字")
+
                 Spacer()
+
+                // 倒计时指示器 (开启自动消失时展示)
+                if settings.ocrAutoDismiss {
+                    HStack(spacing: 3) {
+                        Image(systemName: "timer")
+                            .font(.system(size: 9))
+                        Text("\(max(1, remainingSeconds))s")
+                            .font(.system(size: 10.5, weight: .medium, design: .monospaced))
+                    }
+                    .foregroundColor(isHovered ? .orange : .white.opacity(0.85))
+                    .padding(.horizontal, 6)
+                    .padding(.vertical, 4)
+                    .background(Color.white.opacity(0.1))
+                    .cornerRadius(4)
+                    .help(isHovered ? "鼠标悬停中，倒计时已暂停" : "\(remainingSeconds) 秒后自动关闭")
+                    .transition(.opacity)
+                }
 
                 Button(action: copyToClipboard) {
                     Label(copied ? "已复制" : "复制", systemImage: copied ? "checkmark" : "doc.on.doc")
@@ -184,6 +212,8 @@ public struct OCRFloatingPreviewView: View {
                 .buttonStyle(.borderedProminent)
                 .controlSize(.small)
                 .tint(copied ? .green : .accentColor)
+                .focusable(false)
+                .focusEffectDisabled()
             }
         }
         .padding(14)
@@ -197,8 +227,20 @@ public struct OCRFloatingPreviewView: View {
             RoundedRectangle(cornerRadius: 12)
                 .stroke(Color.white.opacity(0.2), lineWidth: 1)
         )
+        .onHover { hovering in
+            isHovered = hovering
+        }
+        .onReceive(timer) { _ in
+            guard settings.ocrAutoDismiss, !isHovered else { return }
+            if remainingSeconds > 1 {
+                remainingSeconds -= 1
+            } else {
+                onClose()
+            }
+        }
         .onChange(of: item.id) { _, _ in
             editedText = item.text
+            remainingSeconds = Int(max(2.0, settings.ocrAutoDismissDelay))
         }
     }
 

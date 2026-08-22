@@ -10,6 +10,7 @@ public final class HotKeyManager {
     private var hotKeyRefPalette: EventHotKeyRef?
     private var hotKeyRefOCR: EventHotKeyRef?
     private var hotKeyRefClipboard: EventHotKeyRef?
+    private var hotKeyRefTranslation: EventHotKeyRef?
 
     private init() {
         registerGlobalHotKey()
@@ -50,6 +51,10 @@ public final class HotKeyManager {
                         Task { @MainActor in
                             ClipboardHistoryWindowController.shared.toggle()
                         }
+                    } else if hotKeyID.id == 5 {
+                        Task { @MainActor in
+                            TranslationManager.shared.translateFromClipboard()
+                        }
                     }
                 }
                 return noErr
@@ -77,6 +82,10 @@ public final class HotKeyManager {
         // 4. Option + Command + V -> Clipboard History Toggle
         let hotKeyID4 = EventHotKeyID(signature: OSType(0x43424152), id: 4)
         RegisterEventHotKey(UInt32(kVK_ANSI_V), modifiers, hotKeyID4, GetApplicationEventTarget(), 0, &hotKeyRefClipboard)
+
+        // 5. Option + Command + T -> Quick AI Translate Clipboard
+        let hotKeyID5 = EventHotKeyID(signature: OSType(0x43424152), id: 5)
+        RegisterEventHotKey(UInt32(kVK_ANSI_T), modifiers, hotKeyID5, GetApplicationEventTarget(), 0, &hotKeyRefTranslation)
     }
 
     public func unregister() {
@@ -95,6 +104,10 @@ public final class HotKeyManager {
         if let ref = hotKeyRefClipboard {
             UnregisterEventHotKey(ref)
             hotKeyRefClipboard = nil
+        }
+        if let ref = hotKeyRefTranslation {
+            UnregisterEventHotKey(ref)
+            hotKeyRefTranslation = nil
         }
         if let handler = eventHandler {
             RemoveEventHandler(handler)

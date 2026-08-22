@@ -268,6 +268,19 @@ public struct ClipboardHistoryView: View {
                 .controlSize(.small)
                 .tint(.accentColor)
 
+                // AI 翻译按钮（文本类型）
+                if let text = item.textValue, !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                    Button(action: {
+                        TranslationManager.shared.translate(text: text)
+                    }) {
+                        Label("翻译", systemImage: "character.bubble")
+                            .font(.system(size: 11))
+                    }
+                    .buttonStyle(.bordered)
+                    .controlSize(.small)
+                    .help("使用 AI 翻译此剪贴板条目")
+                }
+
                 // 纯文本复制（富文本时提供）
                 if item.type == .richText {
                     Button(action: {

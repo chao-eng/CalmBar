@@ -189,6 +189,7 @@ public final class StatusBarManager: ObservableObject {
         closePopover()
 
         if let window = settingsWindow, window.isVisible {
+            positionWindowInUpperCenter(window)
             window.makeKeyAndOrderFront(nil)
             NSApp.activate(ignoringOtherApps: true)
             return
@@ -200,13 +201,46 @@ public final class StatusBarManager: ObservableObject {
             backing: .buffered,
             defer: false
         )
-        window.center()
         window.title = "CalmBar 偏好设置"
         window.contentViewController = NSHostingController(rootView: SettingsView())
         window.isReleasedWhenClosed = false
+
+        positionWindowInUpperCenter(window)
         window.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
         self.settingsWindow = window
+    }
+
+    /// 将偏好设置窗口定位在当前屏幕水平居中、垂直靠上半部分（与命令窗口位置完全一致：距离顶部 18% 屏幕高度）
+    private func positionWindowInUpperCenter(_ window: NSWindow) {
+        let mouseLoc = NSEvent.mouseLocation
+        let targetScreen = NSScreen.screens.first(where: { NSMouseInRect(mouseLoc, $0.frame, false) })
+            ?? NSScreen.main
+            ?? NSScreen.screens.first
+
+        guard let screen = targetScreen else {
+            window.center()
+            return
+        }
+
+        let panelWidth: CGFloat = 680
+        let panelHeight: CGFloat = 560
+        let screenFrame = screen.visibleFrame
+
+        // 1. 水平严格居中 (相对于当前屏幕可见区域)
+        let x = screenFrame.origin.x + (screenFrame.width - panelWidth) / 2.0
+
+        // 2. 垂直靠上半部分：与命令窗口完全一致（顶部距离屏幕可见区域顶边缘 18% 屏幕高度）
+        let targetTopY = screenFrame.origin.y + screenFrame.height - (screenFrame.height * 0.18)
+        let y = targetTopY - panelHeight
+
+        let targetRect = NSRect(
+            x: round(x),
+            y: round(max(screenFrame.origin.y, y)),
+            width: panelWidth,
+            height: panelHeight
+        )
+        window.setFrame(targetRect, display: true, animate: false)
     }
 }

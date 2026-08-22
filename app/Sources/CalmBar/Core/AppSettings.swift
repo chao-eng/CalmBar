@@ -212,6 +212,41 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(cleanerSensitivity.rawValue, forKey: "cleanerSensitivity") }
     }
 
+    // MARK: - AI Translation Settings
+    @Published public var translationEnabled: Bool {
+        didSet { defaults.set(translationEnabled, forKey: "translationEnabled") }
+    }
+    @Published public var translationAPIBaseURL: String {
+        didSet { defaults.set(translationAPIBaseURL, forKey: "translationAPIBaseURL") }
+    }
+    @Published public var translationAPIKey: String {
+        didSet { defaults.set(translationAPIKey, forKey: "translationAPIKey") }
+    }
+    @Published public var translationModel: String {
+        didSet { defaults.set(translationModel, forKey: "translationModel") }
+    }
+    @Published public var translationTargetLanguageCode: String {
+        didSet { defaults.set(translationTargetLanguageCode, forKey: "translationTargetLanguageCode") }
+    }
+    @Published public var translationCustomPrompt: String {
+        didSet { defaults.set(translationCustomPrompt, forKey: "translationCustomPrompt") }
+    }
+    @Published public var translationDoubleCopyEnabled: Bool {
+        didSet { defaults.set(translationDoubleCopyEnabled, forKey: "translationDoubleCopyEnabled") }
+    }
+    @Published public var translationDoubleCopyInterval: Double {
+        didSet { defaults.set(translationDoubleCopyInterval, forKey: "translationDoubleCopyInterval") }
+    }
+    @Published public var translationAutoDismiss: Bool {
+        didSet { defaults.set(translationAutoDismiss, forKey: "translationAutoDismiss") }
+    }
+    @Published public var translationAutoDismissDelay: Double {
+        didSet { defaults.set(translationAutoDismissDelay, forKey: "translationAutoDismissDelay") }
+    }
+    @Published public var popoverShowTranslation: Bool {
+        didSet { defaults.set(popoverShowTranslation, forKey: "popoverShowTranslation") }
+    }
+
     private init() {
         let presetStr = defaults.string(forKey: "fanPreset") ?? FanPreset.smart.rawValue
         self.fanPreset = FanPreset(rawValue: presetStr) ?? .smart
@@ -283,8 +318,20 @@ public final class AppSettings: ObservableObject {
         self.popoverShowOCR = defaults.object(forKey: "popoverShowOCR") as? Bool ?? true
         self.popoverShowClipboard = defaults.object(forKey: "popoverShowClipboard") as? Bool ?? true
         self.popoverShowCleaner = defaults.object(forKey: "popoverShowCleaner") as? Bool ?? true
+        self.popoverShowTranslation = defaults.object(forKey: "popoverShowTranslation") as? Bool ?? true
         let sensStr = defaults.string(forKey: "cleanerSensitivity") ?? SearchSensitivityLevel.balanced.rawValue
         self.cleanerSensitivity = SearchSensitivityLevel(rawValue: sensStr) ?? .balanced
+
+        self.translationEnabled = defaults.object(forKey: "translationEnabled") as? Bool ?? true
+        self.translationAPIBaseURL = defaults.string(forKey: "translationAPIBaseURL") ?? ""
+        self.translationAPIKey = defaults.string(forKey: "translationAPIKey") ?? ""
+        self.translationModel = defaults.string(forKey: "translationModel") ?? "Hy-MT2"
+        self.translationTargetLanguageCode = defaults.string(forKey: "translationTargetLanguageCode") ?? "zh"
+        self.translationCustomPrompt = defaults.string(forKey: "translationCustomPrompt") ?? ""
+        self.translationDoubleCopyEnabled = defaults.object(forKey: "translationDoubleCopyEnabled") as? Bool ?? true
+        self.translationDoubleCopyInterval = defaults.object(forKey: "translationDoubleCopyInterval") as? Double ?? 0.8
+        self.translationAutoDismiss = defaults.object(forKey: "translationAutoDismiss") as? Bool ?? true
+        self.translationAutoDismissDelay = defaults.object(forKey: "translationAutoDismissDelay") as? Double ?? 8.0
     }
 }
 

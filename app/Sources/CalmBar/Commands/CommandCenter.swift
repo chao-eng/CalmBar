@@ -230,6 +230,7 @@ public final class CommandCenter: ObservableObject {
         case .noTunes: return "music.note"
         case .gatekeeper: return "lock.shield"
         case .menuBar: return "menubar.rectangle"
+        case .translation: return "character.bubble.fill"
         }
     }
 
@@ -256,6 +257,8 @@ public final class CommandCenter: ObservableObject {
             aliases.append(contentsOf: ["隔离", "去隔离", "已损坏", "签名", "打不开", "修复", "gatekeeper", "quarantine", "sign", "fix", "repair", "gl", "qgl", "xf"])
         case .menuBar:
             aliases.append(contentsOf: ["菜单栏", "收纳", "折叠", "隐藏图标", "menubar", "hide", "fold", "collapse", "organizer", "cdl", "sn", "zd", "yc"])
+        case .translation:
+            aliases.append(contentsOf: ["翻译", "划词翻译", "ai翻译", "双击复制", "hy-mt2", "openai", "translation", "translate", "fanyi", "fy", "hc", "hcfy", "trans"])
         }
 
         if commandID.contains("settings") {

@@ -347,6 +347,7 @@ public struct PopoverContentView: View {
     // MARK: - Quick Action Item Enums
     private enum QuickToolItem: Hashable {
         case ocr
+        case translation
         case clipboard
         case cleaner
         case gatekeeper
@@ -363,6 +364,7 @@ public struct PopoverContentView: View {
     private var activeQuickTools: [QuickToolItem] {
         var items: [QuickToolItem] = []
         if settings.popoverShowOCR { items.append(.ocr) }
+        if settings.popoverShowTranslation { items.append(.translation) }
         if settings.popoverShowClipboard { items.append(.clipboard) }
         if settings.popoverShowCleaner { items.append(.cleaner) }
         if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
@@ -422,6 +424,24 @@ public struct PopoverContentView: View {
                 }
             }
             .help("选区截图识字与二维码解析 (右键打开历史)")
+
+        case .translation:
+            ToolTileButton(
+                icon: "character.bubble.fill",
+                title: "AI 翻译",
+                color: .blue,
+                action: {
+                    StatusBarManager.shared.closePopover()
+                    TranslationManager.shared.translateFromClipboard()
+                }
+            )
+            .contextMenu {
+                Button("打开翻译历史记录") {
+                    StatusBarManager.shared.closePopover()
+                    TranslationHistoryWindowController.shared.show()
+                }
+            }
+            .help("翻译当前剪贴板文本 (双击 ⌘C 或 ⌥⌘T 快速触发，右键打开历史)")
 
         case .clipboard:
             ToolTileButton(

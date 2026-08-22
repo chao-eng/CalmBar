@@ -214,6 +214,16 @@ public struct OCRHistoryView: View {
                 }
 
                 Button(action: {
+                    TranslationManager.shared.translate(text: item.text)
+                }) {
+                    Image(systemName: "character.bubble")
+                        .font(.system(size: 12))
+                        .foregroundColor(.blue)
+                }
+                .buttonStyle(.plain)
+                .help("使用 AI 翻译此文本")
+
+                Button(action: {
                     copyItem(item)
                 }) {
                     Image(systemName: copiedItemID == item.id ? "checkmark.circle.fill" : "doc.on.doc")

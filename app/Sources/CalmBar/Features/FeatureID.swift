@@ -11,6 +11,7 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
     case noTunes
     case gatekeeper
     case menuBar
+    case translation
 
     public var id: String { rawValue }
 
@@ -26,6 +27,7 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
         case .noTunes: return "音乐启动拦截"
         case .gatekeeper: return "应用去隔离与自签名"
         case .menuBar: return "菜单栏收纳"
+        case .translation: return "AI 划词翻译"
         }
     }
 }

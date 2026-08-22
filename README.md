@@ -1,11 +1,11 @@
 # CalmBar 🌬️
 
-> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 系统防休眠防离开 · 充电管理与电池上限 · 应用去隔离授权 · 屏幕文字与二维码识别 · 剪贴板历史管理 · 软件卸载与开发者环境深度清理
+> **macOS 全能系统增强套件** —— 硬件温控 · 菜单栏收纳 · 鼠标滚轮解耦 · 媒体启动拦截 · 系统防休眠防离开 · 充电管理与电池上限 · 应用去隔离授权 · 屏幕文字与二维码识别 · AI 划词翻译 · 剪贴板历史管理 · 软件卸载与开发者环境深度清理
 
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
 [![Language](https://img.shields.io/badge/language-Swift%206-orange.svg)](https://swift.org)
-[![Version](https://img.shields.io/badge/release-v2.0.2-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
+[![Version](https://img.shields.io/badge/release-v2.1.0-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 ---
@@ -22,8 +22,9 @@
 6. **插电满电高压损耗电池**：长期插电使用电量持续处于 100% 易加速电池损耗老化，CalmBar 提供 80% SMC 充电上限保护与回差巡航（带 15% 底层安全熔断与看门狗）。
 7. **未签名与已损坏应用拦截**：外部下载软件常因 Gatekeeper 隔离标记报错无法打开，CalmBar 支持拖拽一键递归去隔离与 Ad-hoc 自签名修复。
 8. **屏幕信息快速提取与归档**：无需安装庞大第三方 OCR 软件，CalmBar 原生集成 Apple Vision 深度学习识别引擎，支持屏幕选区识字、二维码/条码解析与历史管理。
-9. **剪贴板碎片化与数据丢失**：原生剪贴板仅保留单次复制，CalmBar 提供多模态格式捕获、图片智能升格、Vision OCR 文字/二维码索引与隐私过滤。
-10. **应用卸载残留与开发缓存积压**：原生拖进废纸篓只带走主程序，散落在 Library 中的几个 GB 偏好与缓存依然霸占硬盘；Xcode/Node/Python 等工具链缓存及已被删除工程的历史工作区日积月累，CalmBar 提供一键应用深层卸载与开发者环境专属清理。
+9. **跨语种划词翻译与多语言支持**：无需启动繁琐网页或重量级本地模型，CalmBar 通过 HTTP OpenAI / HY-MT2 兼容接口支持双击 `⌘+C` / `⌥⌘T` 就地悬浮翻译，支持中/英/藏/维/粤/蒙等 38 种多语言体系。
+10. **剪贴板碎片化与数据丢失**：原生剪贴板仅保留单次复制，CalmBar 提供多模态格式捕获、图片智能升格、Vision OCR 文字/二维码索引与隐私过滤。
+11. **应用卸载残留与开发缓存积压**：原生拖进废纸篓只带走主程序，散落在 Library 中的几个 GB 偏好与缓存依然霸占硬盘；Xcode/Node/Python 等工具链缓存及已被删除工程的历史工作区日积月累，CalmBar 提供一键应用深层卸载与开发者环境专属清理。
 
 ---
 

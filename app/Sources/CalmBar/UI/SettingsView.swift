@@ -10,6 +10,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     case battery
     case gatekeeper
     case ocr
+    case translation
     case clipboard
     case cleaner
     case permissions
@@ -27,6 +28,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .battery: return "充电管理"
         case .gatekeeper: return "应用授权"
         case .ocr: return "文字识别"
+        case .translation: return "智能翻译"
         case .clipboard: return "剪贴板"
         case .cleaner: return "清理工具"
         case .permissions: return "权限安全"
@@ -44,6 +46,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .battery: return "battery.100.bolt"
         case .gatekeeper: return "lock.shield.fill"
         case .ocr: return "text.viewfinder"
+        case .translation: return "character.bubble.fill"
         case .clipboard: return "doc.on.clipboard.fill"
         case .cleaner: return "trash.fill"
         case .permissions: return "shield.lefthalf.filled"
@@ -63,6 +66,8 @@ public struct SettingsView: View {
     @ObservedObject private var chargeManager = BatteryChargeManager.shared
     @ObservedObject private var ocrManager = OCRManager.shared
     @ObservedObject private var ocrHistory = OCRHistoryManager.shared
+    @ObservedObject private var translationManager = TranslationManager.shared
+    @ObservedObject private var translationHistory = TranslationHistoryManager.shared
     @ObservedObject private var clipboardHistory = ClipboardHistoryManager.shared
     @ObservedObject private var clipboardMonitor = ClipboardMonitor.shared
 
@@ -72,6 +77,9 @@ public struct SettingsView: View {
     @State private var isInstallingHelper = false
     @State private var helperMessage: String?
     @State private var terminateAlertMessage: String?
+    @State private var isTestingTranslation = false
+    @State private var testTranslationResult: String?
+    @State private var testTranslationError: String?
 
     public init() {}
 
@@ -125,6 +133,8 @@ public struct SettingsView: View {
                     GatekeeperUnlockerView()
                 case .ocr:
                     ocrTab
+                case .translation:
+                    translationTab
                 case .clipboard:
                     clipboardTab
                 case .cleaner:
@@ -1149,6 +1159,250 @@ public struct SettingsView: View {
         }
     }
 
+    // MARK: - AI Translation Tab
+    private var translationTab: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 16) {
+                // 1. 服务端接口与连接配置
+                GroupBox(label: Label("HTTP OpenAI 兼容服务端配置 (如 HY-MT2 / Ollama / vLLM)", systemImage: "network")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("启用 AI 划词翻译")
+                                    .font(.system(size: 12, weight: .medium))
+                                Text("开启后可通过双击 ⌘+C、全局快捷键 ⌥⌘T 或 OCR 联动直接调用 AI 模型翻译。")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Toggle("", isOn: $settings.translationEnabled)
+                                .labelsHidden()
+                        }
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("API 基础地址 (Base URL):")
+                                .font(.system(size: 12, weight: .medium))
+                            TextField("例如 http://10.0.8.2:8000/v1 或 https://api.openai.com/v1", text: $settings.translationAPIBaseURL)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 12, design: .monospaced))
+                        }
+
+                        HStack(spacing: 12) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("模型名称 (Model Name):")
+                                    .font(.system(size: 12, weight: .medium))
+                                TextField("Hy-MT2", text: $settings.translationModel)
+                                    .textFieldStyle(.roundedBorder)
+                                    .font(.system(size: 12, design: .monospaced))
+                            }
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("API Key (可选，无鉴权可留空):")
+                                    .font(.system(size: 12, weight: .medium))
+                                SecureField("sk-...", text: $settings.translationAPIKey)
+                                    .textFieldStyle(.roundedBorder)
+                                    .font(.system(size: 12, design: .monospaced))
+                            }
+                        }
+
+                        Divider()
+
+                        HStack {
+                            Button(action: runTranslationConnectionTest) {
+                                HStack(spacing: 6) {
+                                    if isTestingTranslation {
+                                        ProgressView()
+                                            .controlSize(.small)
+                                    } else {
+                                        Image(systemName: "bolt.horizontal.fill")
+                                    }
+                                    Text(isTestingTranslation ? "正在测试连接..." : "测试连接")
+                                }
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .controlSize(.small)
+                            .disabled(isTestingTranslation)
+
+                            Spacer()
+
+                            if let res = testTranslationResult {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "checkmark.circle.fill")
+                                        .foregroundColor(.green)
+                                    Text(res)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.green)
+                                }
+                            } else if let err = testTranslationError {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "exclamationmark.triangle.fill")
+                                        .foregroundColor(.orange)
+                                    Text(err)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.orange)
+                                        .lineLimit(1)
+                                }
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // 2. 语言与提示词偏好
+                GroupBox(label: Label("多语言与提示词偏好 (支持 38 种语言)", systemImage: "globe")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("默认目标翻译语言")
+                                    .font(.system(size: 12, weight: .medium))
+                                Text("默认翻译输出语言，支持藏语、维吾尔语、粤语、哈萨克语等 38 种语言体系。")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Picker("", selection: $settings.translationTargetLanguageCode) {
+                                ForEach(TranslationLanguage.supportedLanguages) { lang in
+                                    Text(lang.displayName).tag(lang.code)
+                                }
+                            }
+                            .frame(width: 220)
+                        }
+
+                        Divider()
+
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("自定义 Prompt 提示词模板 (可选，留空使用 HY-MT2 默认规范):")
+                                .font(.system(size: 12, weight: .medium))
+                            Text("支持占位符: {targetLanguage} (英文名), {targetLanguageZH} (中文名), {text} (原文)")
+                                .font(.system(size: 10))
+                                .foregroundColor(.secondary)
+                            TextField("Translate the following segment into {targetLanguage}, without additional explanation: {text}", text: $settings.translationCustomPrompt)
+                                .textFieldStyle(.roundedBorder)
+                                .font(.system(size: 11, design: .monospaced))
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // 3. 交互与触发设置 (Double ⌘+C & Hotkey)
+                GroupBox(label: Label("触发交互与浮窗行为 (参考 cctrans)", systemImage: "hand.tap.fill")) {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Toggle("开启双击 ⌘+C (Double Copy) 划词就地翻译", isOn: $settings.translationDoubleCopyEnabled)
+
+                        if settings.translationDoubleCopyEnabled {
+                            HStack {
+                                Text("双击判断时间阈值:")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 140, alignment: .leading)
+                                Slider(value: $settings.translationDoubleCopyInterval, in: 0.4...1.5, step: 0.1)
+                                Text(String(format: "%.1f 秒", settings.translationDoubleCopyInterval))
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .frame(width: 50, alignment: .trailing)
+                            }
+                            .padding(.leading, 18)
+                        }
+
+                        Divider()
+
+                        Toggle("翻译浮窗自动倒计时消失", isOn: $settings.translationAutoDismiss)
+
+                        if settings.translationAutoDismiss {
+                            HStack {
+                                Text("自动消失延迟:")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.secondary)
+                                    .frame(width: 140, alignment: .leading)
+                                Slider(value: $settings.translationAutoDismissDelay, in: 3.0...20.0, step: 1.0)
+                                Text(String(format: "%.0f 秒", settings.translationAutoDismissDelay))
+                                    .font(.system(size: 11, design: .monospaced))
+                                    .frame(width: 50, alignment: .trailing)
+                            }
+                            .padding(.leading, 18)
+                        }
+
+                        Divider()
+
+                        HStack {
+                            Text("全局快捷键: **⌥⌘T** (翻译剪贴板/选区文本)")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                            Spacer()
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // 4. 历史记录管理
+                GroupBox(label: Label("历史归档与操作", systemImage: "clock.arrow.circlepath")) {
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            TranslationHistoryWindowController.shared.show()
+                        }) {
+                            Label("打开翻译历史窗口", systemImage: "macwindow.on.rectangle")
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.small)
+
+                        Button(action: {
+                            translationManager.translateFromClipboard()
+                        }) {
+                            Label("立即翻译剪贴板", systemImage: "character.bubble")
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.small)
+
+                        Spacer()
+
+                        if !translationHistory.history.isEmpty {
+                            Button(role: .destructive, action: {
+                                translationHistory.clearAll()
+                            }) {
+                                Label("清空历史 (\(translationHistory.history.count) 条)", systemImage: "trash")
+                            }
+                            .buttonStyle(.bordered)
+                            .tint(.red)
+                            .controlSize(.small)
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+            }
+            .padding(10)
+        }
+    }
+
+    private func runTranslationConnectionTest() {
+        isTestingTranslation = true
+        testTranslationResult = nil
+        testTranslationError = nil
+
+        Task {
+            do {
+                let res = try await TranslationService.shared.testConnection(
+                    baseURL: settings.translationAPIBaseURL,
+                    apiKey: settings.translationAPIKey.isEmpty ? nil : settings.translationAPIKey,
+                    model: settings.translationModel
+                )
+                await MainActor.run {
+                    self.isTestingTranslation = false
+                    self.testTranslationResult = "连接成功 (\(res.latencyMs)ms): \(res.sampleResponse.prefix(20))"
+                }
+            } catch {
+                await MainActor.run {
+                    self.isTestingTranslation = false
+                    self.testTranslationError = error.localizedDescription
+                }
+            }
+        }
+    }
+
     // MARK: - Clipboard Tab
     private var clipboardTab: some View {
         ScrollView {
@@ -1371,6 +1625,29 @@ public struct SettingsView: View {
                             Toggle(isOn: $settings.popoverShowCleaner) {
                                 Label("卸载与清理快捷入口", systemImage: "trash")
                             }
+                            Toggle(isOn: $settings.popoverShowTranslation) {
+                                Label("AI 划词翻译快捷入口", systemImage: "character.bubble.fill")
+                            }
+                        }
+                    }
+                    .padding(8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+
+                // 全局快捷键按键展示
+                GroupBox(label: Label("全局快捷键速查", systemImage: "keyboard")) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("CalmBar 支持通过以下全局快捷键在任意 App 中即时呼出功能：")
+                            .font(.system(size: 11))
+                            .foregroundColor(.secondary)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
+                            shortcutRow(title: "呼出命令面板 / 启动器", keys: ["⌥", "⌘", "K"])
+                            shortcutRow(title: "AI 快速翻译剪贴板", keys: ["⌥", "⌘", "T"])
+                            shortcutRow(title: "屏幕选区识字与扫码 (OCR)", keys: ["⌥", "⌘", "O"])
+                            shortcutRow(title: "剪贴板历史记录面板", keys: ["⌥", "⌘", "V"])
+                            shortcutRow(title: "展开 / 折叠菜单栏图标", keys: ["⌥", "⌘", "H"])
+                            shortcutRow(title: "双击划词就地翻译 (连按)", keys: ["⌘", "C", "×2"])
                         }
                     }
                     .padding(8)
@@ -1386,14 +1663,14 @@ public struct SettingsView: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("CalmBar")
                                     .font(.system(size: 14, weight: .bold))
-                                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.0.2"
+                                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.1.0"
                                 Text("Version \(version) (Native Swift 6 & SwiftUI)")
                                     .font(.system(size: 11))
                                     .foregroundColor(.secondary)
                             }
                         }
                         Divider()
-                        Text("整合硬件温控、菜单栏收纳、滚动手势解耦、媒体启动拦截、防休眠与防离开、电池充电上限保护、应用去隔离授权、屏幕文字与二维码识别 (Vision OCR)、剪贴板历史记录 (Clipboard History) 及应用与开发者环境深度清理 (Developer Cleaner) 的全能 macOS 菜单栏综合增强套件。")
+                        Text("整合硬件温控、菜单栏收纳、滚动手势解耦、媒体启动拦截、防休眠与防离开、电池充电上限保护、应用去隔离授权、屏幕文字与二维码识别 (Vision OCR)、AI 划词翻译 (HTTP OpenAI & HY-MT2)、剪贴板历史记录 (Clipboard History) 及应用与开发者环境深度清理 (Developer Cleaner) 的全能 macOS 菜单栏综合增强套件。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
 
@@ -1421,6 +1698,34 @@ public struct SettingsView: View {
             }
             .padding(10)
         }
+    }
+
+    private func shortcutRow(title: String, keys: [String]) -> some View {
+        HStack {
+            Text(title)
+                .font(.system(size: 11.5))
+                .foregroundColor(.primary)
+                .lineLimit(1)
+            Spacer()
+            HStack(spacing: 3) {
+                ForEach(keys, id: \.self) { key in
+                    Text(key)
+                        .font(.system(size: 11, weight: .semibold, design: .monospaced))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
+                        .background(Color.primary.opacity(0.08))
+                        .cornerRadius(4)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 4)
+                                .stroke(Color.primary.opacity(0.12), lineWidth: 0.5)
+                        )
+                }
+            }
+        }
+        .padding(.horizontal, 8)
+        .padding(.vertical, 6)
+        .background(Color.primary.opacity(0.03))
+        .cornerRadius(6)
     }
 }
 

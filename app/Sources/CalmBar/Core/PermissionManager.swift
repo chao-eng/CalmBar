@@ -142,7 +142,7 @@ public final class PermissionManager: ObservableObject {
             return [FeaturePermissionRequirement(type: .screenRecording, level: .required, reason: "屏幕选区截屏")]
         case .cleaner:
             return [FeaturePermissionRequirement(type: .fullDiskAccess, level: .advanced, reason: "完整缓存与残留扫描")]
-        case .clipboard, .noTunes, .menuBar:
+        case .clipboard, .noTunes, .menuBar, .translation:
             return []
         }
     }
