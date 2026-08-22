@@ -1515,40 +1515,66 @@ button {
    ========================================================================== */
 .section-hymt2 {
   padding: 100px 0;
-  background-color: var(--apple-black);
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background-color: #000000;
+  color: #f5f5f7;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.section-hymt2 .section-title {
+  color: #ffffff !important;
+  font-size: clamp(32px, 4.5vw, 48px);
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin-bottom: 12px;
+}
+
+.section-hymt2 .section-desc {
+  color: #a1a1a6 !important;
+  max-width: 680px;
+  margin: 0 auto;
+  font-size: 16px;
+  line-height: 1.5;
+}
+
+.section-hymt2 .badge-pill {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  color: rgba(255, 255, 255, 0.9);
+  display: inline-flex;
+  margin-bottom: 16px;
 }
 
 .hymt2-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 28px;
+  gap: 24px;
   margin-top: 48px;
 }
 
 .hymt2-card {
-  background: var(--apple-dark-surface-1);
-  border: 1px solid var(--apple-dark-border);
-  border-radius: var(--radius-card);
+  background: #161618;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
   padding: 32px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   transition: var(--transition-smooth);
 }
 
 .hymt2-card:hover {
-  border-color: rgba(255, 255, 255, 0.25);
+  border-color: rgba(255, 255, 255, 0.28);
   transform: translateY(-2px);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.65);
 }
 
 .hymt2-tag {
   display: inline-block;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
-  color: var(--apple-blue-bright);
-  background: rgba(41, 151, 255, 0.12);
+  color: #2997ff;
+  background: rgba(41, 151, 255, 0.14);
   padding: 4px 10px;
   border-radius: var(--radius-capsule);
   margin-bottom: 12px;
@@ -1557,7 +1583,7 @@ button {
 .hymt2-card-header h3 {
   font-size: 22px;
   font-weight: 700;
-  color: var(--apple-text-primary-dark);
+  color: #ffffff !important;
   margin-bottom: 8px;
   letter-spacing: -0.015em;
 }
@@ -1565,54 +1591,89 @@ button {
 .hymt2-card-header p {
   font-size: 14px;
   line-height: 1.5;
-  color: var(--apple-text-secondary-dark);
-  margin-bottom: 20px;
+  color: #a1a1a6 !important;
+  margin-bottom: 18px;
 }
 
 .hymt2-features {
   display: flex;
   flex-direction: column;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .hymt2-feat-item {
   font-size: 13px;
-  color: var(--apple-text-primary-dark);
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: #e5e5ea;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   padding: 8px 12px;
-  border-radius: var(--radius-inner);
+  border-radius: 8px;
+  line-height: 1.45;
 }
 
 .hymt2-feat-item strong {
-  color: var(--apple-blue-bright);
+  color: #2997ff;
+}
+
+.terminal-install-box.in-card {
+  margin: 14px 0 10px;
+  background: #0c0c0e;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.terminal-install-box.in-card .terminal-header {
+  background: rgba(255, 255, 255, 0.06);
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.terminal-install-box.in-card .terminal-title {
+  font-size: 12px;
+  color: #a1a1a6;
+  font-weight: 500;
+}
+
+.terminal-install-box.in-card .terminal-body {
+  padding: 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+  color: #30d158;
+  background: transparent;
+  white-space: pre-wrap;
+  word-break: break-all;
 }
 
 .hymt2-card-footer {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin-top: 20px;
-  padding-top: 16px;
+  gap: 8px;
+  margin-top: 18px;
+  padding-top: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .hymt2-card-footer span {
   font-size: 13px;
-  color: var(--apple-text-secondary-dark);
+  color: #a1a1a6;
 }
 
 .hymt2-card-footer code {
   font-family: var(--font-mono);
-  color: var(--apple-blue-bright);
-  background: rgba(41, 151, 255, 0.1);
+  color: #2997ff;
+  background: rgba(41, 151, 255, 0.12);
   padding: 2px 6px;
   border-radius: 4px;
 }
 
 .link-blue {
-  color: var(--apple-blue-bright);
+  color: #2997ff;
   font-size: 13px;
   font-weight: 500;
   display: inline-flex;
@@ -1625,4 +1686,5 @@ button {
   text-decoration: underline;
   color: #64b5f6;
 }
+
 
