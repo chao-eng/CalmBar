@@ -12,7 +12,7 @@
   - **按需加载**：平时不常驻占用显存，首次收到翻译请求时毫秒级自动加载进显存。
   - **自动释放**：默认连续 **20 分钟** 无请求时，自动卸载模型并执行底层显存缓存清理（`mx.clear_cache()`），显存占用归零。
 - 🔌 **兼容 OpenAI 标准接口**：原生提供 `/v1/chat/completions`、`/v1/models`、`/health` 接口，支持 SSE 流式实时打字机输出。
-- 🔄 **macOS 后台守护进程**：集成 `launchd` 守护进程，开机静默自启、异常自动重启。
+- 🚀 **轻量后台运行**：生成便捷的后台启动（`./start.sh`）与停止（`./stop.sh`）脚本，PID 安全管理。
 
 ---
 
@@ -43,32 +43,23 @@ chmod +x install.sh
 3. 从国内清华大学镜像源高速安装 MLX (`mlx`, `mlx-lm`)、FastAPI、Uvicorn 等依赖。
 4. 从国内 ModelScope（魔搭社区）高速下载 `Hy-MT2-1.8B-4bit` 量化模型权重。
 5. 生成高性能 OpenAI 兼容 FastAPI 服务端（`app/server.py`）。
-6. 配置并注册 macOS `launchd` 用户级守护进程（`~/Library/LaunchAgents/com.user.hymt2.server.plist`）。
-7. 启动服务并自动执行双语翻译连通性测试。
+6. 生成便捷的后台管理脚本（`start.sh`、`stop.sh`）。
+7. 输出启动指引。
 
 ---
 
 ## 🕹️ 服务管理命令
 
-安装完成后，可在 `~/HyMT2-Server/` 目录下随时使用以下快捷脚本进行服务运维：
+安装完成后，可在 `~/HyMT2-Server/` 目录下使用以下命令启动和停止后台服务：
 
 ```bash
 cd ~/HyMT2-Server
 
-# 查看服务运行状态、PID、端口与健康度
-./status.sh
-
-# 测试翻译接口连通性与模型推理输出
-./test.sh
-
-# 启动服务
+# 启动后台服务
 ./start.sh
 
-# 停止服务
+# 停止后台服务
 ./stop.sh
-
-# 重启服务
-./restart.sh
 
 # 查看实时运行日志
 tail -f logs/server.log

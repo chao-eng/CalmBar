@@ -276,7 +276,7 @@ CalmBar/
     ├── HyMT2部署/                       # macOS MLX 硬件加速与 Docker 跨平台部署指南
     │   ├── MacOs MLX加速部署.md         # Apple Silicon M1~M4 MLX 硬件加速与空闲释放方案
     │   ├── 其他系统部署.md               # Linux / Docker / NAS llama-server GGUF 部署方案
-    │   └── install.sh                   # macOS 一键自动部署与 launchd 守护进程安装脚本
+    │   └── install.sh                   # macOS 一键自动部署脚本
     ├── RELEASE.md                       # 版本发布说明与更新日志
     ├── 核心需求.md                       # 产品需求与架构说明文档
     ├── CalmBar 2.0 优化方案.md           # 2.0 架构与平台化演进方案
