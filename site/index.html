@@ -41,6 +41,7 @@
         <a href="#showcase" class="nav-link">功能演示</a>
         <a href="#performance" class="nav-link">技术架构</a>
         <a href="#shortcuts" class="nav-link">快捷键</a>
+        <a href="#hymt2" class="nav-link">Hy-MT2 部署</a>
         <a href="#download" class="nav-link nav-highlight">立即获取</a>
       </nav>
 
@@ -399,6 +400,87 @@
           </div>
           <div class="key-name">剪贴板历史唤出</div>
           <div class="key-desc">在光标位置快速预览与粘贴历史记录</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hy-MT2 AI Server Deployment Guide Section -->
+  <section class="section section-hymt2" id="hymt2">
+    <div class="container">
+      <div class="section-header text-center">
+        <div class="badge-pill mb-3">
+          <span>大模型本地 / 私有化部署</span>
+        </div>
+        <h2 class="section-title">Hy-MT2 专用翻译模型部署指南</h2>
+        <p class="section-sub">为 CalmBar 配备毫秒级响应的专属 AI 翻译大模型，支持纯本地 Apple Silicon 硬件加速或 Linux / Docker 跨平台自建服务。</p>
+      </div>
+
+      <div class="hymt2-grid">
+        <!-- Card 1: Apple Silicon MLX -->
+        <div class="hymt2-card">
+          <div class="hymt2-card-header">
+            <span class="hymt2-tag">🍎 Apple Silicon (macOS)</span>
+            <h3>MLX 原生硬件加速</h3>
+            <p>专为 M1/M2/M3/M4 系列芯片定制，直接利用 Apple Metal GPU 与统一内存，4-bit 量化仅需约 1.2GB 内存。</p>
+          </div>
+          <div class="hymt2-features">
+            <div class="hymt2-feat-item">⚡ <strong>按需加载</strong>：首个请求毫秒级拉起，平时不占显存</div>
+            <div class="hymt2-feat-item">🌿 <strong>空闲释放</strong>：连续 20 分钟无请求自动卸载（显存归零）</div>
+            <div class="hymt2-feat-item">🔄 <strong>开机自启</strong>：集成 macOS launchd 守护进程静默运行</div>
+          </div>
+          <div class="terminal-install-box in-card">
+            <div class="terminal-header">
+              <span class="terminal-title">一键安装脚本</span>
+              <button class="btn-copy" id="btn-copy-mlx" data-clipboard="cd doc/HyMT2部署 && chmod +x install.sh && ./install.sh">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>复制代码</span>
+              </button>
+            </div>
+            <pre class="terminal-body"><code># 前置依赖: brew install python@3.11
+cd doc/HyMT2部署 && chmod +x install.sh && ./install.sh</code></pre>
+          </div>
+          <div class="hymt2-card-footer">
+            <span>CalmBar 配置：<code>http://127.0.0.1:8000/v1</code></span>
+            <a href="https://github.com/chao-eng/CalmBar/blob/main/doc/HyMT2%E9%83%A8%E7%BD%B2/MacOs%20MLX%E5%8A%A0%E9%80%9F%E9%83%A8%E7%BD%B2.md" target="_blank" rel="noopener noreferrer" class="link-blue">查看完整 macOS 部署文档 →</a>
+          </div>
+        </div>
+
+        <!-- Card 2: Docker & Linux / NAS -->
+        <div class="hymt2-card">
+          <div class="hymt2-card-header">
+            <span class="hymt2-tag">🐧 Linux / NAS / Docker</span>
+            <h3>Docker 容器化 & llama-server</h3>
+            <p>基于 GGUF 量化模型与 llama-server，支持 Linux 服务器、家庭群晖 / QNAP / Unraid NAS 及 Windows WSL2 跨平台并发部署。</p>
+          </div>
+          <div class="hymt2-features">
+            <div class="hymt2-feat-item">🐳 <strong>一键容器化</strong>：Docker 单行指令或 Docker Compose 编排</div>
+            <div class="hymt2-feat-item">🚀 <strong>并发批处理</strong>：连续批处理与多线程并发吞吐</div>
+            <div class="hymt2-feat-item">📦 <strong>标准量化</strong>：支持 ModelScope 下载 Q4_K_M 等 GGUF 权重</div>
+          </div>
+          <div class="terminal-install-box in-card">
+            <div class="terminal-header">
+              <span class="terminal-title">Docker 启动命令</span>
+              <button class="btn-copy" id="btn-copy-docker" data-clipboard="docker run -d --name hy-mt2-server --restart unless-stopped -p 8000:8080 -v /opt/models:/models crpi-a1liy20beodq2bdl.cn-beijing.personal.cr.aliyuncs.com/bujic/llama-server:pr22836 -m /models/Hy-MT2-1.8B-Q4_K_M.gguf -c 2048 -t 8 --cont-batching">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                  <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                </svg>
+                <span>复制代码</span>
+              </button>
+            </div>
+            <pre class="terminal-body"><code>docker run -d --name hy-mt2-server -p 8000:8080 \
+  -v /opt/models:/models \
+  crpi-a1liy20beodq2bdl.cn-beijing.personal.cr.aliyuncs.com/bujic/llama-server:pr22836 \
+  -m /models/Hy-MT2-1.8B-Q4_K_M.gguf -c 2048 -t 8 --cont-batching</code></pre>
+          </div>
+          <div class="hymt2-card-footer">
+            <span>CalmBar 配置：<code>http://&lt;局域网IP&gt;:8000/v1</code></span>
+            <a href="https://github.com/chao-eng/CalmBar/blob/main/doc/HyMT2%E9%83%A8%E7%BD%B2/%E5%85%B6%E4%BB%96%E7%B3%BB%E7%BB%9F%E9%83%A8%E7%BD%B2.md" target="_blank" rel="noopener noreferrer" class="link-blue">查看完整 Docker 部署文档 →</a>
+          </div>
         </div>
       </div>
     </div>

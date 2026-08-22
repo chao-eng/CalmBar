@@ -1502,7 +1502,127 @@ button {
   .tech-grid {
     grid-template-columns: 1fr;
   }
+  .hymt2-grid {
+    grid-template-columns: 1fr !important;
+  }
   .hero-headline {
     font-size: 36px;
   }
 }
+
+/* ==========================================================================
+   Hy-MT2 AI Deployment Guide Section Styles
+   ========================================================================== */
+.section-hymt2 {
+  padding: 100px 0;
+  background-color: var(--apple-black);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hymt2-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 28px;
+  margin-top: 48px;
+}
+
+.hymt2-card {
+  background: var(--apple-dark-surface-1);
+  border: 1px solid var(--apple-dark-border);
+  border-radius: var(--radius-card);
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  transition: var(--transition-smooth);
+}
+
+.hymt2-card:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.45);
+}
+
+.hymt2-tag {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--apple-blue-bright);
+  background: rgba(41, 151, 255, 0.12);
+  padding: 4px 10px;
+  border-radius: var(--radius-capsule);
+  margin-bottom: 12px;
+}
+
+.hymt2-card-header h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: var(--apple-text-primary-dark);
+  margin-bottom: 8px;
+  letter-spacing: -0.015em;
+}
+
+.hymt2-card-header p {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--apple-text-secondary-dark);
+  margin-bottom: 20px;
+}
+
+.hymt2-features {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.hymt2-feat-item {
+  font-size: 13px;
+  color: var(--apple-text-primary-dark);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  padding: 8px 12px;
+  border-radius: var(--radius-inner);
+}
+
+.hymt2-feat-item strong {
+  color: var(--apple-blue-bright);
+}
+
+.hymt2-card-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hymt2-card-footer span {
+  font-size: 13px;
+  color: var(--apple-text-secondary-dark);
+}
+
+.hymt2-card-footer code {
+  font-family: var(--font-mono);
+  color: var(--apple-blue-bright);
+  background: rgba(41, 151, 255, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.link-blue {
+  color: var(--apple-blue-bright);
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: var(--transition-fast);
+}
+
+.link-blue:hover {
+  text-decoration: underline;
+  color: #64b5f6;
+}
+
