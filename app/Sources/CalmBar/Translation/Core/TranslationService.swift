@@ -31,8 +31,17 @@ public final class TranslationService: Sendable {
 
     private let session: URLSession
 
-    public init(session: URLSession = .shared) {
-        self.session = session
+    public init(session: URLSession? = nil) {
+        if let session = session {
+            self.session = session
+        } else {
+            let config = URLSessionConfiguration.default
+            config.timeoutIntervalForRequest = 60
+            config.timeoutIntervalForResource = 300
+            config.requestCachePolicy = .reloadIgnoringLocalCacheData
+            config.urlCache = nil
+            self.session = URLSession(configuration: config)
+        }
     }
 
     // MARK: - Prompt Construction
@@ -100,6 +109,7 @@ public final class TranslationService: Sendable {
 
         var accumulated = ""
         var usage: TranslationUsage?
+        var lastChunkTime: CFAbsoluteTime = 0
 
         for try await line in bytes.lines {
             try Task.checkCancellation()
@@ -125,7 +135,11 @@ public final class TranslationService: Sendable {
             if let chunk = try? JSONDecoder().decode(ChatCompletionChunk.self, from: jsonData) {
                 if let delta = chunk.choices.first?.delta.content, !delta.isEmpty {
                     accumulated += delta
-                    onChunk(accumulated)
+                    let now = CFAbsoluteTimeGetCurrent()
+                    if now - lastChunkTime >= 0.035 { // ~30fps 节流，避免高频 token 频繁唤醒主线程
+                        lastChunkTime = now
+                        onChunk(accumulated)
+                    }
                 }
                 if let u = chunk.usage {
                     usage = TranslationUsage(
@@ -205,7 +219,14 @@ public final class TranslationService: Sendable {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.timeoutInterval = 30
+        request.timeoutInterval = 60
+
+        if stream {
+            request.setValue("text/event-stream", forHTTPHeaderField: "Accept")
+            request.setValue("no-cache", forHTTPHeaderField: "Cache-Control")
+            request.setValue("identity", forHTTPHeaderField: "Accept-Encoding")
+            request.setValue("no", forHTTPHeaderField: "X-Accel-Buffering")
+        }
 
         if let key = apiKey?.trimmingCharacters(in: .whitespacesAndNewlines), !key.isEmpty {
             request.setValue("Bearer \(key)", forHTTPHeaderField: "Authorization")

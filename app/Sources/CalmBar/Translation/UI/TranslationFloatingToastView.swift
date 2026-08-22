@@ -4,12 +4,14 @@ import Combine
 import CalmBarKit
 
 @MainActor
-public final class TranslationToastWindowController {
+public final class TranslationToastWindowController: ObservableObject {
     public static let shared = TranslationToastWindowController()
 
-    private var window: NSWindow?
-    private var currentItem: TranslationItem?
-    private var isPinned: Bool = false
+    @Published public var currentItem: TranslationItem?
+    @Published public var isPinned: Bool = false
+
+    private var window: NSPanel?
+    private var hostingController: NSHostingController<TranslationFloatingToastRootView>?
 
     private init() {}
 
@@ -17,7 +19,7 @@ public final class TranslationToastWindowController {
         self.currentItem = item
 
         if let existing = window, existing.isVisible {
-            updateContentView(with: item)
+            positionNearMouse(panel: existing)
             existing.makeKeyAndOrderFront(nil)
             return
         }
@@ -45,8 +47,11 @@ public final class TranslationToastWindowController {
         panel.standardWindowButton(.miniaturizeButton)?.isHidden = true
         panel.standardWindowButton(.zoomButton)?.isHidden = true
 
+        let rootView = TranslationFloatingToastRootView(controller: self)
+        let hosting = NSHostingController(rootView: rootView)
+        panel.contentViewController = hosting
+        self.hostingController = hosting
         self.window = panel
-        updateContentView(with: item)
 
         // 智能定位：优先锚定在鼠标光标位置附近，自适应防屏幕边缘越界
         positionNearMouse(panel: panel)
@@ -56,41 +61,17 @@ public final class TranslationToastWindowController {
 
     public func update(item: TranslationItem) {
         self.currentItem = item
-        if let window = window, window.isVisible {
-            updateContentView(with: item)
-        }
     }
 
     public func close() {
         window?.close()
         window = nil
+        hostingController = nil
         isPinned = false
     }
 
     public func togglePin() {
         isPinned.toggle()
-        if let item = currentItem {
-            updateContentView(with: item)
-        }
-    }
-
-    private func updateContentView(with item: TranslationItem) {
-        window?.contentViewController = NSHostingController(
-            rootView: TranslationFloatingToastView(
-                item: item,
-                isPinned: isPinned,
-                onClose: { [weak self] in
-                    self?.close()
-                },
-                onTogglePin: { [weak self] in
-                    self?.togglePin()
-                },
-                onRetranslate: { targetLang in
-                    TranslationManager.shared.translate(text: item.originalText, targetLanguage: targetLang)
-                }
-            )
-            .environment(\.colorScheme, .dark)
-        )
     }
 
     private func positionNearMouse(panel: NSPanel) {
@@ -119,6 +100,31 @@ public final class TranslationToastWindowController {
         originY = max(visibleFrame.minY + margin, min(originY, visibleFrame.maxY - height - margin))
 
         panel.setFrameOrigin(NSPoint(x: originX, y: originY))
+    }
+}
+
+public struct TranslationFloatingToastRootView: View {
+    @ObservedObject var controller: TranslationToastWindowController
+
+    public var body: some View {
+        if let item = controller.currentItem {
+            TranslationFloatingToastView(
+                item: item,
+                isPinned: controller.isPinned,
+                onClose: {
+                    controller.close()
+                },
+                onTogglePin: {
+                    controller.togglePin()
+                },
+                onRetranslate: { targetLang in
+                    TranslationManager.shared.translate(text: item.originalText, targetLanguage: targetLang)
+                }
+            )
+            .environment(\.colorScheme, .dark)
+        } else {
+            EmptyView()
+        }
     }
 }
 
@@ -191,6 +197,14 @@ public struct TranslationFloatingToastView: View {
             } else {
                 onClose()
             }
+        }
+        .onChange(of: item.id) { _, _ in
+            selectedTargetLangCode = item.targetLanguage
+            isCopied = false
+            remainingSeconds = Int(max(2.0, settings.translationAutoDismissDelay))
+        }
+        .onChange(of: item.targetLanguage) { _, newLang in
+            selectedTargetLangCode = newLang
         }
         .onChange(of: item.status) { _, newStatus in
             if newStatus == .completed || newStatus == .failed {
