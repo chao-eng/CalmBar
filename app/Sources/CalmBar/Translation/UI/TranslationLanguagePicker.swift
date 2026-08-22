@@ -47,6 +47,7 @@ public struct TranslationLanguagePicker: View {
             .cornerRadius(6)
         }
         .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
         .fixedSize()
         .focusable(false)
         .focusEffectDisabled()
