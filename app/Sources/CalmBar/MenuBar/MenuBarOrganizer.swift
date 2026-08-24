@@ -83,6 +83,14 @@ public final class MenuBarOrganizer: ObservableObject {
     }
 
     private func setupObservers() {
+        AppSettings.shared.$menuBarOrganizerEnabled
+            .sink { [weak self] enabled in
+                Task { @MainActor in
+                    self?.updateOrganizerEnabled(enabled)
+                }
+            }
+            .store(in: &cancellables)
+
         AppSettings.shared.$hoverToExpand
             .sink { [weak self] enabled in
                 Task { @MainActor in
@@ -90,6 +98,18 @@ public final class MenuBarOrganizer: ObservableObject {
                 }
             }
             .store(in: &cancellables)
+    }
+
+    private func updateOrganizerEnabled(_ enabled: Bool) {
+        if !enabled {
+            expandMenuBar()
+            btnExpandCollapse.isVisible = false
+            btnSeparate.isVisible = false
+        } else {
+            btnExpandCollapse.isVisible = true
+            btnSeparate.isVisible = true
+            collapseMenuBar()
+        }
     }
 
     @objc private func handleExpandCollapseClick() {
@@ -111,6 +131,7 @@ public final class MenuBarOrganizer: ObservableObject {
     }
 
     public func toggleExpandCollapse() {
+        guard AppSettings.shared.menuBarOrganizerEnabled else { return }
         if isCollapsed {
             expandMenuBar()
         } else {

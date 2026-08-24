@@ -15,6 +15,11 @@ public final class OCRManager: ObservableObject {
 
     /// 触发交互式截屏并进行文字与二维码识别
     public func startCaptureAndRecognize(completion: ((OCRItem?) -> Void)? = nil) {
+        guard AppSettings.shared.ocrEnabled else {
+            completion?(nil)
+            return
+        }
+
         // 1. 先收起菜单栏主面板，避免遮挡用户想要框选的屏幕区域
         StatusBarManager.shared.closePopover()
 

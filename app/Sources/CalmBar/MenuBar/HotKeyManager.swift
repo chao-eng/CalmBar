@@ -37,7 +37,9 @@ public final class HotKeyManager {
                 if status == noErr {
                     if hotKeyID.id == 1 {
                         Task { @MainActor in
-                            MenuBarOrganizer.shared.toggleExpandCollapse()
+                            if AppSettings.shared.menuBarOrganizerEnabled {
+                                MenuBarOrganizer.shared.toggleExpandCollapse()
+                            }
                         }
                     } else if hotKeyID.id == 2 {
                         Task { @MainActor in
@@ -45,15 +47,21 @@ public final class HotKeyManager {
                         }
                     } else if hotKeyID.id == 3 {
                         Task { @MainActor in
-                            OCRManager.shared.startCaptureAndRecognize()
+                            if AppSettings.shared.ocrEnabled {
+                                OCRManager.shared.startCaptureAndRecognize()
+                            }
                         }
                     } else if hotKeyID.id == 4 {
                         Task { @MainActor in
-                            ClipboardHistoryWindowController.shared.toggle()
+                            if AppSettings.shared.clipboardHistoryEnabled {
+                                ClipboardHistoryWindowController.shared.toggle()
+                            }
                         }
                     } else if hotKeyID.id == 5 {
                         Task { @MainActor in
-                            TranslationManager.shared.translateFromClipboard()
+                            if AppSettings.shared.translationEnabled {
+                                TranslationManager.shared.translateFromClipboard()
+                            }
                         }
                     }
                 }
