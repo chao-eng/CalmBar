@@ -18,6 +18,16 @@ public struct BatterySettingsTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .battery)
 
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.battery.icon,
+                    iconColors: SettingsTab.battery.gradientColors,
+                    title: "电池充电上限保护",
+                    activeSubtitle: "已激活 · 充至 \(settings.batteryChargeLimit)% 自动切断充电，延长锂电池使用寿命",
+                    inactiveSubtitle: "已停用 · 采用 macOS 官方默认充电策略，将充满至 100%",
+                    isEnabled: $settings.batteryChargeLimitEnabled
+                )
+
                 if !helper.isHelperAvailable || helper.needsHelperUpdate {
                     GroupBox(label: Label("特权助手状态", systemImage: "lock.shield")) {
                         HStack {
@@ -83,11 +93,6 @@ public struct BatterySettingsTab: View {
                             }
 
                             Spacer()
-
-                            Toggle("", isOn: $settings.batteryChargeLimitEnabled)
-                                .toggleStyle(.switch)
-                                .labelsHidden()
-                                .tint(.accentColor)
                         }
 
                         Divider()
@@ -174,6 +179,8 @@ public struct BatterySettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(!settings.batteryChargeLimitEnabled)
+                .opacity(settings.batteryChargeLimitEnabled ? 1.0 : 0.6)
 
                 // 3. 临时充至 100% (Top Up)
                 GroupBox(label: Label("临时满电模式 (Top Up)", systemImage: "bolt.badge.clock")) {
@@ -202,6 +209,8 @@ public struct BatterySettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(!settings.batteryChargeLimitEnabled)
+                .opacity(settings.batteryChargeLimitEnabled ? 1.0 : 0.6)
 
                 // 4. 原理与技术说明
                 GroupBox(label: Label("硬件充电阻断与安全熔断机制", systemImage: "info.circle")) {

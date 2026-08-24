@@ -7,60 +7,44 @@ public struct CaffeineSettingsTab: View {
 
     public init() {}
 
+    private var isCaffeineActive: Binding<Bool> {
+        Binding<Bool>(
+            get: { caffeine.isActive },
+            set: { enabled in
+                if enabled {
+                    caffeine.activate()
+                } else {
+                    caffeine.deactivate()
+                }
+            }
+        )
+    }
+
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .caffeine)
 
-                // 1. 状态与快速控制
-                GroupBox(label: Label("防休眠状态与快速启动", systemImage: "cup.and.saucer.fill")) {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 12) {
-                            CaffeineIconView(size: 36, isActive: caffeine.isActive)
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.caffeine.icon,
+                    iconColors: SettingsTab.caffeine.gradientColors,
+                    title: "系统保持清醒 (防休眠)",
+                    activeSubtitle: "已激活 · 阻止系统与显示器睡眠 (剩余时间: \(caffeine.formattedTimeRemaining()))",
+                    inactiveSubtitle: "已停用 · 采用 macOS 默认节能策略，允许自动熄屏与休眠",
+                    isEnabled: isCaffeineActive
+                )
 
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 6) {
-                                    Text(caffeine.isActive ? "保持清醒已激活 (防休眠)" : "防休眠处于停用状态")
-                                        .font(.system(size: 13, weight: .semibold))
-                                    Text(caffeine.isActive ? "已阻止休眠" : "节能模式")
-                                        .font(.system(size: 10, weight: .semibold))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 1)
-                                        .background(caffeine.isActive ? Color.brown.opacity(0.12) : Color.secondary.opacity(0.15))
-                                        .foregroundStyle(caffeine.isActive ? Color.brown : Color.secondary)
-                                        .cornerRadius(4)
-                                }
-                                Text(caffeine.isActive ? "剩余时间: \(caffeine.formattedTimeRemaining())" : "系统将按照 macOS 默认节能设置自动熄屏与睡眠。")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.secondary)
-                            }
-
-                            Spacer()
-
-                            Toggle("", isOn: Binding(
-                                get: { caffeine.isActive },
-                                set: { if $0 { caffeine.activate() } else { caffeine.deactivate() } }
-                            ))
-                            .toggleStyle(.switch)
-                            .labelsHidden()
-                            .tint(.accentColor)
-                        }
-
-                        Divider()
-
-                        // 快速时长预设按钮组
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("快速设置保持清醒时长:")
-                                .font(.system(size: 11, weight: .medium))
-
-                            HStack(spacing: 6) {
-                                durationPresetButton(title: "无限期", minutes: 0)
-                                durationPresetButton(title: "15 分钟", minutes: 15)
-                                durationPresetButton(title: "30 分钟", minutes: 30)
-                                durationPresetButton(title: "1 小时", minutes: 60)
-                                durationPresetButton(title: "2 小时", minutes: 120)
-                                durationPresetButton(title: "5 小时", minutes: 300)
-                            }
+                // 1. 快速控制与时长预设
+                GroupBox(label: Label("快速设置保持清醒时长", systemImage: "cup.and.saucer.fill")) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 6) {
+                            durationPresetButton(title: "无限期", minutes: 0)
+                            durationPresetButton(title: "15 分钟", minutes: 15)
+                            durationPresetButton(title: "30 分钟", minutes: 30)
+                            durationPresetButton(title: "1 小时", minutes: 60)
+                            durationPresetButton(title: "2 小时", minutes: 120)
+                            durationPresetButton(title: "5 小时", minutes: 300)
                         }
                     }
                     .padding(8)

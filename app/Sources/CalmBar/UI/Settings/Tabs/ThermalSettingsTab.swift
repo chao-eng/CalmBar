@@ -12,11 +12,35 @@ public struct ThermalSettingsTab: View {
 
     public init() {}
 
+    private var isThermalControlEnabled: Binding<Bool> {
+        Binding<Bool>(
+            get: { settings.fanPreset != .auto },
+            set: { enabled in
+                if enabled {
+                    settings.fanPreset = .smart
+                } else {
+                    settings.fanPreset = .auto
+                }
+            }
+        )
+    }
+
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .thermal)
 
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.thermal.icon,
+                    iconColors: SettingsTab.thermal.gradientColors,
+                    title: "硬件温控调控引擎",
+                    activeSubtitle: "已激活 · 正在根据 CPU 传感器实时调节转速曲线 (\(settings.fanPreset.titleZH))",
+                    inactiveSubtitle: "已停用 · macOS 系统原生托管散热，未覆写风扇转速",
+                    isEnabled: isThermalControlEnabled
+                )
+
+                // 特权驱动与控制权限
                 GroupBox(label: Label("特权驱动与控制权限", systemImage: "lock.shield")) {
                     HStack {
                         Image(systemName: (helper.isHelperAvailable && !helper.needsHelperUpdate) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
@@ -53,7 +77,8 @@ public struct ThermalSettingsTab: View {
                     .padding(8)
                 }
 
-                GroupBox(label: Label("温控调控模式", systemImage: "fanblades")) {
+                // 温控调控模式
+                GroupBox(label: Label("温控调控模式与曲线参数", systemImage: "fanblades")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Picker("调控模式", selection: $settings.fanPreset) {
                             ForEach(FanPreset.allCases) { preset in
@@ -133,7 +158,10 @@ public struct ThermalSettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(settings.fanPreset == .auto)
+                .opacity(settings.fanPreset == .auto ? 0.6 : 1.0)
 
+                // 实时传感器读数
                 GroupBox(label: Label("实时传感器读数", systemImage: "thermometer.medium")) {
                     VStack(alignment: .leading, spacing: 6) {
                         if thermal.allTemps.isEmpty {

@@ -11,6 +11,16 @@ public struct MenuBarSettingsTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .menuBar)
 
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.menuBar.icon,
+                    iconColors: SettingsTab.menuBar.gradientColors,
+                    title: "菜单栏图标收纳引擎",
+                    activeSubtitle: "已激活 · 支持通过按键 ⌥⌘H 或点击 `<` 箭头展开/折叠隐藏图标",
+                    inactiveSubtitle: "已停用 · 所有图标恢复 macOS 原生排布，不进行折叠收纳",
+                    isEnabled: $settings.menuBarOrganizerEnabled
+                )
+
                 GroupBox(label: Label("自动化与交互", systemImage: "sparkles")) {
                     VStack(alignment: .leading, spacing: 10) {
                         Toggle("展开后无操作自动折叠收纳", isOn: $settings.autoCollapseEnabled)
@@ -29,6 +39,8 @@ public struct MenuBarSettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(!settings.menuBarOrganizerEnabled)
+                .opacity(settings.menuBarOrganizerEnabled ? 1.0 : 0.6)
 
                 GroupBox(label: Label("使用指南与快捷键", systemImage: "questionmark.circle")) {
                     VStack(alignment: .leading, spacing: 8) {
@@ -47,7 +59,7 @@ public struct MenuBarSettingsTab: View {
                         HStack(alignment: .top, spacing: 8) {
                             Text("3.")
                                 .font(.system(size: 12, weight: .bold))
-                            Text("软件退出或重启时，所有图标将自动恢复系统原生排列。")
+                            Text("软件退出或关闭该功能时，所有图标将自动恢复系统原生排列。")
                                 .font(.system(size: 12))
                         }
                     }

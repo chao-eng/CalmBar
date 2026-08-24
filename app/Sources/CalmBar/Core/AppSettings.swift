@@ -36,6 +36,9 @@ public final class AppSettings: ObservableObject {
     }
 
     // MARK: - Menu Bar Settings
+    @Published public var menuBarOrganizerEnabled: Bool {
+        didSet { defaults.set(menuBarOrganizerEnabled, forKey: "menuBarOrganizerEnabled") }
+    }
     @Published public var autoCollapseEnabled: Bool {
         didSet { defaults.set(autoCollapseEnabled, forKey: "autoCollapseEnabled") }
     }
@@ -124,6 +127,9 @@ public final class AppSettings: ObservableObject {
     }
 
     // MARK: - OCR (Vision Text Recognition) Settings
+    @Published public var ocrEnabled: Bool {
+        didSet { defaults.set(ocrEnabled, forKey: "ocrEnabled") }
+    }
     @Published public var ocrQualityAccurate: Bool {
         didSet { defaults.set(ocrQualityAccurate, forKey: "ocrQualityAccurate") }
     }
@@ -208,6 +214,9 @@ public final class AppSettings: ObservableObject {
     @Published public var popoverShowCleaner: Bool {
         didSet { defaults.set(popoverShowCleaner, forKey: "popoverShowCleaner") }
     }
+    @Published public var cleanerEnabled: Bool {
+        didSet { defaults.set(cleanerEnabled, forKey: "cleanerEnabled") }
+    }
     @Published public var cleanerSensitivity: SearchSensitivityLevel {
         didSet { defaults.set(cleanerSensitivity.rawValue, forKey: "cleanerSensitivity") }
     }
@@ -258,6 +267,7 @@ public final class AppSettings: ObservableObject {
         self.fan1CustomFraction = defaults.object(forKey: "fan1CustomFraction") as? Double ?? 0.50
         self.showTempInMenuBar = defaults.object(forKey: "showTempInMenuBar") as? Bool ?? true
 
+        self.menuBarOrganizerEnabled = defaults.object(forKey: "menuBarOrganizerEnabled") as? Bool ?? true
         self.autoCollapseEnabled = defaults.object(forKey: "autoCollapseEnabled") as? Bool ?? false
         self.autoCollapseDelay = defaults.object(forKey: "autoCollapseDelay") as? Double ?? 5.0
         self.alwaysHiddenSectionEnabled = defaults.object(forKey: "alwaysHiddenSectionEnabled") as? Bool ?? true
@@ -290,6 +300,7 @@ public final class AppSettings: ObservableObject {
         self.batteryTopUpActive = defaults.object(forKey: "batteryTopUpActive") as? Bool ?? false
         self.batteryAutoDischargeEnabled = defaults.object(forKey: "batteryAutoDischargeEnabled") as? Bool ?? false
 
+        self.ocrEnabled = defaults.object(forKey: "ocrEnabled") as? Bool ?? true
         self.ocrQualityAccurate = defaults.object(forKey: "ocrQualityAccurate") as? Bool ?? true
         self.ocrLanguageCode = defaults.string(forKey: "ocrLanguageCode") ?? "auto"
         self.ocrAutoCopyToClipboard = defaults.object(forKey: "ocrAutoCopyToClipboard") as? Bool ?? true
@@ -318,6 +329,7 @@ public final class AppSettings: ObservableObject {
         self.popoverShowOCR = defaults.object(forKey: "popoverShowOCR") as? Bool ?? true
         self.popoverShowClipboard = defaults.object(forKey: "popoverShowClipboard") as? Bool ?? true
         self.popoverShowCleaner = defaults.object(forKey: "popoverShowCleaner") as? Bool ?? true
+        self.cleanerEnabled = defaults.object(forKey: "cleanerEnabled") as? Bool ?? true
         self.popoverShowTranslation = defaults.object(forKey: "popoverShowTranslation") as? Bool ?? true
         let sensStr = defaults.string(forKey: "cleanerSensitivity") ?? SearchSensitivityLevel.balanced.rawValue
         self.cleanerSensitivity = SearchSensitivityLevel(rawValue: sensStr) ?? .balanced

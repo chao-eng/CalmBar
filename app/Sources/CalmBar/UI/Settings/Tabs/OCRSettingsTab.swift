@@ -13,6 +13,16 @@ public struct OCRSettingsTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .ocr)
 
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.ocr.icon,
+                    iconColors: SettingsTab.ocr.gradientColors,
+                    title: "屏幕文字与二维码识别 (OCR)",
+                    activeSubtitle: "已激活 · 随时通过全局快捷键 ⌥⌘O 框选识别屏幕内容 (Apple Vision)",
+                    inactiveSubtitle: "已停用 · 暂停屏幕截图文字识别与二维码解析通道",
+                    isEnabled: $settings.ocrEnabled
+                )
+
                 // 1. 识别引擎与精度
                 GroupBox(label: Label("识别引擎与精度配置", systemImage: "cpu")) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -58,6 +68,8 @@ public struct OCRSettingsTab: View {
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .disabled(!settings.ocrEnabled)
+                .opacity(settings.ocrEnabled ? 1.0 : 0.6)
 
                 // 2. 识别后自动化行为
                 GroupBox(label: Label("自动化与交互动作", systemImage: "bolt.fill")) {
@@ -98,6 +110,8 @@ public struct OCRSettingsTab: View {
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .disabled(!settings.ocrEnabled)
+                .opacity(settings.ocrEnabled ? 1.0 : 0.6)
 
                 // 3. 历史记录归档与管理
                 GroupBox(label: Label("历史归档与管理", systemImage: "clock.arrow.circlepath")) {

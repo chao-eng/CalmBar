@@ -12,6 +12,16 @@ public struct ScrollSettingsTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .scroll)
 
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.scroll.icon,
+                    iconColors: SettingsTab.scroll.gradientColors,
+                    title: "滚动手势解耦引擎",
+                    activeSubtitle: "已激活 · 独立反转鼠标/触控板滚轮方向，恢复自然交互体验",
+                    inactiveSubtitle: "已停用 · macOS 原生滚动方向，手势解耦引擎未运行",
+                    isEnabled: $settings.scrollReverserEnabled
+                )
+
                 GroupBox(label: Label("系统权限状态", systemImage: "lock.shield")) {
                     HStack {
                         Image(systemName: scroll.hasAccessibilityPermission ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
@@ -41,18 +51,12 @@ public struct ScrollSettingsTab: View {
 
                 GroupBox(label: Label("设备独立滚动方向配置", systemImage: "slider.horizontal.2")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Toggle("启用滚动手势反转引擎", isOn: $settings.scrollReverserEnabled)
-
-                        Divider()
-
                         VStack(alignment: .leading, spacing: 8) {
                             Text("传统外接鼠标 (Mouse)")
                                 .font(.system(size: 12, weight: .semibold))
 
                             Toggle("反转垂直滚轮 (恢复 Windows/经典滚轮方向)", isOn: $settings.reverseMouseVertical)
-                                .disabled(!settings.scrollReverserEnabled)
                             Toggle("反转水平滚轮 (X 轴)", isOn: $settings.reverseMouseHorizontal)
-                                .disabled(!settings.scrollReverserEnabled)
                         }
 
                         Divider()
@@ -62,13 +66,13 @@ public struct ScrollSettingsTab: View {
                                 .font(.system(size: 12, weight: .semibold))
 
                             Toggle("反转触控板双指垂直滑动", isOn: $settings.reverseTrackpadVertical)
-                                .disabled(!settings.scrollReverserEnabled)
                             Toggle("反转触控板双指水平滑动", isOn: $settings.reverseTrackpadHorizontal)
-                                .disabled(!settings.scrollReverserEnabled)
                         }
                     }
                     .padding(8)
                 }
+                .disabled(!settings.scrollReverserEnabled)
+                .opacity(settings.scrollReverserEnabled ? 1.0 : 0.6)
             }
             .padding(16)
         }

@@ -17,24 +17,19 @@ public struct TranslationSettingsTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .translation)
 
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.translation.icon,
+                    iconColors: SettingsTab.translation.gradientColors,
+                    title: "AI 划词与快捷键翻译",
+                    activeSubtitle: "已激活 · 支持双击 ⌘+C 就地翻译与快捷键 ⌥⌘T (\(settings.translationModel))",
+                    inactiveSubtitle: "已停用 · 暂停 AI 划词捕获与剪贴板即时翻译通道",
+                    isEnabled: $settings.translationEnabled
+                )
+
                 // 1. 服务端接口与连接配置
                 GroupBox(label: Label("HTTP OpenAI 兼容服务端配置 (如 HY-MT2 / Ollama / vLLM)", systemImage: "network")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("启用 AI 划词翻译")
-                                    .font(.system(size: 12, weight: .medium))
-                                Text("开启后可通过双击 ⌘+C、全局快捷键 ⌥⌘T 或 OCR 联动直接调用 AI 模型翻译。")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.secondary)
-                            }
-                            Spacer()
-                            Toggle("", isOn: $settings.translationEnabled)
-                                .labelsHidden()
-                        }
-
-                        Divider()
-
                         VStack(alignment: .leading, spacing: 6) {
                             Text("API 基础地址 (Base URL):")
                                 .font(.system(size: 12, weight: .medium))
@@ -104,6 +99,8 @@ public struct TranslationSettingsTab: View {
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .disabled(!settings.translationEnabled)
+                .opacity(settings.translationEnabled ? 1.0 : 0.6)
 
                 // 2. 语言与提示词偏好
                 GroupBox(label: Label("多语言与提示词偏好 (支持 38 种语言)", systemImage: "globe")) {
@@ -141,6 +138,8 @@ public struct TranslationSettingsTab: View {
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .disabled(!settings.translationEnabled)
+                .opacity(settings.translationEnabled ? 1.0 : 0.6)
 
                 // 3. 交互与触发设置 (Double ⌘+C & Hotkey)
                 GroupBox(label: Label("触发交互与浮窗行为 (参考 cctrans)", systemImage: "hand.tap.fill")) {
@@ -191,6 +190,8 @@ public struct TranslationSettingsTab: View {
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .disabled(!settings.translationEnabled)
+                .opacity(settings.translationEnabled ? 1.0 : 0.6)
 
                 // 4. 历史记录管理
                 GroupBox(label: Label("历史归档与操作", systemImage: "clock.arrow.circlepath")) {

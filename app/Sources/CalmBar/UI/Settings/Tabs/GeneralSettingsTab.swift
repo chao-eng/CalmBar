@@ -11,9 +11,18 @@ public struct GeneralSettingsTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .general)
 
-                GroupBox(label: Label("启动与外观", systemImage: "gearshape")) {
+                // 统一置顶启动主开关
+                FeatureMasterToggleCard(
+                    icon: "power",
+                    iconColors: [Color.blue, Color.cyan],
+                    title: "登录时自动启动 CalmBar",
+                    activeSubtitle: "已激活 · 开机登录系统后自动在后台常驻启动",
+                    inactiveSubtitle: "已停用 · 开机不自启，需要时请手动打开 CalmBar",
+                    isEnabled: $settings.launchAtLogin
+                )
+
+                GroupBox(label: Label("外观与菜单栏指示", systemImage: "gearshape")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Toggle("登录时自动启动 CalmBar", isOn: $settings.launchAtLogin)
                         Toggle("在菜单栏图标旁实时显示 SoC 温度", isOn: $settings.showTempInMenuBar)
                     }
                     .padding(8)

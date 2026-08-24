@@ -14,39 +14,22 @@ public struct NoTunesSettingsTab: View {
             VStack(alignment: .leading, spacing: 16) {
                 SettingsHeaderView(tab: .noTunes)
 
-                // 1. 防护状态与总开关
-                GroupBox(label: Label("Apple Music 防自动启动保护", systemImage: "shield.checkerboard")) {
+                // 统一总控开关
+                FeatureMasterToggleCard(
+                    icon: SettingsTab.noTunes.icon,
+                    iconColors: SettingsTab.noTunes.gradientColors,
+                    title: "Apple Music 自动启动拦截防护",
+                    activeSubtitle: "已激活 · 连接蓝牙耳机或按键时阻止 Apple Music 强行弹起 (已拦截 \(noTunes.blockedCount) 次)",
+                    inactiveSubtitle: "已停用 · 允许 Apple Music / iTunes 随系统按键与外设正常启动",
+                    isEnabled: $settings.noTunesEnabled
+                )
+
+                // 1. 防护操作与拦截统计
+                GroupBox(label: Label("防护操作与拦截统计", systemImage: "shield.checkerboard")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 12) {
-                            NoTunesIconView(size: 32)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                HStack(spacing: 6) {
-                                    Text(settings.noTunesEnabled ? "防启动防护已激活" : "防启动保护已暂停")
-                                        .font(.system(size: 13, weight: .semibold))
-                                    Text(settings.noTunesEnabled ? "监控中" : "已暂停")
-                                        .font(.system(size: 10, weight: .semibold))
-                                        .padding(.horizontal, 6)
-                                        .padding(.vertical, 1)
-                                        .background(settings.noTunesEnabled ? Color.green.opacity(0.15) : Color.secondary.opacity(0.15))
-                                        .foregroundStyle(settings.noTunesEnabled ? .green : .secondary)
-                                        .cornerRadius(4)
-                                }
-                                Text(settings.noTunesEnabled ? "系统检测到连接耳机或按键唤醒 Apple Music / iTunes 时，将瞬间阻止其启动。" : "系统将允许 Apple Music / iTunes 正常启动。")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(.secondary)
-                            }
-
-                            Spacer()
-
-                            Toggle("", isOn: $settings.noTunesEnabled)
-                                .toggleStyle(.switch)
-                                .labelsHidden()
-                        }
+                        Toggle("开启拦截时自动关闭当前已在运行的 Music / iTunes", isOn: $settings.noTunesTerminateOnEnable)
 
                         Divider()
-
-                        Toggle("开启拦截时自动关闭当前已在运行的 Music / iTunes", isOn: $settings.noTunesTerminateOnEnable)
 
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
@@ -73,6 +56,8 @@ public struct NoTunesSettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(!settings.noTunesEnabled)
+                .opacity(settings.noTunesEnabled ? 1.0 : 0.6)
 
                 // 2. 替代目标配置
                 GroupBox(label: Label("拦截后替代启动 (Replacement)", systemImage: "arrow.triangle.2.circlepath")) {
@@ -148,6 +133,8 @@ public struct NoTunesSettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(!settings.noTunesEnabled)
+                .opacity(settings.noTunesEnabled ? 1.0 : 0.6)
 
                 // 3. 原理解释
                 GroupBox(label: Label("功能说明", systemImage: "info.circle")) {
