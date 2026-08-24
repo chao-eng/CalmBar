@@ -11,8 +11,6 @@ public struct OCRSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .ocr)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.ocr.icon,
@@ -29,9 +27,9 @@ public struct OCRSettingsTab: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("高精度识别模式 (深度学习神经网络)")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 Text("开启后调用 Apple Vision 精准模型，对中英文混排、模糊小字等场景识别更精准。")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -44,9 +42,9 @@ public struct OCRSettingsTab: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("目标识别语言")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 Text("指定优先识别的语言，默认自动适配中英文。")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -58,12 +56,14 @@ public struct OCRSettingsTab: View {
                                 Text("日语 (ja)").tag("ja")
                                 Text("韩语 (ko)").tag("ko")
                             }
+                            .font(.system(size: 12.5))
                             .frame(width: 170)
                         }
 
                         Divider()
 
                         Toggle("保留原始换行符 (关闭后自动转为空格单行)", isOn: $settings.ocrKeepLineBreaks)
+                            .font(.system(size: 12.5, weight: .medium))
                     }
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -75,20 +75,24 @@ public struct OCRSettingsTab: View {
                 GroupBox(label: Label("自动化与交互动作", systemImage: "bolt.fill")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Toggle("识别成功后自动写入系统剪贴板", isOn: $settings.ocrAutoCopyToClipboard)
+                            .font(.system(size: 12.5, weight: .medium))
                         Toggle("识别完成后播放提示音效", isOn: $settings.ocrPlaySound)
+                            .font(.system(size: 12.5, weight: .medium))
                         Toggle("识别完成后弹出半透明悬浮预览窗口", isOn: $settings.ocrShowFloatingPreview)
+                            .font(.system(size: 12.5, weight: .medium))
 
                         if settings.ocrShowFloatingPreview {
                             VStack(alignment: .leading, spacing: 8) {
                                 Divider()
 
                                 Toggle("悬浮预览窗口自动倒计时消失", isOn: $settings.ocrAutoDismiss)
+                                    .font(.system(size: 12.5, weight: .medium))
                                     .padding(.leading, 12)
 
                                 if settings.ocrAutoDismiss {
                                     HStack {
                                         Text("自动消失倒计时")
-                                            .font(.system(size: 12))
+                                            .font(.system(size: 12.5))
                                             .foregroundColor(.secondary)
                                         Spacer()
                                         Picker("", selection: $settings.ocrAutoDismissDelay) {
@@ -99,6 +103,7 @@ public struct OCRSettingsTab: View {
                                             Text("30 秒").tag(30.0)
                                             Text("60 秒").tag(60.0)
                                         }
+                                        .font(.system(size: 12.5))
                                         .frame(width: 100)
                                     }
                                     .padding(.leading, 24)
@@ -119,9 +124,9 @@ public struct OCRSettingsTab: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("最大历史记录保留条数")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 Text("当前已存储 \(ocrHistory.items.count) 条识别记录。")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -131,6 +136,7 @@ public struct OCRSettingsTab: View {
                                 Text("200 条").tag(200)
                                 Text("500 条").tag(500)
                             }
+                            .font(.system(size: 12.5))
                             .frame(width: 110)
                         }
 
@@ -143,6 +149,7 @@ public struct OCRSettingsTab: View {
                                 Label("打开历史记录独立窗口", systemImage: "macwindow.on.rectangle")
                             }
                             .buttonStyle(.borderedProminent)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
 
                             Button(action: {
@@ -151,6 +158,7 @@ public struct OCRSettingsTab: View {
                                 Label("立即框选识别", systemImage: "text.viewfinder")
                             }
                             .buttonStyle(.bordered)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
 
                             Spacer()
@@ -162,6 +170,7 @@ public struct OCRSettingsTab: View {
                                     Label("清空历史", systemImage: "trash")
                                 }
                                 .buttonStyle(.bordered)
+                                .font(.system(size: 12, weight: .medium))
                                 .tint(.red)
                                 .controlSize(.small)
                             }

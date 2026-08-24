@@ -23,8 +23,6 @@ public struct CaffeineSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .caffeine)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.caffeine.icon,
@@ -55,7 +53,7 @@ public struct CaffeineSettingsTab: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack(spacing: 8) {
                             Text("默认激活时长:")
-                                .font(.system(size: 13))
+                                .font(.system(size: 12.5, weight: .medium))
 
                             Picker("", selection: $settings.caffeineDefaultDuration) {
                                 Text("无限期 (直到手动关闭)").tag(0)
@@ -67,6 +65,7 @@ public struct CaffeineSettingsTab: View {
                                 Text("2 小时").tag(120)
                                 Text("5 小时").tag(300)
                             }
+                            .font(.system(size: 12.5))
                             .pickerStyle(.menu)
                             .frame(width: 200)
 
@@ -76,7 +75,10 @@ public struct CaffeineSettingsTab: View {
                         Divider()
 
                         Toggle("启动 CalmBar 时自动开启保持清醒", isOn: $settings.caffeineActivateAtLaunch)
+                            .font(.system(size: 12.5, weight: .medium))
+
                         Toggle("Mac 手动进入睡眠时自动解除保持清醒", isOn: $settings.caffeineDeactivateOnManualSleep)
+                            .font(.system(size: 12.5, weight: .medium))
                     }
                     .padding(8)
                 }
@@ -91,22 +93,24 @@ public struct CaffeineSettingsTab: View {
                                 caffeine.updateActivitySimulation(enabled: newVal)
                             }
                         ))
-                        .font(.system(size: 13, weight: .medium))
+                        .font(.system(size: 12.5, weight: .medium))
 
                         Text("当系统闲置超过设定阈值时，自动在鼠标原位产生微小 HID 微动，重置系统 `IOHIDSystem` 闲置计数器，降低基于系统 idle time 的 Away 判定。（注：若某些协作应用依赖独立服务端心跳或主动按键钩子，可能需要保持窗口前台活动）。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
 
                         if settings.caffeineKeepAppsActive {
                             Divider()
 
                             HStack {
                                 Text("触发空闲阈值:")
+                                    .font(.system(size: 12.5, weight: .medium))
                                     .frame(width: 100, alignment: .leading)
                                 Slider(value: $settings.caffeineIdleThreshold, in: 30...300, step: 15)
                                 Text("\(Int(settings.caffeineIdleThreshold)) 秒")
                                     .frame(width: 45, alignment: .trailing)
-                                    .font(.system(.body, design: .monospaced))
+                                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
                             }
                         }
                     }
@@ -117,11 +121,13 @@ public struct CaffeineSettingsTab: View {
                 GroupBox(label: Label("系统原理与电源管理说明", systemImage: "info.circle")) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("• **原生 IOKit 电源断言**：通过 macOS 原生 `IOKit.pwr_mgt` 的 `kIOPMAssertPreventUserIdleDisplaySleep` 向电源管理总线注册临时断言，超低能耗且不损伤电池寿命。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                         Text("• **安全释放机制 (Fail-Safe)**：CalmBar 退出、重启或系统锁屏切换用户时，将自动释放所有电源断言并暂停微动，确保节能策略正常。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                     }
                     .padding(8)
                 }
@@ -136,6 +142,7 @@ public struct CaffeineSettingsTab: View {
             caffeine.activate(withTimeout: seconds)
         }
         .buttonStyle(.bordered)
+        .font(.system(size: 12, weight: .medium))
         .controlSize(.small)
     }
 }

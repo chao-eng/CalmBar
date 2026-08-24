@@ -15,8 +15,6 @@ public struct TranslationSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .translation)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.translation.icon,
@@ -32,7 +30,7 @@ public struct TranslationSettingsTab: View {
                     VStack(alignment: .leading, spacing: 12) {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("API 基础地址 (Base URL):")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 12.5, weight: .medium))
                             TextField("例如 http://10.0.8.2:8000/v1 或 https://api.openai.com/v1", text: $settings.translationAPIBaseURL)
                                 .textFieldStyle(.roundedBorder)
                                 .font(.system(size: 12, design: .monospaced))
@@ -41,7 +39,7 @@ public struct TranslationSettingsTab: View {
                         HStack(spacing: 12) {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("模型名称 (Model Name):")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 TextField("Hy-MT2", text: $settings.translationModel)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.system(size: 12, design: .monospaced))
@@ -49,7 +47,7 @@ public struct TranslationSettingsTab: View {
 
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("API Key (可选，无鉴权可留空):")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 SecureField("sk-...", text: $settings.translationAPIKey)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.system(size: 12, design: .monospaced))
@@ -71,6 +69,7 @@ public struct TranslationSettingsTab: View {
                                 }
                             }
                             .buttonStyle(.borderedProminent)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
                             .disabled(isTestingTranslation)
 
@@ -81,7 +80,7 @@ public struct TranslationSettingsTab: View {
                                     Image(systemName: "checkmark.circle.fill")
                                         .foregroundColor(.green)
                                     Text(res)
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 11.5))
                                         .foregroundColor(.green)
                                 }
                             } else if let err = testTranslationError {
@@ -89,7 +88,7 @@ public struct TranslationSettingsTab: View {
                                     Image(systemName: "exclamationmark.triangle.fill")
                                         .foregroundColor(.orange)
                                     Text(err)
-                                        .font(.system(size: 11))
+                                        .font(.system(size: 11.5))
                                         .foregroundColor(.orange)
                                         .lineLimit(1)
                                 }
@@ -108,9 +107,9 @@ public struct TranslationSettingsTab: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("默认目标翻译语言")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 Text("默认翻译输出语言，支持藏语、维吾尔语、粤语、哈萨克语等 38 种语言体系。")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -119,6 +118,7 @@ public struct TranslationSettingsTab: View {
                                     Text(lang.displayName).tag(lang.code)
                                 }
                             }
+                            .font(.system(size: 12.5))
                             .frame(width: 220)
                         }
 
@@ -126,13 +126,13 @@ public struct TranslationSettingsTab: View {
 
                         VStack(alignment: .leading, spacing: 4) {
                             Text("自定义 Prompt 提示词模板 (可选，留空使用 HY-MT2 默认规范):")
-                                .font(.system(size: 12, weight: .medium))
+                                .font(.system(size: 12.5, weight: .medium))
                             Text("支持占位符: {targetLanguage} (英文名), {targetLanguageZH} (中文名), {text} (原文)")
-                                .font(.system(size: 10))
+                                .font(.system(size: 11))
                                 .foregroundColor(.secondary)
                             TextField("Translate the following segment into {targetLanguage}, without additional explanation: {text}", text: $settings.translationCustomPrompt)
                                 .textFieldStyle(.roundedBorder)
-                                .font(.system(size: 11, design: .monospaced))
+                                .font(.system(size: 11.5, design: .monospaced))
                         }
                     }
                     .padding(8)
@@ -145,16 +145,16 @@ public struct TranslationSettingsTab: View {
                 GroupBox(label: Label("触发交互与浮窗行为 (参考 cctrans)", systemImage: "hand.tap.fill")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Toggle("开启双击 ⌘+C (Double Copy) 划词就地翻译", isOn: $settings.translationDoubleCopyEnabled)
+                            .font(.system(size: 12.5, weight: .medium))
 
                         if settings.translationDoubleCopyEnabled {
                             HStack {
                                 Text("双击判断时间阈值:")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 12.5, weight: .medium))
                                     .frame(width: 140, alignment: .leading)
                                 Slider(value: $settings.translationDoubleCopyInterval, in: 0.4...1.5, step: 0.1)
                                 Text(String(format: "%.1f 秒", settings.translationDoubleCopyInterval))
-                                    .font(.system(size: 11, design: .monospaced))
+                                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
                                     .frame(width: 50, alignment: .trailing)
                             }
                             .padding(.leading, 18)
@@ -163,16 +163,16 @@ public struct TranslationSettingsTab: View {
                         Divider()
 
                         Toggle("翻译浮窗自动倒计时消失", isOn: $settings.translationAutoDismiss)
+                            .font(.system(size: 12.5, weight: .medium))
 
                         if settings.translationAutoDismiss {
                             HStack {
                                 Text("自动消失延迟:")
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 12.5, weight: .medium))
                                     .frame(width: 140, alignment: .leading)
                                 Slider(value: $settings.translationAutoDismissDelay, in: 3.0...20.0, step: 1.0)
                                 Text(String(format: "%.0f 秒", settings.translationAutoDismissDelay))
-                                    .font(.system(size: 11, design: .monospaced))
+                                    .font(.system(size: 12, weight: .semibold, design: .monospaced))
                                     .frame(width: 50, alignment: .trailing)
                             }
                             .padding(.leading, 18)
@@ -182,7 +182,7 @@ public struct TranslationSettingsTab: View {
 
                         HStack {
                             Text("全局快捷键: **⌥⌘T** (翻译剪贴板/选区文本)")
-                                .font(.system(size: 11))
+                                .font(.system(size: 11.5))
                                 .foregroundColor(.secondary)
                             Spacer()
                         }
@@ -202,6 +202,7 @@ public struct TranslationSettingsTab: View {
                             Label("打开翻译历史窗口", systemImage: "macwindow.on.rectangle")
                         }
                         .buttonStyle(.borderedProminent)
+                        .font(.system(size: 12, weight: .medium))
                         .controlSize(.small)
 
                         Button(action: {
@@ -210,6 +211,7 @@ public struct TranslationSettingsTab: View {
                             Label("立即翻译剪贴板", systemImage: "character.bubble")
                         }
                         .buttonStyle(.bordered)
+                        .font(.system(size: 12, weight: .medium))
                         .controlSize(.small)
 
                         Spacer()
@@ -221,6 +223,7 @@ public struct TranslationSettingsTab: View {
                                 Label("清空历史 (\(translationHistory.history.count) 条)", systemImage: "trash")
                             }
                             .buttonStyle(.bordered)
+                            .font(.system(size: 12, weight: .medium))
                             .tint(.red)
                             .controlSize(.small)
                         }

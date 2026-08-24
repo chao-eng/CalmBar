@@ -9,8 +9,6 @@ public struct GeneralSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .general)
-
                 // 统一置顶启动主开关
                 FeatureMasterToggleCard(
                     icon: "power",
@@ -24,6 +22,7 @@ public struct GeneralSettingsTab: View {
                 GroupBox(label: Label("外观与菜单栏指示", systemImage: "gearshape")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Toggle("在菜单栏图标旁实时显示 SoC 温度", isOn: $settings.showTempInMenuBar)
+                            .font(.system(size: 12.5, weight: .medium))
                     }
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -32,43 +31,64 @@ public struct GeneralSettingsTab: View {
                 GroupBox(label: Label("任务栏左键面板显示项目", systemImage: "list.bullet.rectangle")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("自定义左键点击菜单栏图标时在面板中展示的功能模块（风扇控制模块作为核心默认常驻）：")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
 
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 12) {
                             Toggle(isOn: $settings.popoverShowGauges) {
                                 Label("硬件温度仪表盘", systemImage: "gauge.with.needle")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowMenuBar) {
                                 Label("菜单栏图标收纳", systemImage: "menubar.rectangle")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowScrollReverser) {
                                 Label("鼠标自然滚动解耦", systemImage: "computermouse.fill")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowNoTunes) {
                                 Label("Apple Music 启动拦截", systemImage: "music.note")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowCaffeine) {
                                 Label("系统防休眠 (保持清醒)", systemImage: "cup.and.saucer.fill")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowBattery) {
                                 Label("电池充电上限控制", systemImage: "battery.100.bolt")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowGatekeeper) {
                                 Label("软件去隔离与签名授权", systemImage: "lock.shield.fill")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowOCR) {
                                 Label("屏幕文字与二维码识别", systemImage: "text.viewfinder")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowClipboard) {
                                 Label("剪贴板历史快捷入口", systemImage: "doc.on.clipboard")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowCleaner) {
                                 Label("卸载与清理快捷入口", systemImage: "trash")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
+
                             Toggle(isOn: $settings.popoverShowTranslation) {
                                 Label("AI 划词翻译快捷入口", systemImage: "character.bubble.fill")
                             }
+                            .font(.system(size: 12.5, weight: .medium))
                         }
                     }
                     .padding(8)
@@ -79,7 +99,7 @@ public struct GeneralSettingsTab: View {
                 GroupBox(label: Label("全局快捷键速查", systemImage: "keyboard")) {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("CalmBar 支持通过以下全局快捷键在任意 App 中即时呼出功能：")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
 
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
@@ -103,31 +123,32 @@ public struct GeneralSettingsTab: View {
                                 .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("CalmBar")
-                                    .font(.system(size: 14, weight: .bold))
+                                    .font(.system(size: 13.5, weight: .bold))
                                 let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.1.0"
                                 Text("Version \(version) (Native Swift 6 & SwiftUI)")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
                         }
                         Divider()
                         Text("整合硬件温控、菜单栏收纳、滚动手势解耦、媒体启动拦截、防休眠与防离开、电池充电上限保护、应用去隔离授权、屏幕文字与二维码识别 (Vision OCR)、AI 划词翻译 (HTTP OpenAI & HY-MT2)、剪贴板历史记录 (Clipboard History) 及应用与开发者环境深度清理 (Developer Cleaner) 的全能 macOS 菜单栏综合增强套件。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
 
                         Divider()
                         HStack(spacing: 6) {
                             Text("开源项目与源码：")
-                                .font(.system(size: 11))
+                                .font(.system(size: 11.5))
                                 .foregroundColor(.secondary)
 
                             if let url = URL(string: "https://github.com/chao-eng/CalmBar") {
                                 Link(destination: url) {
                                     HStack(spacing: 4) {
                                         Text("https://github.com/chao-eng/CalmBar")
-                                            .font(.system(size: 11))
+                                            .font(.system(size: 11.5))
                                         Image(systemName: "arrow.up.forward.square")
-                                            .font(.system(size: 10))
+                                            .font(.system(size: 10.5))
                                     }
                                 }
                             }
@@ -144,7 +165,7 @@ public struct GeneralSettingsTab: View {
     private func shortcutRow(title: String, keys: [String]) -> some View {
         HStack {
             Text(title)
-                .font(.system(size: 11.5))
+                .font(.system(size: 11.5, weight: .medium))
                 .foregroundColor(.primary)
                 .lineLimit(1)
             Spacer()

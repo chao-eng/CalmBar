@@ -101,38 +101,56 @@ public struct SettingsView: View {
     @ViewBuilder
     private var detailContent: some View {
         if let currentTab = selectedTab {
-            Group {
-                switch currentTab {
-                case .thermal:
-                    ThermalSettingsTab()
-                case .battery:
-                    BatterySettingsTab()
-                case .menuBar:
-                    MenuBarSettingsTab()
-                case .scroll:
-                    ScrollSettingsTab()
-                case .caffeine:
-                    CaffeineSettingsTab()
-                case .noTunes:
-                    NoTunesSettingsTab()
-                case .clipboard:
-                    ClipboardSettingsTab()
-                case .translation:
-                    TranslationSettingsTab()
-                case .ocr:
-                    OCRSettingsTab()
-                case .cleaner:
-                    CleanerSettingsTab()
-                case .permissions:
-                    PermissionCenterView()
-                case .gatekeeper:
-                    GatekeeperUnlockerView()
-                case .general:
-                    GeneralSettingsTab()
+            VStack(spacing: 0) {
+                // 固定顶栏 (Native macOS System Settings Header Bar)
+                HStack(spacing: 12) {
+                    Text(currentTab.titleZH)
+                        .font(.system(size: 15, weight: .bold))
+                        .foregroundColor(.primary)
+
+                    Spacer()
                 }
+                .padding(.horizontal, 20)
+                .frame(height: 52)
+                .background(Color(NSColor.windowBackgroundColor))
+
+                Divider()
+                    .opacity(0.4)
+
+                // 下方滚动内容区
+                Group {
+                    switch currentTab {
+                    case .thermal:
+                        ThermalSettingsTab()
+                    case .battery:
+                        BatterySettingsTab()
+                    case .menuBar:
+                        MenuBarSettingsTab()
+                    case .scroll:
+                        ScrollSettingsTab()
+                    case .caffeine:
+                        CaffeineSettingsTab()
+                    case .noTunes:
+                        NoTunesSettingsTab()
+                    case .clipboard:
+                        ClipboardSettingsTab()
+                    case .translation:
+                        TranslationSettingsTab()
+                    case .ocr:
+                        OCRSettingsTab()
+                    case .cleaner:
+                        CleanerSettingsTab()
+                    case .permissions:
+                        PermissionCenterView()
+                    case .gatekeeper:
+                        GatekeeperUnlockerView()
+                    case .general:
+                        GeneralSettingsTab()
+                    }
+                }
+                .id(currentTab)
+                .transition(.opacity.animation(.easeInOut(duration: 0.15)))
             }
-            .id(currentTab)
-            .transition(.opacity.animation(.easeInOut(duration: 0.15)))
         } else {
             VStack(spacing: 12) {
                 Image(systemName: "gearshape.2")

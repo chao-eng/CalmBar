@@ -12,8 +12,6 @@ public struct NoTunesSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .noTunes)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.noTunes.icon,
@@ -28,15 +26,16 @@ public struct NoTunesSettingsTab: View {
                 GroupBox(label: Label("防护操作与拦截统计", systemImage: "shield.checkerboard")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Toggle("开启拦截时自动关闭当前已在运行的 Music / iTunes", isOn: $settings.noTunesTerminateOnEnable)
+                            .font(.system(size: 12.5, weight: .medium))
 
                         Divider()
 
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("拦截统计")
-                                    .font(.system(size: 11, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 Text("累计已拦截 \(noTunes.blockedCount) 次 · 最近: \(formattedDate(noTunes.lastBlockedDate))")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
 
@@ -51,6 +50,7 @@ public struct NoTunesSettingsTab: View {
                                 }
                             }
                             .buttonStyle(.bordered)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
                         }
                     }
@@ -63,7 +63,7 @@ public struct NoTunesSettingsTab: View {
                 GroupBox(label: Label("拦截后替代启动 (Replacement)", systemImage: "arrow.triangle.2.circlepath")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("当拦截 Apple Music 启动后，可自动无缝拉起你常用的第三方音乐应用或网页：")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
 
                         Picker("替代模式", selection: $settings.noTunesReplacementType) {
@@ -71,6 +71,7 @@ public struct NoTunesSettingsTab: View {
                                 Text(type.titleZH).tag(type)
                             }
                         }
+                        .font(.system(size: 12.5))
                         .pickerStyle(.radioGroup)
 
                         if settings.noTunesReplacementType == .app {
@@ -78,7 +79,7 @@ public struct NoTunesSettingsTab: View {
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("快速填入常用应用预设:")
-                                    .font(.system(size: 11, weight: .medium))
+                                    .font(.system(size: 12, weight: .medium))
 
                                 HStack(spacing: 6) {
                                     presetAppButton(title: "Spotify", path: "/Applications/Spotify.app")
@@ -91,16 +92,19 @@ public struct NoTunesSettingsTab: View {
                                 HStack(spacing: 8) {
                                     TextField("应用路径 (例如 /Applications/Spotify.app)", text: $settings.noTunesReplacementTarget)
                                         .textFieldStyle(.roundedBorder)
+                                        .font(.system(size: 12))
 
                                     Button("浏览...") {
                                         selectApplicationPath()
                                     }
                                     .buttonStyle(.bordered)
+                                    .font(.system(size: 12, weight: .medium))
 
                                     Button("测试启动") {
                                         noTunes.launchReplacement()
                                     }
                                     .buttonStyle(.borderedProminent)
+                                    .font(.system(size: 12, weight: .medium))
                                     .disabled(settings.noTunesReplacementTarget.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                                 }
                             }
@@ -109,7 +113,7 @@ public struct NoTunesSettingsTab: View {
 
                             VStack(alignment: .leading, spacing: 8) {
                                 Text("快速填入网页播放器预设:")
-                                    .font(.system(size: 11, weight: .medium))
+                                    .font(.system(size: 12, weight: .medium))
 
                                 HStack(spacing: 6) {
                                     presetUrlButton(title: "YouTube Music", url: "https://music.youtube.com")
@@ -121,11 +125,13 @@ public struct NoTunesSettingsTab: View {
                                 HStack(spacing: 8) {
                                     TextField("网页 URL (例如 https://music.youtube.com)", text: $settings.noTunesReplacementTarget)
                                         .textFieldStyle(.roundedBorder)
+                                        .font(.system(size: 12))
 
                                     Button("测试打开") {
                                         noTunes.launchReplacement()
                                     }
                                     .buttonStyle(.borderedProminent)
+                                    .font(.system(size: 12, weight: .medium))
                                     .disabled(settings.noTunesReplacementTarget.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
                                 }
                             }
@@ -140,11 +146,13 @@ public struct NoTunesSettingsTab: View {
                 GroupBox(label: Label("功能说明", systemImage: "info.circle")) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("• **蓝牙耳机防流氓唤醒**：macOS 默认在 AirPods / 蓝牙耳机重新连接或误触耳机柄时强制启动 Apple Music，开启本功能可彻底根除该困扰。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                         Text("• **轻量无感知**：仅在系统收到应用启动通知时进行毫秒级判断，不轮询进程，CPU 占用为 0%。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                     }
                     .padding(8)
                 }
@@ -164,6 +172,7 @@ public struct NoTunesSettingsTab: View {
             settings.noTunesReplacementTarget = path
         }
         .buttonStyle(.bordered)
+        .font(.system(size: 11.5))
         .controlSize(.small)
     }
 
@@ -172,6 +181,7 @@ public struct NoTunesSettingsTab: View {
             settings.noTunesReplacementTarget = url
         }
         .buttonStyle(.bordered)
+        .font(.system(size: 11.5))
         .controlSize(.small)
     }
 

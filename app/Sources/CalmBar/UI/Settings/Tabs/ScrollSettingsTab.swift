@@ -10,8 +10,6 @@ public struct ScrollSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .scroll)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.scroll.icon,
@@ -30,10 +28,11 @@ public struct ScrollSettingsTab: View {
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text(scroll.hasAccessibilityPermission ? "辅助功能权限已就绪" : "需要授予辅助功能权限")
-                                .font(.system(size: 13, weight: .semibold))
+                                .font(.system(size: 12.5, weight: .semibold))
                             Text("滚动手势解耦需要通过辅助功能权限拦截并翻转鼠标滚轮事件。")
-                                .font(.system(size: 11))
+                                .font(.system(size: 11.5))
                                 .foregroundColor(.secondary)
+                                .lineSpacing(2)
                         }
 
                         Spacer()
@@ -44,6 +43,7 @@ public struct ScrollSettingsTab: View {
                                 AccessibilityHelper.openSystemSettingsAccessibility()
                             }
                             .buttonStyle(.borderedProminent)
+                            .font(.system(size: 12, weight: .medium))
                         }
                     }
                     .padding(8)
@@ -53,20 +53,24 @@ public struct ScrollSettingsTab: View {
                     VStack(alignment: .leading, spacing: 12) {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("传统外接鼠标 (Mouse)")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.system(size: 12.5, weight: .semibold))
 
                             Toggle("反转垂直滚轮 (恢复 Windows/经典滚轮方向)", isOn: $settings.reverseMouseVertical)
+                                .font(.system(size: 12.5, weight: .medium))
                             Toggle("反转水平滚轮 (X 轴)", isOn: $settings.reverseMouseHorizontal)
+                                .font(.system(size: 12.5, weight: .medium))
                         }
 
                         Divider()
 
                         VStack(alignment: .leading, spacing: 8) {
                             Text("内建触控板 (Trackpad)")
-                                .font(.system(size: 12, weight: .semibold))
+                                .font(.system(size: 12.5, weight: .semibold))
 
                             Toggle("反转触控板双指垂直滑动", isOn: $settings.reverseTrackpadVertical)
+                                .font(.system(size: 12.5, weight: .medium))
                             Toggle("反转触控板双指水平滑动", isOn: $settings.reverseTrackpadHorizontal)
+                                .font(.system(size: 12.5, weight: .medium))
                         }
                     }
                     .padding(8)

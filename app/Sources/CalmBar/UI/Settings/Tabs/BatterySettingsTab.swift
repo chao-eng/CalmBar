@@ -16,8 +16,6 @@ public struct BatterySettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .battery)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.battery.icon,
@@ -36,10 +34,11 @@ public struct BatterySettingsTab: View {
                                 .font(.system(size: 18))
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(helper.needsHelperUpdate ? "特权助手需更新以支持充电控制" : "充电上限控制需要特权助手")
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(.system(size: 12.5, weight: .semibold))
                                 Text("修改 SMC 充电寄存器需要系统特权守护服务，请点击右侧按钮一键激活或更新。")
-                                    .font(.system(size: 10))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
+                                    .lineSpacing(2)
                             }
                             Spacer()
                             Button(helper.needsHelperUpdate ? "一键更新" : "一键激活") {
@@ -56,6 +55,7 @@ public struct BatterySettingsTab: View {
                                 }
                             }
                             .buttonStyle(.borderedProminent)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
                         }
                         .padding(6)
@@ -76,10 +76,10 @@ public struct BatterySettingsTab: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 HStack(spacing: 6) {
                                     Text("当前电量 \(batteryMonitor.currentPercentage)%")
-                                        .font(.system(size: 14, weight: .bold))
+                                        .font(.system(size: 13.5, weight: .bold))
 
                                     Text(chargeManager.operationStatus.titleZH)
-                                        .font(.system(size: 10, weight: .semibold))
+                                        .font(.system(size: 10.5, weight: .semibold))
                                         .padding(.horizontal, 6)
                                         .padding(.vertical, 1)
                                         .background(Color.accentColor.opacity(0.12))
@@ -88,7 +88,7 @@ public struct BatterySettingsTab: View {
                                 }
 
                                 Text(chargeManager.lastStatusMessage)
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
 
@@ -113,10 +113,10 @@ public struct BatterySettingsTab: View {
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Text("目标充电上限:")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 12.5, weight: .medium))
                             Spacer()
                             Text("\(settings.batteryChargeLimit)%")
-                                .font(.system(size: 14, weight: .bold, design: .rounded))
+                                .font(.system(size: 13.5, weight: .bold, design: .rounded))
                                 .foregroundColor(.accentColor)
                         }
 
@@ -143,11 +143,12 @@ public struct BatterySettingsTab: View {
 
                         // 回差巡航模式
                         Toggle("启用回差巡航模式 (Sailing Mode)", isOn: $settings.batterySailingModeEnabled)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 12.5, weight: .medium))
 
                         if settings.batterySailingModeEnabled {
                             HStack {
                                 Text("回差跨度:")
+                                    .font(.system(size: 12.5, weight: .medium))
                                     .frame(width: 80, alignment: .leading)
                                 Slider(
                                     value: Binding(
@@ -159,23 +160,25 @@ public struct BatterySettingsTab: View {
                                 )
                                 Text("\(settings.batterySailingDelta)% (\(max(20, settings.batteryChargeLimit - settings.batterySailingDelta))% ~ \(settings.batteryChargeLimit)%)")
                                     .frame(width: 90, alignment: .trailing)
-                                    .font(.system(size: 11, design: .monospaced))
+                                    .font(.system(size: 11.5, design: .monospaced))
                             }
 
                             Text("当电量达到 \(settings.batteryChargeLimit)% 后停止充电，电量自然消耗回落到 \(max(20, settings.batteryChargeLimit - settings.batterySailingDelta))% 时才恢复补充充电，避免在临界值反复触发微充微放。")
-                                .font(.system(size: 11))
+                                .font(.system(size: 11.5))
                                 .foregroundColor(.secondary)
+                                .lineSpacing(2)
                         }
 
                         Divider()
 
                         // 自动放电至上限 (Automatic Discharge)
                         Toggle("自动放电至目标上限 (Auto Discharge)", isOn: $settings.batteryAutoDischargeEnabled)
-                            .font(.system(size: 13, weight: .medium))
+                            .font(.system(size: 12.5, weight: .medium))
 
                         Text("当插入充电器但当前电量（如 98%）高于设定的充电上限（如 80%）时，通过 SMC 硬件指令主动切断电源适配器供电，使用电池供电直至电量回落到目标上限。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                     }
                     .padding(8)
                 }
@@ -187,10 +190,11 @@ public struct BatterySettingsTab: View {
                     HStack {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("临时充至 100% 满电")
-                                .font(.system(size: 13, weight: .medium))
+                                .font(.system(size: 12.5, weight: .medium))
                             Text("临时放开充电限制充满至 100%，充满后自动恢复设定的电量保护，适合出门前临时蓄电。")
-                                .font(.system(size: 11))
+                                .font(.system(size: 11.5))
                                 .foregroundColor(.secondary)
+                                .lineSpacing(2)
                         }
                         Spacer()
                         if settings.batteryTopUpActive {
@@ -198,12 +202,14 @@ public struct BatterySettingsTab: View {
                                 chargeManager.toggleTopUp()
                             }
                             .buttonStyle(.bordered)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
                         } else {
                             Button("立即充至 100%") {
                                 chargeManager.toggleTopUp()
                             }
                             .buttonStyle(.borderedProminent)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
                         }
                     }
@@ -216,14 +222,17 @@ public struct BatterySettingsTab: View {
                 GroupBox(label: Label("硬件充电阻断与安全熔断机制", systemImage: "info.circle")) {
                     VStack(alignment: .leading, spacing: 6) {
                         Text("• **SMC 寄存器充电控制**：通过向 SMC 写入 `CH0C` / `CHTE` 寄存器指令，在接通电源且达到目标上限时停止对电池充入电流，直接转由适配器供电。（适配具备相关寄存器的 Apple Silicon 与 Intel Mac 机型）。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                         Text("• **底层安全熔断保护 (Safety Melt)**：电量 ≤ 15% 或电池温度过高时，CalmBar 将立即强行终止放电并取消阻断，确保电芯寿命安全。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                         Text("• **安全回退保障 (Fail-Safe)**：CalmBar 退出、系统休眠或关机时，特权助手将自动安全交还控制权，Mac 恢复官方默认充电策略。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
                     }
                     .padding(8)
                 }
@@ -236,11 +245,11 @@ public struct BatterySettingsTab: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .foregroundStyle(color)
-                .font(.system(size: 14))
-                .frame(width: 20)
+                .font(.system(size: 13))
+                .frame(width: 18)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title)
-                    .font(.system(size: 10))
+                    .font(.system(size: 10.5))
                     .foregroundColor(.secondary)
                 Text(value)
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
@@ -257,6 +266,7 @@ public struct BatterySettingsTab: View {
             settings.batteryChargeLimit = limit
         }
         .buttonStyle(.bordered)
+        .font(.system(size: 12, weight: .medium))
         .tint(settings.batteryChargeLimit == limit ? .accentColor : .secondary)
         .controlSize(.small)
     }

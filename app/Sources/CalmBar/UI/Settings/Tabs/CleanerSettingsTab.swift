@@ -9,8 +9,6 @@ public struct CleanerSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .cleaner)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.cleaner.icon,
@@ -24,15 +22,16 @@ public struct CleanerSettingsTab: View {
                 GroupBox(label: Label("软件卸载与清理中心", systemImage: "trash.fill")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("一键分析已安装软件及其散落在系统与用户 Library 中的深层缓存、偏好与残留文件，安全移入废纸篓。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
 
                         HStack {
                             Button(action: {
                                 CleanerWindowController.shared.show()
                             }) {
                                 Label("打开清理中心主窗口", systemImage: "sparkles")
-                                    .font(.system(size: 12, weight: .semibold))
+                                    .font(.system(size: 12.5, weight: .semibold))
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.regular)
@@ -42,12 +41,13 @@ public struct CleanerSettingsTab: View {
 
                         HStack {
                             Text("残留探测灵敏度：")
-                                .font(.system(size: 12))
+                                .font(.system(size: 12.5, weight: .medium))
                             Picker("", selection: $settings.cleanerSensitivity) {
                                 ForEach(SearchSensitivityLevel.allCases) { level in
                                     Text(level.titleZH).tag(level)
                                 }
                             }
+                            .font(.system(size: 12))
                             .pickerStyle(.segmented)
                             .frame(width: 320)
                         }
@@ -61,8 +61,9 @@ public struct CleanerSettingsTab: View {
                 GroupBox(label: Label("完全磁盘访问权限 (Full Disk Access)", systemImage: "lock.shield")) {
                     VStack(alignment: .leading, spacing: 10) {
                         Text("为完整扫描 ~/Library/Containers、Group Containers 及保护目录下的应用残留，建议为 CalmBar 开启完全磁盘访问权限。")
-                            .font(.system(size: 11))
+                            .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
+                            .lineSpacing(2)
 
                         Button(action: {
                             if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_AllFiles") {
@@ -72,6 +73,7 @@ public struct CleanerSettingsTab: View {
                             Label("打开系统「完全磁盘访问权限」设置", systemImage: "arrow.up.forward.app")
                         }
                         .buttonStyle(.bordered)
+                        .font(.system(size: 12, weight: .medium))
                         .controlSize(.small)
                     }
                     .padding(8)

@@ -11,8 +11,6 @@ public struct ClipboardSettingsTab: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
-                SettingsHeaderView(tab: .clipboard)
-
                 // 统一总控开关
                 FeatureMasterToggleCard(
                     icon: SettingsTab.clipboard.icon,
@@ -37,7 +35,9 @@ public struct ClipboardSettingsTab: View {
                 GroupBox(label: Label("隐私保护与内容过滤", systemImage: "shield.lefthalf.filled")) {
                     VStack(alignment: .leading, spacing: 12) {
                         Toggle("保存复制的图片与截图", isOn: $settings.clipboardSaveImages)
+                            .font(.system(size: 12.5, weight: .medium))
                         Toggle("自动过滤密码管理器与敏感标记 (1Password / Bitwarden / 瞬态剪贴板)", isOn: $settings.clipboardFilterSensitive)
+                            .font(.system(size: 12.5, weight: .medium))
                     }
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -51,9 +51,9 @@ public struct ClipboardSettingsTab: View {
                         HStack {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("历史记录最大保留条数")
-                                    .font(.system(size: 12, weight: .medium))
+                                    .font(.system(size: 12.5, weight: .medium))
                                 Text("当前已存储 \(clipboardHistory.items.count) 条记录（固定项永不自动清除）。")
-                                    .font(.system(size: 11))
+                                    .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
                             Spacer()
@@ -64,6 +64,7 @@ public struct ClipboardSettingsTab: View {
                                 Text("500 条").tag(500)
                                 Text("1000 条").tag(1000)
                             }
+                            .font(.system(size: 12.5))
                             .frame(width: 110)
                         }
 
@@ -71,8 +72,7 @@ public struct ClipboardSettingsTab: View {
 
                         HStack {
                             Text("本地存储占用：")
-                                .font(.system(size: 12))
-                                .foregroundColor(.secondary)
+                                .font(.system(size: 12.5, weight: .medium))
                             Text(clipboardHistory.storageSizeFormatted)
                                 .font(.system(size: 12, weight: .semibold, design: .monospaced))
                             Spacer()
@@ -94,6 +94,7 @@ public struct ClipboardSettingsTab: View {
                                 Label("打开剪贴板历史独立窗口", systemImage: "macwindow.on.rectangle")
                             }
                             .buttonStyle(.borderedProminent)
+                            .font(.system(size: 12, weight: .medium))
                             .controlSize(.small)
 
                             Spacer()
@@ -105,6 +106,7 @@ public struct ClipboardSettingsTab: View {
                                     Label("清空未固定记录", systemImage: "trash")
                                 }
                                 .buttonStyle(.bordered)
+                                .font(.system(size: 12, weight: .medium))
                                 .tint(.orange)
                                 .controlSize(.small)
 
@@ -114,6 +116,7 @@ public struct ClipboardSettingsTab: View {
                                     Label("清空全部", systemImage: "trash.fill")
                                 }
                                 .buttonStyle(.bordered)
+                                .font(.system(size: 12, weight: .medium))
                                 .tint(.red)
                                 .controlSize(.small)
                             }
