@@ -24,16 +24,23 @@ public struct SettingsView: View {
         .onChange(of: statusBarManager.selectedSettingsTab) { _, newTab in
             if selectedTab != newTab {
                 selectedTab = newTab
+                statusBarManager.updateSettingsWindowTitle(newTab.titleZH)
             }
         }
         .onChange(of: selectedTab) { _, newTab in
-            if let newTab = newTab, statusBarManager.selectedSettingsTab != newTab {
-                statusBarManager.selectedSettingsTab = newTab
+            if let newTab = newTab {
+                if statusBarManager.selectedSettingsTab != newTab {
+                    statusBarManager.selectedSettingsTab = newTab
+                }
+                statusBarManager.updateSettingsWindowTitle(newTab.titleZH)
             }
         }
         .onAppear {
             if selectedTab == nil {
                 selectedTab = statusBarManager.selectedSettingsTab
+            }
+            if let tab = selectedTab {
+                statusBarManager.updateSettingsWindowTitle(tab.titleZH)
             }
         }
     }
@@ -101,56 +108,39 @@ public struct SettingsView: View {
     @ViewBuilder
     private var detailContent: some View {
         if let currentTab = selectedTab {
-            VStack(spacing: 0) {
-                // 固定顶栏 (Native macOS System Settings Header Bar)
-                HStack(spacing: 12) {
-                    Text(currentTab.titleZH)
-                        .font(.system(size: 15, weight: .bold))
-                        .foregroundColor(.primary)
-
-                    Spacer()
+            Group {
+                switch currentTab {
+                case .thermal:
+                    ThermalSettingsTab()
+                case .battery:
+                    BatterySettingsTab()
+                case .menuBar:
+                    MenuBarSettingsTab()
+                case .scroll:
+                    ScrollSettingsTab()
+                case .caffeine:
+                    CaffeineSettingsTab()
+                case .noTunes:
+                    NoTunesSettingsTab()
+                case .clipboard:
+                    ClipboardSettingsTab()
+                case .translation:
+                    TranslationSettingsTab()
+                case .ocr:
+                    OCRSettingsTab()
+                case .cleaner:
+                    CleanerSettingsTab()
+                case .permissions:
+                    PermissionCenterView()
+                case .gatekeeper:
+                    GatekeeperUnlockerView()
+                case .general:
+                    GeneralSettingsTab()
                 }
-                .padding(.horizontal, 20)
-                .frame(height: 52)
-                .background(Color(NSColor.windowBackgroundColor))
-
-                Divider()
-                    .opacity(0.4)
-
-                // 下方滚动内容区
-                Group {
-                    switch currentTab {
-                    case .thermal:
-                        ThermalSettingsTab()
-                    case .battery:
-                        BatterySettingsTab()
-                    case .menuBar:
-                        MenuBarSettingsTab()
-                    case .scroll:
-                        ScrollSettingsTab()
-                    case .caffeine:
-                        CaffeineSettingsTab()
-                    case .noTunes:
-                        NoTunesSettingsTab()
-                    case .clipboard:
-                        ClipboardSettingsTab()
-                    case .translation:
-                        TranslationSettingsTab()
-                    case .ocr:
-                        OCRSettingsTab()
-                    case .cleaner:
-                        CleanerSettingsTab()
-                    case .permissions:
-                        PermissionCenterView()
-                    case .gatekeeper:
-                        GatekeeperUnlockerView()
-                    case .general:
-                        GeneralSettingsTab()
-                    }
-                }
-                .id(currentTab)
-                .transition(.opacity.animation(.easeInOut(duration: 0.15)))
             }
+            .id(currentTab)
+            .navigationTitle(currentTab.titleZH)
+            .transition(.opacity.animation(.easeInOut(duration: 0.15)))
         } else {
             VStack(spacing: 12) {
                 Image(systemName: "gearshape.2")

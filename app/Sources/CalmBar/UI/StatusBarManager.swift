@@ -211,8 +211,8 @@ public final class StatusBarManager: ObservableObject {
             backing: .buffered,
             defer: false
         )
-        window.title = "CalmBar"
-        window.titleVisibility = .hidden
+        window.title = tab.titleZH
+        window.titleVisibility = .visible
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
         window.isMovableByWindowBackground = true
@@ -225,6 +225,10 @@ public final class StatusBarManager: ObservableObject {
         NSApp.activate(ignoringOtherApps: true)
 
         self.settingsWindow = window
+    }
+
+    public func updateSettingsWindowTitle(_ title: String) {
+        settingsWindow?.title = title
     }
 
     /// 将偏好设置窗口定位在当前屏幕水平居中、垂直靠上半部分（与命令窗口位置完全一致：距离顶部 18% 屏幕高度）
