@@ -249,120 +249,126 @@ public struct PopoverContentView: View {
 
     // MARK: - Fan Control Section (Native macOS HIG Style)
     private var fanControlSection: some View {
-        GroupBox {
-            VStack(alignment: .leading, spacing: 10) {
-                // Native Segmented Picker
-                Picker("风扇模式", selection: $settings.fanPreset) {
-                    Text("自动").tag(FanPreset.auto)
-                    Text("自定义").tag(FanPreset.manual)
-                    Label("智能", systemImage: "sparkles").tag(FanPreset.smart)
-                }
-                .pickerStyle(.segmented)
-                .labelsHidden()
+        VStack(alignment: .leading, spacing: 10) {
+            // Native Segmented Picker
+            Picker("风扇模式", selection: $settings.fanPreset) {
+                Text("自动").tag(FanPreset.auto)
+                Text("自定义").tag(FanPreset.manual)
+                Label("智能", systemImage: "sparkles").tag(FanPreset.smart)
+            }
+            .pickerStyle(.segmented)
+            .labelsHidden()
 
-                // Linked Fan Toggle & Slider
-                HStack {
-                    Text("左右风扇联动")
-                        .font(.system(size: 13, weight: .medium))
-                    Spacer()
-                    Toggle("", isOn: $settings.dualFanLinked)
-                        .toggleStyle(.switch)
-                        .labelsHidden()
-                        .controlSize(.mini)
-                        .tint(.accentColor)
-                }
-                .padding(.top, 2)
+            // Linked Fan Toggle & Slider
+            HStack {
+                Text("左右风扇联动")
+                    .font(.system(size: 13, weight: .medium))
+                Spacer()
+                Toggle("", isOn: $settings.dualFanLinked)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+                    .controlSize(.mini)
+                    .tint(.accentColor)
+            }
+            .padding(.top, 2)
 
-                HStack(spacing: 10) {
-                    Image(systemName: "fan")
-                        .font(.system(size: 14))
-                        .foregroundColor(settings.fanPreset == .auto ? .secondary : .accentColor)
+            HStack(spacing: 10) {
+                Image(systemName: "fan")
+                    .font(.system(size: 14))
+                    .foregroundColor(settings.fanPreset == .auto ? .secondary : .accentColor)
 
-                    Slider(value: sliderBinding, in: 0.0...1.0)
-                        .tint(.accentColor)
+                Slider(value: sliderBinding, in: 0.0...1.0)
+                    .tint(.accentColor)
 
-                    Text("\(Int(activeFanFraction * 100))%")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .frame(width: 38, alignment: .trailing)
-                }
+                Text("\(Int(activeFanFraction * 100))%")
+                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .frame(width: 38, alignment: .trailing)
+            }
 
-                // RPM Readouts
-                HStack(spacing: 12) {
-                    if let firstFan = thermal.fanSnapshots.first {
-                        let rpm0 = Int(firstFan.actualRPM)
-                        Text("风扇 0 \(formattedRPM(rpm0)) RPM")
-                            .font(.system(size: 11, design: .rounded))
-                            .foregroundColor(.secondary)
-                    } else {
-                        Text("风扇 0 3,060 RPM")
-                            .font(.system(size: 11, design: .rounded))
-                            .foregroundColor(.secondary)
-                    }
-
-                    if thermal.fanSnapshots.count > 1 {
-                        let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
-                        Text("风扇 1 \(formattedRPM(rpm1)) RPM")
-                            .font(.system(size: 11, design: .rounded))
-                            .foregroundColor(.secondary)
-                    }
-                }
-
-                // Separate Control Section (When Dual Fan Linked is disabled)
-                if !settings.dualFanLinked {
-                    Divider()
-
-                    Text("分别控制")
-                        .font(.system(size: 11, weight: .medium))
+            // RPM Readouts
+            HStack(spacing: 12) {
+                if let firstFan = thermal.fanSnapshots.first {
+                    let rpm0 = Int(firstFan.actualRPM)
+                    Text("风扇 0 \(formattedRPM(rpm0)) RPM")
+                        .font(.system(size: 11, design: .rounded))
                         .foregroundColor(.secondary)
+                } else {
+                    Text("风扇 0 3,060 RPM")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundColor(.secondary)
+                }
 
-                    // Fan 0 Slider
+                if thermal.fanSnapshots.count > 1 {
+                    let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
+                    Text("风扇 1 \(formattedRPM(rpm1)) RPM")
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundColor(.secondary)
+                }
+            }
+
+            // Separate Control Section (When Dual Fan Linked is disabled)
+            if !settings.dualFanLinked {
+                Divider()
+
+                Text("分别控制")
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.secondary)
+
+                // Fan 0 Slider
+                HStack(spacing: 10) {
+                    Text("风扇 0")
+                        .font(.system(size: 12))
+                        .frame(width: 48, alignment: .leading)
+
+                    Slider(value: $settings.fan0CustomFraction, in: 0.0...1.0)
+                        .tint(.accentColor)
+
+                    let rpm0 = Int(thermal.fanSnapshots.first?.actualRPM ?? Float(settings.fan0CustomFraction * 5000 + 1200))
+                    Text(formattedRPM(rpm0))
+                        .font(.system(size: 12, design: .monospaced))
+                        .frame(width: 48, alignment: .trailing)
+                }
+
+                // Fan 1 Slider (if hardware has fan 1)
+                if thermal.fanSnapshots.count > 1 {
                     HStack(spacing: 10) {
-                        Text("风扇 0")
+                        Text("风扇 1")
                             .font(.system(size: 12))
                             .frame(width: 48, alignment: .leading)
 
-                        Slider(value: $settings.fan0CustomFraction, in: 0.0...1.0)
+                        Slider(value: $settings.fan1CustomFraction, in: 0.0...1.0)
                             .tint(.accentColor)
 
-                        let rpm0 = Int(thermal.fanSnapshots.first?.actualRPM ?? Float(settings.fan0CustomFraction * 5000 + 1200))
-                        Text(formattedRPM(rpm0))
+                        let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
+                        Text(formattedRPM(rpm1))
                             .font(.system(size: 12, design: .monospaced))
                             .frame(width: 48, alignment: .trailing)
                     }
-
-                    // Fan 1 Slider (if hardware has fan 1)
-                    if thermal.fanSnapshots.count > 1 {
-                        HStack(spacing: 10) {
-                            Text("风扇 1")
-                                .font(.system(size: 12))
-                                .frame(width: 48, alignment: .leading)
-
-                            Slider(value: $settings.fan1CustomFraction, in: 0.0...1.0)
-                                .tint(.accentColor)
-
-                            let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
-                            Text(formattedRPM(rpm1))
-                                .font(.system(size: 12, design: .monospaced))
-                                .frame(width: 48, alignment: .trailing)
-                        }
-                    }
-                }
-
-                if settings.fanPreset == .smart {
-                    HStack(spacing: 6) {
-                        Image(systemName: "waveform.path.ecg")
-                            .foregroundStyle(.tint)
-                            .font(.system(size: 11))
-                        Text("加速区间: \(Int(settings.smartStartTemp))°C ~ \(Int(settings.smartFullTemp))°C")
-                            .font(.system(size: 10))
-                            .foregroundColor(.secondary)
-                        Spacer()
-                    }
-                    .padding(.top, 2)
                 }
             }
-            .padding(4)
+
+            if settings.fanPreset == .smart {
+                HStack(spacing: 6) {
+                    Image(systemName: "waveform.path.ecg")
+                        .foregroundStyle(.tint)
+                        .font(.system(size: 11))
+                    Text("加速区间: \(Int(settings.smartStartTemp))°C ~ \(Int(settings.smartFullTemp))°C")
+                        .font(.system(size: 10))
+                        .foregroundColor(.secondary)
+                    Spacer()
+                }
+                .padding(.top, 2)
+            }
         }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
     }
 
     // MARK: - Quick Action Item Enums
@@ -748,7 +754,7 @@ public struct PopoverContentView: View {
             VStack(alignment: .leading, spacing: 1) {
                 Text("菜单收纳")
                     .font(.system(size: 11, weight: .medium))
-                    .lineLimit(1)
+                    .fixedSize(horizontal: true, vertical: false)
                 Text(settings.menuBarOrganizerEnabled ? (menuBar.isCollapsed ? "已收纳" : "已展开") : "已停用")
                     .font(.system(size: 9))
                     .foregroundColor(settings.menuBarOrganizerEnabled ? .indigo : .secondary)
@@ -761,13 +767,14 @@ public struct PopoverContentView: View {
                 Button(action: {
                     menuBar.toggleExpandCollapse()
                 }) {
-                    Text(menuBar.isCollapsed ? "展开" : "折叠")
-                        .font(.system(size: 10, weight: .medium))
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 1)
+                    Image(systemName: menuBar.isCollapsed ? "chevron.right" : "chevron.left")
+                        .font(.system(size: 10, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .frame(width: 16, height: 16)
+                        .contentShape(Rectangle())
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.mini)
+                .buttonStyle(.plain)
+                .help(menuBar.isCollapsed ? "点击展开菜单栏图标" : "点击折叠隐藏菜单栏图标")
             }
 
             Toggle("", isOn: $settings.menuBarOrganizerEnabled)

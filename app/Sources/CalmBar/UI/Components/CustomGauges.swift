@@ -37,8 +37,12 @@ public struct TemperatureGaugeView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.6))
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 0.5)
         )
     }
 }
@@ -75,8 +79,12 @@ public struct FanRPMGaugeView: View {
         .frame(maxWidth: .infinity)
         .padding(.vertical, 8)
         .background(
-            RoundedRectangle(cornerRadius: 10)
-                .fill(Color(nsColor: .controlBackgroundColor).opacity(0.6))
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.06), lineWidth: 0.5)
         )
     }
 
