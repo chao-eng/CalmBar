@@ -61,8 +61,8 @@ public struct PopoverContentView: View {
             permissionBanners
             if settings.popoverShowGauges {
                 gaugesSection
+                fanControlSection
             }
-            fanControlSection
             if !activeQuickTools.isEmpty || !activeGuardians.isEmpty {
                 quickActionsSection
             }
@@ -119,13 +119,22 @@ public struct PopoverContentView: View {
                         .font(.system(size: 10, weight: .medium))
                         .foregroundStyle(.secondary)
                 }
-            } else if dashboard.safetyAction != .none {
+            } else if settings.thermalEnabled && dashboard.safetyAction != .none {
                 HStack(spacing: 4) {
                     Image(systemName: "flame.fill")
                         .foregroundStyle(.red)
                     Text("温控保护中")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.red)
+                }
+            } else if !settings.thermalEnabled {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color.secondary.opacity(0.6))
+                        .frame(width: 6, height: 6)
+                    Text("温控已停用")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
                 }
             }
 
@@ -220,31 +229,33 @@ public struct PopoverContentView: View {
         HStack(spacing: 8) {
             TemperatureGaugeView(
                 title: "CPU",
-                temp: thermal.cpuTemp,
+                temp: settings.thermalEnabled ? thermal.cpuTemp : 0,
                 icon: "cpu",
                 color: .orange
             )
             TemperatureGaugeView(
                 title: "GPU",
-                temp: thermal.gpuTemp,
+                temp: settings.thermalEnabled ? thermal.gpuTemp : 0,
                 icon: "square.stack.3d.up.fill",
                 color: .purple
             )
-            if let firstFan = thermal.fanSnapshots.first {
+            if let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
                 FanRPMGaugeView(fan: firstFan, title: "风扇 1")
             } else {
                 TemperatureGaugeView(
                     title: "电池",
-                    temp: thermal.batteryTemp > 0 ? thermal.batteryTemp : 32,
+                    temp: settings.thermalEnabled ? thermal.batteryTemp : 0,
                     icon: "battery.100.bolt",
                     color: .green
                 )
             }
 
-            if thermal.fanSnapshots.count > 1 {
+            if thermal.fanSnapshots.count > 1, settings.thermalEnabled {
                 FanRPMGaugeView(fan: thermal.fanSnapshots[1], title: "风扇 2")
             }
         }
+        .disabled(!settings.thermalEnabled)
+        .opacity(settings.thermalEnabled ? 1.0 : 0.45)
     }
 
     // MARK: - Fan Control Section (Native macOS HIG Style)
@@ -275,7 +286,7 @@ public struct PopoverContentView: View {
             HStack(spacing: 10) {
                 Image(systemName: "fan")
                     .font(.system(size: 14))
-                    .foregroundColor(settings.fanPreset == .auto ? .secondary : .accentColor)
+                    .foregroundColor((settings.fanPreset == .auto || !settings.thermalEnabled) ? .secondary : .accentColor)
 
                 Slider(value: sliderBinding, in: 0.0...1.0)
                     .tint(.accentColor)
@@ -287,18 +298,18 @@ public struct PopoverContentView: View {
 
             // RPM Readouts
             HStack(spacing: 12) {
-                if let firstFan = thermal.fanSnapshots.first {
+                if let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
                     let rpm0 = Int(firstFan.actualRPM)
                     Text("风扇 0 \(formattedRPM(rpm0)) RPM")
                         .font(.system(size: 11, design: .rounded))
                         .foregroundColor(.secondary)
                 } else {
-                    Text("风扇 0 3,060 RPM")
+                    Text("风扇 0 \(settings.thermalEnabled ? "3,060" : "0") RPM")
                         .font(.system(size: 11, design: .rounded))
                         .foregroundColor(.secondary)
                 }
 
-                if thermal.fanSnapshots.count > 1 {
+                if thermal.fanSnapshots.count > 1, settings.thermalEnabled {
                     let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
                     Text("风扇 1 \(formattedRPM(rpm1)) RPM")
                         .font(.system(size: 11, design: .rounded))
@@ -369,6 +380,8 @@ public struct PopoverContentView: View {
             RoundedRectangle(cornerRadius: 10, style: .continuous)
                 .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
         )
+        .disabled(!settings.thermalEnabled)
+        .opacity(settings.thermalEnabled ? 1.0 : 0.45)
     }
 
     // MARK: - Quick Action Item Enums

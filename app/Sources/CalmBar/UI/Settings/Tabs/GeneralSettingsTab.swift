@@ -30,13 +30,13 @@ public struct GeneralSettingsTab: View {
 
                 GroupBox(label: Label("任务栏左键面板显示项目", systemImage: "list.bullet.rectangle")) {
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("自定义左键点击菜单栏图标时在面板中展示的功能模块（风扇控制模块作为核心默认常驻）：")
+                        Text("自定义左键点击菜单栏图标时在面板中展示的功能模块：")
                             .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
 
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], alignment: .leading, spacing: 12) {
                             Toggle(isOn: $settings.popoverShowGauges) {
-                                Label("硬件温度仪表盘", systemImage: "gauge.with.needle")
+                                Label("硬件温度与风扇调控", systemImage: "gauge.with.needle")
                             }
                             .font(.system(size: 12.5, weight: .medium))
 
