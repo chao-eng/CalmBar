@@ -195,13 +195,21 @@ public final class StatusBarManager: ObservableObject {
             return
         }
 
+        let defaultWidth: CGFloat = 840
+        let defaultHeight: CGFloat = 580
+
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 680, height: 560),
-            styleMask: [.titled, .closable, .miniaturizable],
+            contentRect: NSRect(x: 0, y: 0, width: defaultWidth, height: defaultHeight),
+            styleMask: [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView],
             backing: .buffered,
             defer: false
         )
-        window.title = "CalmBar 偏好设置"
+        window.title = "CalmBar"
+        window.titleVisibility = .hidden
+        window.titlebarAppearsTransparent = true
+        window.titlebarSeparatorStyle = .none
+        window.isMovableByWindowBackground = true
+        window.minSize = NSSize(width: 760, height: 500)
         window.contentViewController = NSHostingController(rootView: SettingsView())
         window.isReleasedWhenClosed = false
 
@@ -224,8 +232,8 @@ public final class StatusBarManager: ObservableObject {
             return
         }
 
-        let panelWidth: CGFloat = 680
-        let panelHeight: CGFloat = 560
+        let panelWidth: CGFloat = window.frame.width > 0 ? window.frame.width : 840
+        let panelHeight: CGFloat = window.frame.height > 0 ? window.frame.height : 580
         let screenFrame = screen.visibleFrame
 
         // 1. 水平严格居中 (相对于当前屏幕可见区域)

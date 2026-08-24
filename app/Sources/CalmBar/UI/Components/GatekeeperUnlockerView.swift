@@ -13,6 +13,8 @@ public struct GatekeeperUnlockerView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                SettingsHeaderView(tab: .gatekeeper)
+
                 // 功能介绍与说明卡片
                 headerInfoCard
 

@@ -9,6 +9,8 @@ public struct PermissionCenterView: View {
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
+                SettingsHeaderView(tab: .permissions)
+
                 // Header Banner
                 GroupBox(label: Label("系统权限与安全性说明", systemImage: "shield.lefthalf.filled")) {
                     VStack(alignment: .leading, spacing: 6) {
