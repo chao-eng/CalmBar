@@ -109,10 +109,7 @@ public struct SettingsView: View {
     private var detailContent: some View {
         if let currentTab = selectedTab {
             VStack(spacing: 0) {
-                // 顶栏 38pt 紧凑占位，标题底部/分割线严格水平对齐侧边栏搜索框顶部
-                Color.clear
-                    .frame(height: 38)
-
+                // 顶部细分割线，直接与侧边栏搜索框顶部严格水平贯通对齐
                 Divider()
                     .opacity(0.4)
 
