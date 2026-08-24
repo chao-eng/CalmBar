@@ -78,6 +78,13 @@ public final class StatusBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        AppSettings.shared.$thermalEnabled
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.updateStatusItemTitle()
+            }
+            .store(in: &cancellables)
+
         AppSettings.shared.$showTempInMenuBar
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
@@ -88,7 +95,7 @@ public final class StatusBarManager: ObservableObject {
 
     private func updateStatusItemTitle() {
         guard let button = statusItem?.button else { return }
-        let showTemp = AppSettings.shared.showTempInMenuBar
+        let showTemp = AppSettings.shared.thermalEnabled && AppSettings.shared.showTempInMenuBar
         let temp = Int(ThermalMonitor.shared.primaryTemp)
 
         if showTemp && temp > 0 {
@@ -195,7 +202,7 @@ public final class StatusBarManager: ObservableObject {
             return
         }
 
-        let defaultWidth: CGFloat = 840
+        let defaultWidth: CGFloat = 800
         let defaultHeight: CGFloat = 580
 
         let window = NSWindow(
@@ -209,7 +216,7 @@ public final class StatusBarManager: ObservableObject {
         window.titlebarAppearsTransparent = true
         window.titlebarSeparatorStyle = .none
         window.isMovableByWindowBackground = true
-        window.minSize = NSSize(width: 760, height: 500)
+        window.minSize = NSSize(width: 700, height: 500)
         window.contentViewController = NSHostingController(rootView: SettingsView())
         window.isReleasedWhenClosed = false
 

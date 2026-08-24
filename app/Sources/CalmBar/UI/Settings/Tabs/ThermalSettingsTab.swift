@@ -12,19 +12,6 @@ public struct ThermalSettingsTab: View {
 
     public init() {}
 
-    private var isThermalControlEnabled: Binding<Bool> {
-        Binding<Bool>(
-            get: { settings.fanPreset != .auto },
-            set: { enabled in
-                if enabled {
-                    settings.fanPreset = .smart
-                } else {
-                    settings.fanPreset = .auto
-                }
-            }
-        )
-    }
-
     public var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 16) {
@@ -34,10 +21,10 @@ public struct ThermalSettingsTab: View {
                 FeatureMasterToggleCard(
                     icon: SettingsTab.thermal.icon,
                     iconColors: SettingsTab.thermal.gradientColors,
-                    title: "硬件温控调控引擎",
-                    activeSubtitle: "已激活 · 正在根据 CPU 传感器实时调节转速曲线 (\(settings.fanPreset.titleZH))",
-                    inactiveSubtitle: "已停用 · macOS 系统原生托管散热，未覆写风扇转速",
-                    isEnabled: isThermalControlEnabled
+                    title: "硬件温控与风扇调控引擎",
+                    activeSubtitle: "已激活 · 正在持续监听 CPU 传感器并调节转速曲线 (\(settings.fanPreset.titleZH))",
+                    inactiveSubtitle: "已停用 · 已停止温度传感器监听，完全交由 macOS 系统散热",
+                    isEnabled: $settings.thermalEnabled
                 )
 
                 // 特权驱动与控制权限
@@ -76,6 +63,8 @@ public struct ThermalSettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(!settings.thermalEnabled)
+                .opacity(settings.thermalEnabled ? 1.0 : 0.6)
 
                 // 温控调控模式
                 GroupBox(label: Label("温控调控模式与曲线参数", systemImage: "fanblades")) {
@@ -158,13 +147,17 @@ public struct ThermalSettingsTab: View {
                     }
                     .padding(8)
                 }
-                .disabled(settings.fanPreset == .auto)
-                .opacity(settings.fanPreset == .auto ? 0.6 : 1.0)
+                .disabled(!settings.thermalEnabled || settings.fanPreset == .auto)
+                .opacity((!settings.thermalEnabled || settings.fanPreset == .auto) ? 0.6 : 1.0)
 
                 // 实时传感器读数
                 GroupBox(label: Label("实时传感器读数", systemImage: "thermometer.medium")) {
                     VStack(alignment: .leading, spacing: 6) {
-                        if thermal.allTemps.isEmpty {
+                        if !settings.thermalEnabled {
+                            Text("温控引擎已停用，传感器监听已暂停。")
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        } else if thermal.allTemps.isEmpty {
                             Text("正在连接 SMC 驱动读取传感器...")
                                 .font(.system(size: 11))
                                 .foregroundColor(.secondary)
@@ -186,6 +179,8 @@ public struct ThermalSettingsTab: View {
                     }
                     .padding(8)
                 }
+                .disabled(!settings.thermalEnabled)
+                .opacity(settings.thermalEnabled ? 1.0 : 0.6)
             }
             .padding(16)
         }

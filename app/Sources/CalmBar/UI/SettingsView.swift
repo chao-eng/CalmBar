@@ -14,13 +14,13 @@ public struct SettingsView: View {
     public var body: some View {
         NavigationSplitView {
             sidebarContent
-                .navigationSplitViewColumnWidth(min: 220, ideal: 235, max: 280)
+                .navigationSplitViewColumnWidth(min: 165, ideal: 185, max: 220)
         } detail: {
             detailContent
-                .frame(minWidth: 520, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
+                .frame(minWidth: 500, maxWidth: .infinity, minHeight: 500, maxHeight: .infinity)
                 .background(Color(NSColor.windowBackgroundColor))
         }
-        .frame(minWidth: 760, minHeight: 520)
+        .frame(minWidth: 700, minHeight: 520)
         .onChange(of: statusBarManager.selectedSettingsTab) { _, newTab in
             if selectedTab != newTab {
                 selectedTab = newTab

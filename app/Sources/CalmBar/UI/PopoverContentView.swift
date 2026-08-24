@@ -59,11 +59,18 @@ public struct PopoverContentView: View {
         VStack(spacing: 12) {
             headerView
             permissionBanners
-            if settings.popoverShowGauges {
+            if settings.thermalEnabled && settings.popoverShowGauges {
                 gaugesSection
             }
-            fanControlSection
-            quickActionsSection
+            if settings.thermalEnabled {
+                fanControlSection
+            }
+            if !activeQuickTools.isEmpty || !activeGuardians.isEmpty {
+                quickActionsSection
+            }
+            if !settings.thermalEnabled && activeQuickTools.isEmpty && activeGuardians.isEmpty {
+                allDisabledPlaceholderView
+            }
             footerView
         }
         .padding(14)
@@ -77,6 +84,22 @@ public struct PopoverContentView: View {
                 .stroke(Color.primary.opacity(0.12), lineWidth: 0.5)
         )
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+    }
+
+    private var allDisabledPlaceholderView: some View {
+        VStack(spacing: 8) {
+            Image(systemName: "slider.horizontal.3")
+                .font(.system(size: 24))
+                .foregroundColor(.secondary.opacity(0.5))
+            Text("功能模块已在偏好设置中停用")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.secondary)
+            Text("点击下方齿轮按钮可随时重新开启所需功能")
+                .font(.system(size: 10))
+                .foregroundColor(.secondary.opacity(0.8))
+        }
+        .padding(.vertical, 24)
+        .frame(maxWidth: .infinity)
     }
 
     // MARK: - Header Bar
@@ -363,21 +386,21 @@ public struct PopoverContentView: View {
 
     private var activeQuickTools: [QuickToolItem] {
         var items: [QuickToolItem] = []
-        if settings.popoverShowOCR { items.append(.ocr) }
-        if settings.popoverShowTranslation { items.append(.translation) }
-        if settings.popoverShowClipboard { items.append(.clipboard) }
-        if settings.popoverShowCleaner { items.append(.cleaner) }
+        if settings.popoverShowOCR && settings.ocrEnabled { items.append(.ocr) }
+        if settings.popoverShowTranslation && settings.translationEnabled { items.append(.translation) }
+        if settings.popoverShowClipboard && settings.clipboardHistoryEnabled { items.append(.clipboard) }
+        if settings.popoverShowCleaner && settings.cleanerEnabled { items.append(.cleaner) }
         if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
         return items
     }
 
     private var activeGuardians: [GuardianItem] {
         var items: [GuardianItem] = []
-        if settings.popoverShowCaffeine { items.append(.caffeine) }
-        if settings.popoverShowBattery && batteryMonitor.hasBattery { items.append(.battery) }
-        if settings.popoverShowScrollReverser { items.append(.scrollReverser) }
-        if settings.popoverShowNoTunes { items.append(.noTunes) }
-        if settings.popoverShowMenuBar { items.append(.menuBar) }
+        if settings.popoverShowCaffeine && settings.caffeineEnabled { items.append(.caffeine) }
+        if settings.popoverShowBattery && batteryMonitor.hasBattery && settings.batteryChargeLimitEnabled { items.append(.battery) }
+        if settings.popoverShowScrollReverser && settings.scrollReverserEnabled { items.append(.scrollReverser) }
+        if settings.popoverShowNoTunes && settings.noTunesEnabled { items.append(.noTunes) }
+        if settings.popoverShowMenuBar && settings.menuBarOrganizerEnabled { items.append(.menuBar) }
         return items
     }
 

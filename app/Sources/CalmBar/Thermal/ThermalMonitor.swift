@@ -29,7 +29,9 @@ public final class ThermalMonitor: ObservableObject {
         setupController()
         setupObservers()
         checkAuthorization()
-        startPolling()
+        if AppSettings.shared.thermalEnabled {
+            startPolling()
+        }
     }
 
     public func setupController() {
@@ -56,11 +58,28 @@ public final class ThermalMonitor: ObservableObject {
     }
 
     private func setupObservers() {
+        AppSettings.shared.$thermalEnabled
+            .dropFirst()
+            .sink { [weak self] enabled in
+                Task { @MainActor in
+                    if enabled {
+                        self?.startPolling()
+                        self?.applyCurrentMode()
+                    } else {
+                        self?.stopPolling()
+                        self?.restoreSystemControl()
+                    }
+                }
+            }
+            .store(in: &cancellables)
+
         AppSettings.shared.$fanPreset
             .dropFirst()
             .sink { [weak self] _ in
                 Task { @MainActor in
-                    self?.applyCurrentMode()
+                    if AppSettings.shared.thermalEnabled {
+                        self?.applyCurrentMode()
+                    }
                 }
             }
             .store(in: &cancellables)
@@ -69,7 +88,7 @@ public final class ThermalMonitor: ObservableObject {
             .dropFirst()
             .sink { [weak self] _ in
                 Task { @MainActor in
-                    if AppSettings.shared.fanPreset == .manual {
+                    if AppSettings.shared.thermalEnabled && AppSettings.shared.fanPreset == .manual {
                         self?.applyCurrentMode()
                     }
                 }
@@ -89,6 +108,7 @@ public final class ThermalMonitor: ObservableObject {
 
     public func startPolling() {
         stopPolling()
+        guard AppSettings.shared.thermalEnabled else { return }
         updateReadings()
         timer = Timer.scheduledTimer(withTimeInterval: 1.5, repeats: true) { [weak self] _ in
             Task { @MainActor in
@@ -101,6 +121,12 @@ public final class ThermalMonitor: ObservableObject {
     public func stopPolling() {
         timer?.invalidate()
         timer = nil
+        self.primaryTemp = 0.0
+        self.cpuTemp = 0.0
+        self.gpuTemp = 0.0
+        self.batteryTemp = 0.0
+        self.allTemps = []
+        self.fanSnapshots = []
     }
 
     public func updateReadings() {

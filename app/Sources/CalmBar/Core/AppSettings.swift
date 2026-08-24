@@ -10,6 +10,9 @@ public final class AppSettings: ObservableObject {
     private let defaults = UserDefaults.standard
 
     // MARK: - Thermal Settings
+    @Published public var thermalEnabled: Bool {
+        didSet { defaults.set(thermalEnabled, forKey: "thermalEnabled") }
+    }
     @Published public var fanPreset: FanPreset {
         didSet { defaults.set(fanPreset.rawValue, forKey: "fanPreset") }
     }
@@ -257,6 +260,7 @@ public final class AppSettings: ObservableObject {
     }
 
     private init() {
+        self.thermalEnabled = defaults.object(forKey: "thermalEnabled") as? Bool ?? true
         let presetStr = defaults.string(forKey: "fanPreset") ?? FanPreset.smart.rawValue
         self.fanPreset = FanPreset(rawValue: presetStr) ?? .smart
         self.customFanFraction = defaults.object(forKey: "customFanFraction") as? Double ?? 0.50
