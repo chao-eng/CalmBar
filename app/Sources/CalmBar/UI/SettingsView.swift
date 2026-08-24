@@ -109,9 +109,9 @@ public struct SettingsView: View {
     private var detailContent: some View {
         if let currentTab = selectedTab {
             VStack(spacing: 0) {
-                // 顶栏 52pt 占位，为窗口原生标题预留安全展示空间，底部对齐侧边栏搜索框
+                // 顶栏 38pt 紧凑占位，标题底部/分割线严格水平对齐侧边栏搜索框顶部
                 Color.clear
-                    .frame(height: 52)
+                    .frame(height: 38)
 
                 Divider()
                     .opacity(0.4)
