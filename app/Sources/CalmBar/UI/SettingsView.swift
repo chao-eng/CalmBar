@@ -108,39 +108,48 @@ public struct SettingsView: View {
     @ViewBuilder
     private var detailContent: some View {
         if let currentTab = selectedTab {
-            Group {
-                switch currentTab {
-                case .thermal:
-                    ThermalSettingsTab()
-                case .battery:
-                    BatterySettingsTab()
-                case .menuBar:
-                    MenuBarSettingsTab()
-                case .scroll:
-                    ScrollSettingsTab()
-                case .caffeine:
-                    CaffeineSettingsTab()
-                case .noTunes:
-                    NoTunesSettingsTab()
-                case .clipboard:
-                    ClipboardSettingsTab()
-                case .translation:
-                    TranslationSettingsTab()
-                case .ocr:
-                    OCRSettingsTab()
-                case .cleaner:
-                    CleanerSettingsTab()
-                case .permissions:
-                    PermissionCenterView()
-                case .gatekeeper:
-                    GatekeeperUnlockerView()
-                case .general:
-                    GeneralSettingsTab()
+            VStack(spacing: 0) {
+                // 顶栏 52pt 占位，为窗口原生标题预留安全展示空间，底部对齐侧边栏搜索框
+                Color.clear
+                    .frame(height: 52)
+
+                Divider()
+                    .opacity(0.4)
+
+                // 下方滚动内容区
+                Group {
+                    switch currentTab {
+                    case .thermal:
+                        ThermalSettingsTab()
+                    case .battery:
+                        BatterySettingsTab()
+                    case .menuBar:
+                        MenuBarSettingsTab()
+                    case .scroll:
+                        ScrollSettingsTab()
+                    case .caffeine:
+                        CaffeineSettingsTab()
+                    case .noTunes:
+                        NoTunesSettingsTab()
+                    case .clipboard:
+                        ClipboardSettingsTab()
+                    case .translation:
+                        TranslationSettingsTab()
+                    case .ocr:
+                        OCRSettingsTab()
+                    case .cleaner:
+                        CleanerSettingsTab()
+                    case .permissions:
+                        PermissionCenterView()
+                    case .gatekeeper:
+                        GatekeeperUnlockerView()
+                    case .general:
+                        GeneralSettingsTab()
+                    }
                 }
+                .id(currentTab)
+                .transition(.opacity.animation(.easeInOut(duration: 0.15)))
             }
-            .id(currentTab)
-            .navigationTitle(currentTab.titleZH)
-            .transition(.opacity.animation(.easeInOut(duration: 0.15)))
         } else {
             VStack(spacing: 12) {
                 Image(systemName: "gearshape.2")
