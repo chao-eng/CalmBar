@@ -59,16 +59,14 @@ public struct PopoverContentView: View {
         VStack(spacing: 12) {
             headerView
             permissionBanners
-            if settings.thermalEnabled && settings.popoverShowGauges {
+            if settings.popoverShowGauges {
                 gaugesSection
             }
-            if settings.thermalEnabled {
-                fanControlSection
-            }
+            fanControlSection
             if !activeQuickTools.isEmpty || !activeGuardians.isEmpty {
                 quickActionsSection
             }
-            if !settings.thermalEnabled && activeQuickTools.isEmpty && activeGuardians.isEmpty {
+            if !settings.popoverShowGauges && activeQuickTools.isEmpty && activeGuardians.isEmpty {
                 allDisabledPlaceholderView
             }
             footerView
@@ -91,10 +89,10 @@ public struct PopoverContentView: View {
             Image(systemName: "slider.horizontal.3")
                 .font(.system(size: 24))
                 .foregroundColor(.secondary.opacity(0.5))
-            Text("功能模块已在偏好设置中停用")
+            Text("所有菜单栏模块已在偏好设置中隐藏")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundColor(.secondary)
-            Text("点击下方齿轮按钮可随时重新开启所需功能")
+            Text("点击下方齿轮按钮可在「通用设置」中自定义勾选显示")
                 .font(.system(size: 10))
                 .foregroundColor(.secondary.opacity(0.8))
         }
@@ -386,21 +384,21 @@ public struct PopoverContentView: View {
 
     private var activeQuickTools: [QuickToolItem] {
         var items: [QuickToolItem] = []
-        if settings.popoverShowOCR && settings.ocrEnabled { items.append(.ocr) }
-        if settings.popoverShowTranslation && settings.translationEnabled { items.append(.translation) }
-        if settings.popoverShowClipboard && settings.clipboardHistoryEnabled { items.append(.clipboard) }
-        if settings.popoverShowCleaner && settings.cleanerEnabled { items.append(.cleaner) }
+        if settings.popoverShowOCR { items.append(.ocr) }
+        if settings.popoverShowTranslation { items.append(.translation) }
+        if settings.popoverShowClipboard { items.append(.clipboard) }
+        if settings.popoverShowCleaner { items.append(.cleaner) }
         if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
         return items
     }
 
     private var activeGuardians: [GuardianItem] {
         var items: [GuardianItem] = []
-        if settings.popoverShowCaffeine && settings.caffeineEnabled { items.append(.caffeine) }
-        if settings.popoverShowBattery && batteryMonitor.hasBattery && settings.batteryChargeLimitEnabled { items.append(.battery) }
-        if settings.popoverShowScrollReverser && settings.scrollReverserEnabled { items.append(.scrollReverser) }
-        if settings.popoverShowNoTunes && settings.noTunesEnabled { items.append(.noTunes) }
-        if settings.popoverShowMenuBar && settings.menuBarOrganizerEnabled { items.append(.menuBar) }
+        if settings.popoverShowCaffeine { items.append(.caffeine) }
+        if settings.popoverShowBattery && batteryMonitor.hasBattery { items.append(.battery) }
+        if settings.popoverShowScrollReverser { items.append(.scrollReverser) }
+        if settings.popoverShowNoTunes { items.append(.noTunes) }
+        if settings.popoverShowMenuBar { items.append(.menuBar) }
         return items
     }
 
@@ -744,31 +742,39 @@ public struct PopoverContentView: View {
         HStack(spacing: 6) {
             Image(systemName: "menubar.rectangle")
                 .font(.system(size: 13))
-                .foregroundStyle(.indigo)
+                .foregroundStyle(settings.menuBarOrganizerEnabled ? .indigo : .secondary)
                 .frame(width: 18, height: 18)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("菜单收纳")
                     .font(.system(size: 11, weight: .medium))
                     .lineLimit(1)
-                Text(menuBar.isCollapsed ? "已收纳" : "已展开")
+                Text(settings.menuBarOrganizerEnabled ? (menuBar.isCollapsed ? "已收纳" : "已展开") : "已停用")
                     .font(.system(size: 9))
-                    .foregroundColor(.secondary)
+                    .foregroundColor(settings.menuBarOrganizerEnabled ? .indigo : .secondary)
                     .lineLimit(1)
             }
 
             Spacer(minLength: 2)
 
-            Button(action: {
-                menuBar.toggleExpandCollapse()
-            }) {
-                Text(menuBar.isCollapsed ? "展开" : "折叠")
-                    .font(.system(size: 10, weight: .medium))
-                    .padding(.horizontal, 4)
-                    .padding(.vertical, 1)
+            if settings.menuBarOrganizerEnabled {
+                Button(action: {
+                    menuBar.toggleExpandCollapse()
+                }) {
+                    Text(menuBar.isCollapsed ? "展开" : "折叠")
+                        .font(.system(size: 10, weight: .medium))
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 1)
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.mini)
             }
-            .buttonStyle(.bordered)
-            .controlSize(.mini)
+
+            Toggle("", isOn: $settings.menuBarOrganizerEnabled)
+                .toggleStyle(.switch)
+                .labelsHidden()
+                .controlSize(.mini)
+                .tint(.accentColor)
         }
         .padding(.horizontal, 7)
         .padding(.vertical, 6)
