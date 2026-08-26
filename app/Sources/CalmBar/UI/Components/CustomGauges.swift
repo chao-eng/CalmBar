@@ -72,14 +72,14 @@ public struct FanRPMGaugeView: View {
                     .lineLimit(1)
             }
 
-            HStack(alignment: .lastTextBaseline, spacing: 1.5) {
+            HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text(formattedRPM(Int(fan.actualRPM)))
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 19, weight: .semibold, design: .rounded))
                     .foregroundColor(.primary)
                     .lineLimit(1)
-                    .minimumScaleFactor(0.65)
+                    .minimumScaleFactor(0.7)
                 Text("RPM")
-                    .font(.system(size: 8, weight: .medium, design: .rounded))
+                    .font(.system(size: 9, weight: .medium, design: .rounded))
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }

@@ -324,20 +324,22 @@ public struct PopoverContentView: View {
 
             // RPM Readouts
             HStack(spacing: 12) {
+                let hasMultipleFans = thermal.fanSnapshots.count > 1
+                let fan0Title = hasMultipleFans ? "风扇 1" : "风扇"
                 if let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
                     let rpm0 = Int(firstFan.actualRPM)
-                    Text("风扇 0 \(formattedRPM(rpm0)) RPM")
+                    Text("\(fan0Title) \(formattedRPM(rpm0)) RPM")
                         .font(.system(size: 11, design: .rounded))
                         .foregroundColor(.secondary)
                 } else {
-                    Text("风扇 0 \(settings.thermalEnabled ? "3,060" : "0") RPM")
+                    Text("\(fan0Title) \(settings.thermalEnabled ? "3,060" : "0") RPM")
                         .font(.system(size: 11, design: .rounded))
                         .foregroundColor(.secondary)
                 }
 
-                if thermal.fanSnapshots.count > 1, settings.thermalEnabled {
+                if hasMultipleFans, settings.thermalEnabled {
                     let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
-                    Text("风扇 1 \(formattedRPM(rpm1)) RPM")
+                    Text("风扇 2 \(formattedRPM(rpm1)) RPM")
                         .font(.system(size: 11, design: .rounded))
                         .foregroundColor(.secondary)
                 }
@@ -351,9 +353,9 @@ public struct PopoverContentView: View {
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.secondary)
 
-                // Fan 0 Slider
+                // Fan 1 Slider
                 HStack(spacing: 10) {
-                    Text("风扇 0")
+                    Text(thermal.fanSnapshots.count > 1 ? "风扇 1" : "风扇")
                         .font(.system(size: 12))
                         .frame(width: 48, alignment: .leading)
 
@@ -366,10 +368,10 @@ public struct PopoverContentView: View {
                         .frame(width: 48, alignment: .trailing)
                 }
 
-                // Fan 1 Slider (if hardware has fan 1)
+                // Fan 2 Slider (if hardware has fan 1)
                 if thermal.fanSnapshots.count > 1 {
                     HStack(spacing: 10) {
-                        Text("风扇 1")
+                        Text("风扇 2")
                             .font(.system(size: 12))
                             .frame(width: 48, alignment: .leading)
 
