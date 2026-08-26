@@ -252,7 +252,7 @@ public struct PopoverContentView: View {
 
     // MARK: - Gauges Row
     private var gaugesSection: some View {
-        HStack(spacing: 8) {
+        HStack(spacing: 6) {
             TemperatureGaugeView(
                 title: "CPU",
                 temp: settings.thermalEnabled ? thermal.cpuTemp : 0,
@@ -266,7 +266,7 @@ public struct PopoverContentView: View {
                 color: .purple
             )
             if let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
-                FanRPMGaugeView(fan: firstFan, title: "风扇 1")
+                FanRPMGaugeView(fan: firstFan, title: thermal.fanSnapshots.count > 1 ? "风扇 1" : "风扇")
             } else {
                 TemperatureGaugeView(
                     title: "电池",
