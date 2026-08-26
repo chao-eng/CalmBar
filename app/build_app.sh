@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-VERSION="2.2.0"
+VERSION="2.3.0"
 APP_NAME="CalmBar"
 HELPER_NAME="CalmBarHelper"
 BUNDLE_ID="com.chao.CalmBar"
