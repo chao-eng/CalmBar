@@ -124,6 +124,8 @@ public final class StatusBarManager: ObservableObject {
     public func showPopover() {
         guard let button = statusItem?.button else { return }
 
+        PermissionManager.shared.refreshAll()
+
         if panel == nil {
             setupPanel()
         }

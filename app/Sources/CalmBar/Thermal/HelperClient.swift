@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import CalmBarKit
 
@@ -22,8 +23,65 @@ public final class HelperClient: ObservableObject {
         FileManager.default.fileExists(atPath: "/usr/local/libexec/CalmBarHelper")
     }
 
+    /// Helper files exist on disk, but XPC communication is blocked (typically by macOS 13+ Background Items toggle)
+    public var isHelperBlockedBySystem: Bool {
+        Self.isHelperInstalledOnDisk && !isHelperAvailable && !needsHelperUpdate
+    }
+
+    /// Open macOS System Settings -> General -> Login Items & Extensions (Background Items)
+    public static func openBackgroundItemsSettings() {
+        if let url = URL(string: "x-apple.systempreferences:com.apple.LoginItems-Settings.extension") {
+            NSWorkspace.shared.open(url)
+        } else if let fallback = URL(string: "x-apple.systempreferences:com.apple.preference.general?LoginItems") {
+            NSWorkspace.shared.open(fallback)
+        } else if let legacyFallback = URL(string: "x-apple.systempreferences:com.apple.preferences.users") {
+            NSWorkspace.shared.open(legacyFallback)
+        }
+    }
+
+    /// Shows an explanatory dialog before opening system background items settings
+    public static func promptAndOpenBackgroundSettings() {
+        let alert = NSAlert()
+        alert.messageText = "需要开启「允许在后台」权限"
+        alert.informativeText = "检测到 CalmBar 特权守护服务已安装，但当前被 macOS 系统「允许在后台」机制阻止。\n\n即将为您打开「系统设置 ➔ 通用 ➔ 登录项与扩展」，请在列表中找到【CalmBarHelper】并将开关开启为蓝色。"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "前往开启")
+        alert.addButton(withTitle: "取消")
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        if response == .alertFirstButtonReturn {
+            openBackgroundItemsSettings()
+        }
+        
+        // Auto-poll after user interacts with the prompt or goes to settings
+        shared.pollHelperStatusUntilReady()
+    }
+
     private init() {
         checkHelperStatus()
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkHelperStatus()
+            }
+        }
+    }
+
+    /// Automatically poll for helper status after user goes to system settings
+    public func pollHelperStatusUntilReady(maxAttempts: Int = 10, interval: TimeInterval = 1.0) {
+        Task { @MainActor in
+            for _ in 0..<maxAttempts {
+                self.checkHelperStatus()
+                if self.isHelperAvailable {
+                    break
+                }
+                try? await Task.sleep(nanoseconds: UInt64(interval * 1_000_000_000))
+            }
+        }
     }
 
     public func checkHelperStatus() {
@@ -33,39 +91,25 @@ public final class HelperClient: ObservableObject {
             return
         }
 
-        let conn = NSXPCConnection(machServiceName: CalmBarConfig.helperMachService, options: [.privileged])
-        conn.remoteObjectInterface = NSXPCInterface(with: CalmBarHelperProtocol.self)
-        conn.invalidationHandler = { [weak self] in
+        guard let proxy = getProxy(errorHandler: { [weak self] error in
             DispatchQueue.main.async {
                 self?.isHelperAvailable = false
+                self?.lastError = error.localizedDescription
             }
-        }
-        conn.interruptionHandler = { [weak self] in
-            DispatchQueue.main.async {
-                self?.isHelperAvailable = false
-            }
-        }
-        conn.resume()
-
-        let proxy = XPCProxyHelper.proxy(for: conn) { [weak self] _ in
-            DispatchQueue.main.async {
-                self?.isHelperAvailable = false
-            }
-        }
-
-        guard let validProxy = proxy else {
+        }) else {
             self.isHelperAvailable = false
-            conn.invalidate()
             return
         }
 
-        validProxy.ping { [weak self] reply in
+        proxy.ping { [weak self] reply in
             DispatchQueue.main.async {
                 let isLatest = (reply == "pong:\(CalmBarConfig.helperVersion)")
                 self?.isHelperAvailable = isLatest
                 self?.needsHelperUpdate = !isLatest
                 if !isLatest {
                     self?.lastError = "特权服务版本过旧（需更新以支持充电控制），请点击一键激活升级"
+                } else {
+                    self?.lastError = nil
                 }
             }
         }
@@ -215,8 +259,25 @@ public final class HelperClient: ObservableObject {
                 } else {
                     self.checkHelperStatus()
                     completion(true, nil)
+                    Self.showPostInstallGuidanceAlert()
                 }
             }
+        }
+    }
+
+    /// Shows a native guidance modal dialog after successful helper installation
+    public static func showPostInstallGuidanceAlert() {
+        let alert = NSAlert()
+        alert.messageText = "特权助手已成功激活"
+        alert.informativeText = "底层硬件控制驱动已就绪！\n\n在 macOS 13+ (Ventura / Sonoma / Sequoia) 中，若系统弹出「已添加后台项目」通知，请务必保持【CalmBarHelper 允许在后台】开关开启，以确保电脑休眠唤醒后风扇温控与充电保护持续生效。"
+        alert.alertStyle = .informational
+        alert.addButton(withTitle: "我知道了")
+        alert.addButton(withTitle: "查看后台设置...")
+
+        NSApp.activate(ignoringOtherApps: true)
+        let response = alert.runModal()
+        if response == .alertSecondButtonReturn {
+            openBackgroundItemsSettings()
         }
     }
 

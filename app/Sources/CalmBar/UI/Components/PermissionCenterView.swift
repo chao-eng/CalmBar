@@ -125,19 +125,48 @@ public struct PermissionCenterView: View {
                         .padding(.top, 1)
                     }
 
+                    if type == .privilegedHelper {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("💡 提示：在 macOS 13+ 中，激活后请确保在「系统设置 ➔ 通用 ➔ 登录项与扩展」中开启【允许在后台运行 CalmBarHelper】，以避免系统休眠时被阻止导致反复提示未激活。")
+                                .font(.system(size: 10.5))
+                                .foregroundColor(.secondary)
+                                .lineSpacing(2)
+                        }
+                        .padding(.top, 2)
+                    }
+
                     // Action button if not granted
                     if !isGranted {
-                        HStack {
+                        HStack(spacing: 8) {
                             Spacer()
+                            if type == .privilegedHelper && HelperClient.isHelperInstalledOnDisk {
+                                Button("开启后台权限...") {
+                                    HelperClient.promptAndOpenBackgroundSettings()
+                                }
+                                .buttonStyle(.bordered)
+                                .controlSize(.small)
+                            }
+
                             Button {
                                 permissionManager.requestOrOpenSettings(for: type)
                             } label: {
-                                Text(type == .privilegedHelper ? "一键激活特权助手" : "前往系统设置授权")
+                                Text(type == .privilegedHelper ? (HelperClient.isHelperInstalledOnDisk ? "重新激活助手" : "一键激活特权助手") : "前往系统设置授权")
                                     .font(.system(size: 11, weight: .medium))
                             }
                             .buttonStyle(.borderedProminent)
                             .controlSize(.small)
                             .tint(type == .privilegedHelper ? .blue : .orange)
+                        }
+                        .padding(.top, 2)
+                    } else if type == .privilegedHelper {
+                        HStack {
+                            Spacer()
+                            Button("查看后台项目设置...") {
+                                HelperClient.promptAndOpenBackgroundSettings()
+                            }
+                            .buttonStyle(.plain)
+                            .font(.system(size: 10.5))
+                            .foregroundColor(.accentColor)
                         }
                         .padding(.top, 2)
                     }

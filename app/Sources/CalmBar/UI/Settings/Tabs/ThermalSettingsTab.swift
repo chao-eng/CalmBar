@@ -27,38 +27,84 @@ public struct ThermalSettingsTab: View {
 
                 // 特权驱动与控制权限
                 GroupBox(label: Label("特权驱动与控制权限", systemImage: "lock.shield")) {
-                    HStack {
-                        Image(systemName: (helper.isHelperAvailable && !helper.needsHelperUpdate) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                            .foregroundStyle((helper.isHelperAvailable && !helper.needsHelperUpdate) ? .green : .orange)
-                            .font(.system(size: 20))
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Image(systemName: (helper.isHelperAvailable && !helper.needsHelperUpdate) ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                                .foregroundStyle((helper.isHelperAvailable && !helper.needsHelperUpdate) ? .green : .orange)
+                                .font(.system(size: 20))
 
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text((helper.isHelperAvailable && !helper.needsHelperUpdate) ? "SMC 特权服务已就绪" : (helper.needsHelperUpdate ? "特权服务需更新以支持充电控制" : "需要特权助手以修改风扇与充电状态"))
-                                .font(.system(size: 12.5, weight: .semibold))
-                            Text((helper.isHelperAvailable && !helper.needsHelperUpdate) ? "当前具备向 SMC 写入风扇转速与电池充电阻断的完整特权。" : "macOS 安全机制要求特权后台服务 (LaunchDaemon) 才能写入 SMC 寄存器。")
-                                .font(.system(size: 11.5))
-                                .foregroundColor(.secondary)
-                                .lineSpacing(2)
-                        }
-
-                        Spacer()
-
-                        if !helper.isHelperAvailable || helper.needsHelperUpdate {
-                            Button(helper.needsHelperUpdate ? "一键更新..." : "一键激活...") {
-                                isInstallingHelper = true
-                                helper.requestInstallHelper { success, err in
-                                    isInstallingHelper = false
-                                    if success {
-                                        thermal.checkAuthorization()
-                                        helper.checkHelperStatus()
-                                        chargeManager.evaluateChargingPolicy()
+                            VStack(alignment: .leading, spacing: 2) {
+                                let titleText: String = {
+                                    if helper.isHelperAvailable && !helper.needsHelperUpdate {
+                                        return "SMC 特权服务已就绪"
+                                    } else if helper.needsHelperUpdate {
+                                        return "特权服务需更新以支持充电控制"
+                                    } else if helper.isHelperBlockedBySystem {
+                                        return "特权服务未响应 · 需开启系统后台权限"
                                     } else {
-                                        helperMessage = err
+                                        return "需要特权助手以修改风扇与充电状态"
                                     }
+                                }()
+
+                                let descText: String = {
+                                    if helper.isHelperAvailable && !helper.needsHelperUpdate {
+                                        return "当前具备向 SMC 写入风扇转速与电池充电阻断的完整特权。"
+                                    } else if helper.isHelperBlockedBySystem {
+                                        return "特权文件已安装，但被 macOS「允许在后台」机制阻止或暂停，请开启开关。"
+                                    } else {
+                                        return "macOS 安全机制要求特权后台服务 (LaunchDaemon) 才能写入 SMC 寄存器。"
+                                    }
+                                }()
+
+                                Text(titleText)
+                                    .font(.system(size: 12.5, weight: .semibold))
+                                Text(descText)
+                                    .font(.system(size: 11.5))
+                                    .foregroundColor(.secondary)
+                                    .lineSpacing(2)
+                            }
+
+                            Spacer()
+
+                            if !helper.isHelperAvailable || helper.needsHelperUpdate {
+                                HStack(spacing: 6) {
+                                    if helper.isHelperBlockedBySystem {
+                                        Button("开启后台权限...") {
+                                            HelperClient.promptAndOpenBackgroundSettings()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .font(.system(size: 12, weight: .medium))
+                                    }
+
+                                    Button(helper.needsHelperUpdate ? "一键更新..." : (helper.isHelperBlockedBySystem ? "重新激活..." : "一键激活...")) {
+                                        isInstallingHelper = true
+                                        helper.requestInstallHelper { success, err in
+                                            isInstallingHelper = false
+                                            if success {
+                                                thermal.checkAuthorization()
+                                                helper.checkHelperStatus()
+                                                chargeManager.evaluateChargingPolicy()
+                                            } else {
+                                                helperMessage = err
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .font(.system(size: 12, weight: .medium))
                                 }
                             }
-                            .buttonStyle(.borderedProminent)
-                            .font(.system(size: 12, weight: .medium))
+                        }
+
+                        if helper.isHelperBlockedBySystem {
+                            HStack(spacing: 4) {
+                                Image(systemName: "info.circle")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.orange)
+                                Text("如已授权过，请前往「系统设置 ➔ 通用 ➔ 登录项与扩展」，确保开启【CalmBarHelper 允许在后台】。")
+                                    .font(.system(size: 10.5))
+                                    .foregroundColor(.secondary)
+                            }
+                            .padding(.top, 2)
                         }
                     }
                     .padding(8)

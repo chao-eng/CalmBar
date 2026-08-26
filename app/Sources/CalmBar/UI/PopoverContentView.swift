@@ -82,6 +82,9 @@ public struct PopoverContentView: View {
                 .stroke(Color.primary.opacity(0.12), lineWidth: 0.5)
         )
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .onAppear {
+            PermissionManager.shared.refreshAll()
+        }
     }
 
     private var allDisabledPlaceholderView: some View {
@@ -162,36 +165,59 @@ public struct PopoverContentView: View {
                 Image(systemName: "lock.shield")
                     .foregroundStyle(.orange)
                 VStack(alignment: .leading, spacing: 1) {
-                    Text(helper.needsHelperUpdate ? "特权助手需更新" : "特权助手未激活")
+                    let title = helper.needsHelperUpdate ? "特权助手需更新" : (helper.isHelperBlockedBySystem ? "特权助手被后台阻止" : "特权助手未激活")
+                    Text(title)
                         .font(.system(size: 11, weight: .semibold))
                     Text(dashboard.helperAttentionMessage)
                         .font(.system(size: 9))
                         .foregroundColor(.secondary)
                 }
                 Spacer()
-                Button(action: {
-                    isInstallingHelper = true
-                    helper.requestInstallHelper { success, err in
-                        isInstallingHelper = false
-                        if success {
-                            thermal.checkAuthorization()
-                            helper.checkHelperStatus()
-                            chargeManager.evaluateChargingPolicy()
+                if helper.isHelperBlockedBySystem {
+                    HStack(spacing: 4) {
+                        Button("开启后台权限") {
+                            HelperClient.promptAndOpenBackgroundSettings()
+                        }
+                        .buttonStyle(.borderedProminent)
+                        .controlSize(.mini)
+                        .tint(.accentColor)
+
+                        Button {
+                            HelperClient.shared.checkHelperStatus()
+                            PermissionManager.shared.refreshAll()
+                        } label: {
+                            Image(systemName: "arrow.clockwise")
+                                .font(.system(size: 9, weight: .bold))
+                        }
+                        .buttonStyle(.bordered)
+                        .controlSize(.mini)
+                        .help("刷新检测状态")
+                    }
+                } else {
+                    Button(action: {
+                        isInstallingHelper = true
+                        helper.requestInstallHelper { success, err in
+                            isInstallingHelper = false
+                            if success {
+                                thermal.checkAuthorization()
+                                helper.checkHelperStatus()
+                                chargeManager.evaluateChargingPolicy()
+                            } else {
+                                helperInstallMessage = err
+                            }
+                        }
+                    }) {
+                        if isInstallingHelper {
+                            ProgressView().controlSize(.mini)
                         } else {
-                            helperInstallMessage = err
+                            Text(helper.needsHelperUpdate ? "一键更新" : "一键激活")
+                                .font(.system(size: 10, weight: .semibold))
                         }
                     }
-                }) {
-                    if isInstallingHelper {
-                        ProgressView().controlSize(.mini)
-                    } else {
-                        Text(helper.needsHelperUpdate ? "一键更新" : "一键激活")
-                            .font(.system(size: 10, weight: .semibold))
-                    }
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.mini)
+                    .tint(.accentColor)
                 }
-                .buttonStyle(.borderedProminent)
-                .controlSize(.mini)
-                .tint(.accentColor)
             }
             .padding(8)
             .background(Color.orange.opacity(0.12))

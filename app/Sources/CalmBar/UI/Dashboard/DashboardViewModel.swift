@@ -93,7 +93,11 @@ public final class DashboardViewModel: ObservableObject {
                     self?.helperAttentionMessage = "特权助手需更新以支持充电限制"
                 } else if !available {
                     self?.needsHelperAttention = true
-                    self?.helperAttentionMessage = "特权助手未激活（温控与充电受限）"
+                    if HelperClient.isHelperInstalledOnDisk {
+                        self?.helperAttentionMessage = "已授权但未响应，请在系统设置中允许后台运行"
+                    } else {
+                        self?.helperAttentionMessage = "特权助手未激活（温控与充电受限）"
+                    }
                 } else {
                     self?.needsHelperAttention = false
                     self?.helperAttentionMessage = ""

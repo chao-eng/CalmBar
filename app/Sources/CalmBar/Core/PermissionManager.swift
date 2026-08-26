@@ -80,9 +80,19 @@ public final class PermissionManager: ObservableObject {
                 self?.refreshAll()
             }
         }
+        NotificationCenter.default.addObserver(
+            forName: NSApplication.didBecomeActiveNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                self?.refreshAll()
+            }
+        }
     }
 
     public func refreshAll() {
+        HelperClient.shared.checkHelperStatus()
         self.accessibilityGranted = checkAccessibility()
         self.helperInstalled = checkHelper()
         self.screenRecordingGranted = checkScreenRecording()
@@ -154,7 +164,7 @@ public final class PermissionManager: ObservableObject {
     }
 
     public func checkHelper() -> Bool {
-        return HelperClient.isHelperInstalledOnDisk
+        return HelperClient.isHelperInstalledOnDisk && HelperClient.shared.isHelperAvailable
     }
 
     public func checkScreenRecording() -> Bool {

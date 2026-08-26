@@ -28,35 +28,64 @@ public struct BatterySettingsTab: View {
 
                 if !helper.isHelperAvailable || helper.needsHelperUpdate {
                     GroupBox(label: Label("特权助手状态", systemImage: "lock.shield")) {
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundStyle(.orange)
-                                .font(.system(size: 18))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(helper.needsHelperUpdate ? "特权助手需更新以支持充电控制" : "充电上限控制需要特权助手")
-                                    .font(.system(size: 12.5, weight: .semibold))
-                                Text("修改 SMC 充电寄存器需要系统特权守护服务，请点击右侧按钮一键激活或更新。")
-                                    .font(.system(size: 11.5))
-                                    .foregroundColor(.secondary)
-                                    .lineSpacing(2)
-                            }
-                            Spacer()
-                            Button(helper.needsHelperUpdate ? "一键更新" : "一键激活") {
-                                isInstallingHelper = true
-                                helper.requestInstallHelper { success, err in
-                                    isInstallingHelper = false
-                                    if success {
-                                        thermal.checkAuthorization()
-                                        helper.checkHelperStatus()
-                                        chargeManager.evaluateChargingPolicy()
-                                    } else {
-                                        helperMessage = err
+                        VStack(alignment: .leading, spacing: 8) {
+                            HStack {
+                                Image(systemName: "exclamationmark.triangle.fill")
+                                    .foregroundStyle(.orange)
+                                    .font(.system(size: 18))
+                                VStack(alignment: .leading, spacing: 2) {
+                                    let titleText = helper.needsHelperUpdate ? "特权助手需更新以支持充电控制" : (helper.isHelperBlockedBySystem ? "特权助手未响应 · 需开启系统后台权限" : "充电上限控制需要特权助手")
+                                    let descText = helper.isHelperBlockedBySystem ? "检测到特权服务已被安装，但系统「允许在后台」开关处于关闭状态。" : "修改 SMC 充电寄存器需要系统特权守护服务，请点击右侧按钮一键激活或更新。"
+
+                                    Text(titleText)
+                                        .font(.system(size: 12.5, weight: .semibold))
+                                    Text(descText)
+                                        .font(.system(size: 11.5))
+                                        .foregroundColor(.secondary)
+                                        .lineSpacing(2)
+                                }
+                                Spacer()
+
+                                HStack(spacing: 6) {
+                                    if helper.isHelperBlockedBySystem {
+                                        Button("开启后台权限...") {
+                                            HelperClient.promptAndOpenBackgroundSettings()
+                                        }
+                                        .buttonStyle(.bordered)
+                                        .font(.system(size: 12, weight: .medium))
+                                        .controlSize(.small)
                                     }
+
+                                    Button(helper.needsHelperUpdate ? "一键更新" : (helper.isHelperBlockedBySystem ? "重新激活" : "一键激活")) {
+                                        isInstallingHelper = true
+                                        helper.requestInstallHelper { success, err in
+                                            isInstallingHelper = false
+                                            if success {
+                                                thermal.checkAuthorization()
+                                                helper.checkHelperStatus()
+                                                chargeManager.evaluateChargingPolicy()
+                                            } else {
+                                                helperMessage = err
+                                            }
+                                        }
+                                    }
+                                    .buttonStyle(.borderedProminent)
+                                    .font(.system(size: 12, weight: .medium))
+                                    .controlSize(.small)
                                 }
                             }
-                            .buttonStyle(.borderedProminent)
-                            .font(.system(size: 12, weight: .medium))
-                            .controlSize(.small)
+
+                            if helper.isHelperBlockedBySystem {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "info.circle")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.orange)
+                                    Text("请前往「系统设置 ➔ 通用 ➔ 登录项与扩展」，确保开启【CalmBarHelper 允许在后台】。")
+                                        .font(.system(size: 10.5))
+                                        .foregroundColor(.secondary)
+                                }
+                                .padding(.top, 2)
+                            }
                         }
                         .padding(6)
                     }
