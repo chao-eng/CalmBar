@@ -2,12 +2,14 @@ import AppKit
 import SwiftUI
 
 @MainActor
-public final class ClipboardHistoryWindowController {
+public final class ClipboardHistoryWindowController: NSObject, NSWindowDelegate {
     public static let shared = ClipboardHistoryWindowController()
 
     private var window: NSWindow?
 
-    private init() {}
+    private override init() {
+        super.init()
+    }
 
     public func show() {
         if let existing = window, existing.isVisible {
@@ -27,6 +29,7 @@ public final class ClipboardHistoryWindowController {
         win.center()
         win.contentViewController = NSHostingController(rootView: ClipboardHistoryView())
         win.isReleasedWhenClosed = false
+        win.delegate = self
         win.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
 
@@ -44,5 +47,20 @@ public final class ClipboardHistoryWindowController {
     public func close() {
         window?.close()
         window = nil
+    }
+
+    // MARK: - NSWindowDelegate
+
+    public func windowDidResignKey(_ notification: Notification) {
+        guard AppSettings.shared.clipboardHideOnBlur else { return }
+        guard let win = window, (notification.object as? NSWindow) === win else { return }
+        if win.attachedSheet != nil { return }
+        close()
+    }
+
+    public func windowWillClose(_ notification: Notification) {
+        if let win = window, (notification.object as? NSWindow) === win {
+            self.window = nil
+        }
     }
 }

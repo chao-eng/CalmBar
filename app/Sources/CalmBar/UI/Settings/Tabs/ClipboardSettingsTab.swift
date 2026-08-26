@@ -85,8 +85,17 @@ public struct ClipboardSettingsTab: View {
                 .opacity(settings.clipboardHistoryEnabled ? 1.0 : 0.6)
 
                 // 3. 独立管理窗口与数据清理
-                GroupBox(label: Label("历史管理与快捷操作", systemImage: "clock.arrow.circlepath")) {
+                GroupBox(label: Label("历史窗口与快捷操作", systemImage: "clock.arrow.circlepath")) {
                     VStack(alignment: .leading, spacing: 12) {
+                        Toggle("允许窗口失焦隐藏", isOn: $settings.clipboardHideOnBlur)
+                            .font(.system(size: 12.5, weight: .medium))
+
+                        Text("开启后，剪贴板历史窗口在失去焦点（点击外部或切换应用）时将自动关闭隐藏。")
+                            .font(.system(size: 11.5))
+                            .foregroundColor(.secondary)
+
+                        Divider()
+
                         HStack(spacing: 12) {
                             Button(action: {
                                 ClipboardHistoryWindowController.shared.show()

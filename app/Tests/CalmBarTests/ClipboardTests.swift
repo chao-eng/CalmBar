@@ -163,6 +163,7 @@ struct ClipboardTests {
         #expect(settings.clipboardMaxCount >= 50)
         #expect(settings.clipboardSaveImages == true)
         #expect(settings.clipboardFilterSensitive == true)
+        #expect(settings.clipboardHideOnBlur == false || settings.clipboardHideOnBlur == true)
         #expect(settings.popoverShowClipboard == true)
     }
 }

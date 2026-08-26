@@ -174,6 +174,9 @@ public final class AppSettings: ObservableObject {
     @Published public var clipboardFilterSensitive: Bool {
         didSet { defaults.set(clipboardFilterSensitive, forKey: "clipboardFilterSensitive") }
     }
+    @Published public var clipboardHideOnBlur: Bool {
+        didSet { defaults.set(clipboardHideOnBlur, forKey: "clipboardHideOnBlur") }
+    }
     @Published public var clipboardIgnoredApps: [String] {
         didSet { defaults.set(clipboardIgnoredApps, forKey: "clipboardIgnoredApps") }
     }
@@ -319,6 +322,7 @@ public final class AppSettings: ObservableObject {
         self.clipboardMaxCount = defaults.object(forKey: "clipboardMaxCount") as? Int ?? 200
         self.clipboardSaveImages = defaults.object(forKey: "clipboardSaveImages") as? Bool ?? true
         self.clipboardFilterSensitive = defaults.object(forKey: "clipboardFilterSensitive") as? Bool ?? true
+        self.clipboardHideOnBlur = defaults.object(forKey: "clipboardHideOnBlur") as? Bool ?? false
         self.clipboardIgnoredApps = defaults.stringArray(forKey: "clipboardIgnoredApps") ?? []
 
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
