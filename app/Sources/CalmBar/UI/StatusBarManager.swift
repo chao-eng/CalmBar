@@ -124,6 +124,9 @@ public final class StatusBarManager: ObservableObject {
     public func showPopover() {
         guard let button = statusItem?.button else { return }
 
+        // 命令面板与控制中心面板互斥：打开一方先收起另一方
+        CommandPaletteWindowController.shared.hideWindow()
+
         PermissionManager.shared.refreshAll()
 
         if panel == nil {
@@ -196,6 +199,8 @@ public final class StatusBarManager: ObservableObject {
     public func openSettingsWindow(tab: SettingsTab = .thermal) {
         self.selectedSettingsTab = tab
         closePopover()
+        // 命令面板与控制中心面板互斥：打开设置窗也先收起命令面板
+        CommandPaletteWindowController.shared.hideWindow()
 
         if let window = settingsWindow, window.isVisible {
             positionWindowInUpperCenter(window)
