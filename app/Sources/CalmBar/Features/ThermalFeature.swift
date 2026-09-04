@@ -6,13 +6,18 @@ public final class ThermalFeature: CalmFeature {
     public let id: FeatureID = .thermal
     public let title: String = "硬件温控"
     public let category: FeatureCategory = .hardware
-    public let requiredPermissions: [FeaturePermissionRequirement] = [
-        FeaturePermissionRequirement(
-            type: .privilegedHelper,
-            level: .required,
-            reason: "需要特权助手以向 SMC 写入目标风扇转速，未安装时仅可读取传感器温度"
-        )
-    ]
+
+    public var requiredPermissions: [FeaturePermissionRequirement] {
+        // 无风扇机型读温度无需特权助手
+        guard monitor.requiresHelperForThermal else { return [] }
+        return [
+            FeaturePermissionRequirement(
+                type: .privilegedHelper,
+                level: .required,
+                reason: "需要特权助手以向 SMC 写入目标风扇转速，未安装时仅可读取传感器温度"
+            )
+        ]
+    }
 
     private let monitor: ThermalMonitor
     private var cancellables = Set<AnyCancellable>()
@@ -20,7 +25,9 @@ public final class ThermalFeature: CalmFeature {
     @Published public private(set) var state: FeatureState = .running
 
     public var commands: [FeatureCommand] {
-        [
+        // 无风扇机型不暴露任何风扇控制命令，仅保留温度监控
+        guard monitor.requiresHelperForThermal else { return [] }
+        return [
             FeatureCommand(
                 id: "thermal.restoreAuto",
                 title: "恢复风扇自动控制",
@@ -78,6 +85,12 @@ public final class ThermalFeature: CalmFeature {
             } else {
                 state = .unavailable
             }
+            return
+        }
+
+        // 无风扇机型：纯温度监控，无需风扇控制授权即视为可用
+        if !monitor.requiresHelperForThermal {
+            state = .running
             return
         }
 

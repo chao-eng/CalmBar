@@ -95,7 +95,11 @@ public struct SettingsView: View {
                 Circle()
                     .fill(Color.orange)
                     .frame(width: 7, height: 7)
-            } else if (tab == .thermal || tab == .battery) && (!helper.isHelperAvailable || helper.needsHelperUpdate) {
+            } else if tab == .battery && (!helper.isHelperAvailable || helper.needsHelperUpdate) {
+                Circle()
+                    .fill(Color.orange)
+                    .frame(width: 7, height: 7)
+            } else if tab == .thermal && (!helper.isHelperAvailable || helper.needsHelperUpdate) && ThermalMonitor.shared.requiresHelperForThermal {
                 Circle()
                     .fill(Color.orange)
                     .frame(width: 7, height: 7)

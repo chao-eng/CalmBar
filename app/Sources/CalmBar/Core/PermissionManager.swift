@@ -119,6 +119,22 @@ public final class PermissionManager: ObservableObject {
         return defaultRequirements(for: featureID)
     }
 
+    /// 权限用途说明（按当前机型硬件能力裁剪）—— 供权限中心等 UI 展示
+    public func purposeDescription(for type: PermissionType) -> String {
+        switch type {
+        case .privilegedHelper:
+            // 仅当已确认本机无内置风扇时才改写为“被动散热”文案；有风扇机型
+            // 即使 SMC 暂断也保留原文案，避免误导（与 PermissionCenterView 的
+            // `thermal.isFanless` 提示使用同一判据）
+            guard !ThermalMonitor.shared.isFanless else {
+                return "用于低层硬件 80% 充电上限与适配器旁路供电、应用去隔离与自签名修复。当前机型无内置风扇（被动散热），硬件温度读取为只读 SMC 操作，无需风扇调速。"
+            }
+            return type.purposeDescription
+        default:
+            return type.purposeDescription
+        }
+    }
+
     public func affectedFeatures(for permission: PermissionType) -> [FeatureID] {
         FeatureID.allCases.filter { id in
             let reqs = requirements(for: id)
@@ -143,6 +159,8 @@ public final class PermissionManager: ObservableObject {
         case .caffeine:
             return [FeaturePermissionRequirement(type: .accessibility, level: .advanced, reason: "防离开微动仿真")]
         case .thermal:
+            // 无风扇机型读温度无需特权助手
+            guard ThermalMonitor.shared.requiresHelperForThermal else { return [] }
             return [FeaturePermissionRequirement(type: .privilegedHelper, level: .required, reason: "SMC 风扇转速控制")]
         case .battery:
             return [FeaturePermissionRequirement(type: .privilegedHelper, level: .required, reason: "SMC 电池充电控制")]

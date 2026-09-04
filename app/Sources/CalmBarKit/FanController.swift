@@ -22,7 +22,36 @@ public final class FanController: @unchecked Sendable {
             }
         }
         let ftst = connection.keyExists(SMCFanKey.forceTest)
-        return SMCHardwareConfig(modeKeyFormat: modeFormat, ftstAvailable: ftst)
+        let capability = detectCapability(connection: connection)
+        return SMCHardwareConfig(modeKeyFormat: modeFormat, ftstAvailable: ftst, capability: capability)
+    }
+
+    /// 依据 SMC `FNum` 寄存器一次性探测风扇数量。
+    /// - 键不存在 / 读取失败 -> `.unknown`（不武断判定无风扇，交由上层按不可用处理）
+    /// - 读数为 0 -> `.fanless`（无内置风扇的被动散热机型，如 MacBook Air）
+    /// - 读数 > 0 -> `.hasFans(n)`
+    ///
+    /// 支持 `FanCapabilitySimulation` 仿真覆盖（测试 / 无真机打包视觉验证用）。
+    public static func detectCapability(connection: SMCConnection) -> FanCapability {
+        if let override = FanCapabilitySimulation.resolvedOverride() {
+            NSLog("FanCapabilitySimulation: overriding capability to \(capabilityLabel(override))")
+            return override
+        }
+        guard connection.keyExists(SMCFanKey.count),
+              let (bytes, _) = try? connection.readKey(SMCFanKey.count)
+        else {
+            return .unknown
+        }
+        let count = Int(SMCDataFormat.uint8(from: bytes))
+        return count > 0 ? .hasFans(count) : .fanless
+    }
+
+    private static func capabilityLabel(_ capability: FanCapability) -> String {
+        switch capability {
+        case .unknown: return "unknown"
+        case .fanless: return "fanless"
+        case .hasFans(let n): return "hasFans(\(n))"
+        }
     }
 
     public func fanCount() throws -> Int {
@@ -59,6 +88,7 @@ public final class FanController: @unchecked Sendable {
     }
 
     public func enableManualMode(fanIndex: Int) throws -> FanControlStrategy {
+        guard config.capability.supportsFanControl else { return .direct }
         let modeKey = SMCFanKey.key(config.modeKeyFormat, fan: fanIndex)
         do {
             try connection.writeKey(modeKey, bytes: [FanMode.manual.rawValue])
@@ -87,6 +117,7 @@ public final class FanController: @unchecked Sendable {
     }
 
     public func setTargetRPM(fanIndex: Int, rpm: Float) throws {
+        guard config.capability.supportsFanControl else { return }
         let key = SMCFanKey.key(SMCFanKey.target, fan: fanIndex)
         let (_, size) = try connection.readKey(key)
         let bytes = SMCDataFormat.bytes(from: rpm, size: size)
@@ -94,11 +125,13 @@ public final class FanController: @unchecked Sendable {
     }
 
     public func setAuto(fanIndex: Int) throws {
+        guard config.capability.supportsFanControl else { return }
         let modeKey = SMCFanKey.key(config.modeKeyFormat, fan: fanIndex)
         try connection.writeKey(modeKey, bytes: [FanMode.auto.rawValue])
     }
 
     public func restoreSystemControl() throws {
+        guard config.capability.supportsFanControl else { return }
         let count = (try? fanCount()) ?? 0
         for i in 0..<count {
             try? setAuto(fanIndex: i)
@@ -109,6 +142,7 @@ public final class FanController: @unchecked Sendable {
     }
 
     public func setLinkedFraction(_ fraction: Double) throws {
+        guard config.capability.supportsFanControl else { return }
         let fans = try allFans()
         for fan in fans {
             _ = try enableManualMode(fanIndex: fan.index)
@@ -119,6 +153,7 @@ public final class FanController: @unchecked Sendable {
     }
 
     public func setIndependentFraction(fanIndex: Int, fraction: Double) throws {
+        guard config.capability.supportsFanControl else { return }
         let snap = try snapshot(fanIndex: fanIndex)
         _ = try enableManualMode(fanIndex: fanIndex)
         let clamped = max(0.0, min(1.0, fraction))
@@ -127,6 +162,7 @@ public final class FanController: @unchecked Sendable {
     }
 
     public func setLinkedRPM(_ rpm: Float) throws {
+        guard config.capability.supportsFanControl else { return }
         let fans = try allFans()
         for fan in fans {
             _ = try enableManualMode(fanIndex: fan.index)

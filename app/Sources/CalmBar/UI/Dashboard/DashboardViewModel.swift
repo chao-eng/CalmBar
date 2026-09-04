@@ -10,6 +10,7 @@ public final class DashboardViewModel: ObservableObject {
     @Published public private(set) var primaryTemperature: Float = 0.0
     @Published public private(set) var fanSummary: String = "自动"
     @Published public private(set) var fanSnapshots: [FanSnapshot] = []
+    @Published public private(set) var fanCapability: FanCapability = .unknown
     @Published public private(set) var isFanControlAuthorized: Bool = false
     @Published public private(set) var batteryPercentage: Int = 100
     @Published public private(set) var batteryStatus: ChargeOperationStatus = .disabled
@@ -70,6 +71,9 @@ public final class DashboardViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
+        // `fanCapability` 由下方 CombineLatest3(helper, helper, fanCapability) 统一驱动，
+        // 使 capability 后期定型（.unknown → .fanless）时能重估 helper 提示文案。
+
         thermal.$currentSafetyAction
             .receive(on: RunLoop.main)
             .sink { [weak self] action in
@@ -85,9 +89,10 @@ public final class DashboardViewModel: ObservableObject {
             }
             .store(in: &cancellables)
 
-        Publishers.CombineLatest(helper.$isHelperAvailable, helper.$needsHelperUpdate)
+        Publishers.CombineLatest3(helper.$isHelperAvailable, helper.$needsHelperUpdate, thermal.$fanCapability)
             .receive(on: RunLoop.main)
-            .sink { [weak self] available, needsUpdate in
+            .sink { [weak self] available, needsUpdate, capability in
+                self?.fanCapability = capability
                 if needsUpdate {
                     self?.needsHelperAttention = true
                     self?.helperAttentionMessage = "特权助手需更新以支持充电限制"
@@ -95,6 +100,8 @@ public final class DashboardViewModel: ObservableObject {
                     self?.needsHelperAttention = true
                     if HelperClient.isHelperInstalledOnDisk {
                         self?.helperAttentionMessage = "已授权但未响应，请在系统设置中允许后台运行"
+                    } else if capability.isFanless {
+                        self?.helperAttentionMessage = "特权助手未激活（充电保护与应用去隔离受限）"
                     } else {
                         self?.helperAttentionMessage = "特权助手未激活（温控与充电受限）"
                     }
@@ -140,5 +147,18 @@ public final class DashboardViewModel: ObservableObject {
                 self?.clipboardCount = items.count
             }
             .store(in: &cancellables)
+    }
+}
+
+// MARK: - Derived helpers
+extension DashboardViewModel {
+    /// 已确认本机无内置风扇（被动散热机型）
+    public var isFanless: Bool {
+        fanCapability.isFanless
+    }
+
+    /// 存在可控制风扇（SMC 已连接且非 fanless）—— UI 风扇控件的统一门控
+    public var supportsFanControl: Bool {
+        isSMCConnected && fanCapability.supportsFanControl
     }
 }

@@ -82,7 +82,14 @@ struct CommandCenterTests {
         let center = CommandCenter()
         center.registerFeatureCommands(from: featureManager)
 
-        #expect(center.command(id: "thermal.restoreAuto") != nil)
+        // 风扇命令是否注册取决于真实机型能力（无风扇机型/探测失败时不注册），
+        // 因此按能力分双路断言
+        let monitor = ThermalMonitor.shared
+        if monitor.supportsFanControl {
+            #expect(center.command(id: "thermal.restoreAuto") != nil)
+        } else {
+            #expect(center.command(id: "thermal.restoreAuto") == nil)
+        }
         #expect(center.command(id: "battery.topUp") != nil)
         #expect(center.command(id: "cleaner.scanDev") != nil)
         #expect(center.command(id: "cleaner.scanWorkspaces") != nil)

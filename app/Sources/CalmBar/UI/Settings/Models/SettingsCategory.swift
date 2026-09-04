@@ -69,7 +69,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     public var subtitleZH: String {
         switch self {
         case .thermal:
-            return "监控 CPU 传感器温度并智能调节双风扇转速曲线"
+            return "持续监控 CPU / GPU 与电池传感器温度，有风扇机型支持智能调速"
         case .menuBar:
             return "折叠隐藏不常用的菜单栏图标，保持桌面整洁清爽"
         case .scroll:

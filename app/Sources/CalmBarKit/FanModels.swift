@@ -15,13 +15,75 @@ public enum SMCFanKey {
     }
 }
 
+/// 风扇硬件能力 —— 温控模块据此在「被动散热（无风扇）」机型上自动降级
+public enum FanCapability: Sendable, Equatable {
+    /// SMC 尚未探测或探测失败
+    case unknown
+    /// 已确认无内置风扇（被动散热机型）
+    case fanless
+    /// 存在 N 个风扇
+    case hasFans(Int)
+
+    public var isFanless: Bool {
+        if case .fanless = self { return true }
+        return false
+    }
+
+    public var fanCount: Int {
+        if case .hasFans(let n) = self { return n }
+        return 0
+    }
+
+    public var isUnknown: Bool {
+        if case .unknown = self { return true }
+        return false
+    }
+
+    public var supportsFanControl: Bool {
+        // 仅 `.hasFans` 视为可控制：`.unknown`（探测失败）与 `.fanless` 都
+        // 不应向用户暴露风扇调速 UI / 命令，避免 SMC 暂时不可读时误操作。
+        if case .hasFans = self { return true }
+        return false
+    }
+}
+
+/// 无风扇仿真开关 —— 用于在无真机的开发机上验证“被动散热机型”降级路径。
+///
+/// 仅作用于主 App 探测链路的单点 (`FanController.detectCapability`)，不会影响
+/// 特权助手进程（其不会设置 `forced`，也未继承 shell 环境变量 / App 偏好域）。
+/// 支持三种触发方式：
+///  1. `FanCapabilitySimulation.forced = .fanless`   —— 进程内（测试 / 调试钩子）
+///  2. 环境变量 `CALMBAR_SIMULATE_FANLESS=1`          —— 终端启动时临时生效
+///  3. `defaults write com.chaoeng.CalmBar CalmBarSimulateFanless -bool YES`
+///                                                    —— 打包 App 视觉验证
+public enum FanCapabilitySimulation {
+    public static let envKey = "CALMBAR_SIMULATE_FANLESS"
+    public static let defaultsKey = "CalmBarSimulateFanless"
+
+    /// 进程内强制覆盖（并发不安全的调试钩子，仅测试与开发入口使用）
+    public static nonisolated(unsafe) var forced: FanCapability? = nil
+
+    /// 解析当前是否应强制返回某能力；无强制时返回 `nil`（走真实硬件探测）
+    public static func resolvedOverride() -> FanCapability? {
+        if let f = forced { return f }
+        if let env = ProcessInfo.processInfo.environment[envKey] {
+            let v = env.lowercased()
+            if v == "1" || v == "true" || v == "yes" { return .fanless }
+        }
+        if UserDefaults.standard.bool(forKey: defaultsKey) { return .fanless }
+        return nil
+    }
+}
+
 public struct SMCHardwareConfig: Sendable {
     public let modeKeyFormat: String
     public let ftstAvailable: Bool
+    public let capability: FanCapability
 
-    public init(modeKeyFormat: String, ftstAvailable: Bool) {
+    public init(modeKeyFormat: String, ftstAvailable: Bool, capability: FanCapability = .unknown) {
         self.modeKeyFormat = modeKeyFormat
         self.ftstAvailable = ftstAvailable
+        self.capability = capability
     }
 }
 

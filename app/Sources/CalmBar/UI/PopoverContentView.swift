@@ -55,13 +55,25 @@ public struct PopoverContentView: View {
         )
     }
 
+    private var isFanless: Bool {
+        thermal.isFanless
+    }
+
+    private var supportsFanControl: Bool {
+        thermal.supportsFanControl
+    }
+
     public var body: some View {
         VStack(spacing: 12) {
             headerView
             permissionBanners
             if settings.popoverShowGauges {
                 gaugesSection
-                fanControlSection
+                if supportsFanControl {
+                    fanControlSection
+                } else if isFanless {
+                    fanlessMonitoringSection
+                }
             }
             if !activeQuickTools.isEmpty || !activeGuardians.isEmpty {
                 quickActionsSection
@@ -129,6 +141,15 @@ public struct PopoverContentView: View {
                     Text("温控保护中")
                         .font(.system(size: 10, weight: .semibold))
                         .foregroundStyle(.red)
+                }
+            } else if settings.thermalEnabled && isFanless {
+                HStack(spacing: 4) {
+                    Circle()
+                        .fill(Color.accentColor)
+                        .frame(width: 6, height: 6)
+                    Text("温度监控中")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundStyle(.secondary)
                 }
             } else if !settings.thermalEnabled {
                 HStack(spacing: 4) {
@@ -265,18 +286,20 @@ public struct PopoverContentView: View {
                 icon: "square.stack.3d.up.fill",
                 color: .purple
             )
-            if let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
+
+            // 第三槽：有风扇 -> 风扇 1；无风扇但存在电池温度读数 -> 电池温度
+            if supportsFanControl, let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
                 FanRPMGaugeView(fan: firstFan, title: thermal.fanSnapshots.count > 1 ? "风扇 1" : "风扇")
-            } else {
+            } else if thermal.batteryTemp > 0, settings.thermalEnabled {
                 TemperatureGaugeView(
                     title: "电池",
-                    temp: settings.thermalEnabled ? thermal.batteryTemp : 0,
+                    temp: thermal.batteryTemp,
                     icon: "battery.100.bolt",
                     color: .green
                 )
             }
 
-            if thermal.fanSnapshots.count > 1, settings.thermalEnabled {
+            if supportsFanControl, thermal.fanSnapshots.count > 1, settings.thermalEnabled {
                 FanRPMGaugeView(fan: thermal.fanSnapshots[1], title: "风扇 2")
             }
         }
@@ -398,6 +421,37 @@ public struct PopoverContentView: View {
                 }
                 .padding(.top, 2)
             }
+        }
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.primary.opacity(0.04))
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+        )
+        .disabled(!settings.thermalEnabled)
+        .opacity(settings.thermalEnabled ? 1.0 : 0.45)
+    }
+
+    // MARK: - Fanless Monitoring Section (被动散热机型纯温度监控)
+    private var fanlessMonitoringSection: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "fan.slash")
+                .font(.system(size: 15))
+                .foregroundStyle(.secondary)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("本机无内置风扇 · 纯温度监控")
+                    .font(.system(size: 11.5, weight: .semibold))
+                Text("被动散热机型，无需调速。温度读数 \(Int(thermal.primaryTemp))°C")
+                    .font(.system(size: 10))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+            }
+
+            Spacer()
         }
         .padding(10)
         .background(

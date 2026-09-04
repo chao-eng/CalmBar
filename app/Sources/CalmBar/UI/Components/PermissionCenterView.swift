@@ -1,8 +1,10 @@
 import SwiftUI
+import CalmBarKit
 
 /// Permission Center view presenting a transparent, user-friendly security & permissions hub.
 public struct PermissionCenterView: View {
     @StateObject private var permissionManager = PermissionManager.shared
+    @ObservedObject private var thermal = ThermalMonitor.shared
 
     public init() {}
 
@@ -101,7 +103,7 @@ public struct PermissionCenterView: View {
                         }
                     }
 
-                    Text(type.purposeDescription)
+                    Text(permissionManager.purposeDescription(for: type))
                         .font(.system(size: 11))
                         .foregroundColor(.secondary)
                         .fixedSize(horizontal: false, vertical: true)
@@ -127,7 +129,9 @@ public struct PermissionCenterView: View {
 
                     if type == .privilegedHelper {
                         VStack(alignment: .leading, spacing: 4) {
-                            Text("💡 提示：在 macOS 13+ 中，激活后请确保在「系统设置 ➔ 通用 ➔ 登录项与扩展」中开启【允许在后台运行 CalmBarHelper】，以避免系统休眠时被阻止导致反复提示未激活。")
+                            Text(thermal.isFanless
+                                ? "💡 提示：当前机型无内置风扇，特权助手仅用于充电保护与应用去隔离，不涉及风扇调速。在 macOS 13+ 中，激活后请确保在「系统设置 ➔ 通用 ➔ 登录项与扩展」中开启【允许在后台运行 CalmBarHelper】。"
+                                : "💡 提示：在 macOS 13+ 中，激活后请确保在「系统设置 ➔ 通用 ➔ 登录项与扩展」中开启【允许在后台运行 CalmBarHelper】，以避免系统休眠时被阻止导致反复提示未激活。")
                                 .font(.system(size: 10.5))
                                 .foregroundColor(.secondary)
                                 .lineSpacing(2)

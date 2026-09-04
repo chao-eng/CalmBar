@@ -470,36 +470,44 @@ public final class CommandCenter: ObservableObject {
             }
         ))
 
-        // 9. Thermal
-        register(CommandDescriptor(
-            id: "thermal.restoreAuto",
-            title: "恢复风扇自动控制",
-            subtitle: "将散热策略重置为系统默认",
-            iconName: "flame.fill",
-            category: .hardware,
-            featureID: .thermal,
-            aliases: ["fan", "thermal", "fs", "auto", "风扇", "恢复风扇", "自动风扇", "降温"],
-            run: {
-                ThermalMonitor.shared.restoreSystemControl()
-                AppSettings.shared.fanPreset = .auto
-                return .success("已恢复风扇自动控制")
-            }
-        ))
+        // 9. Thermal（无风扇机型：Temperature-only，不注册风扇控制命令）
+        if ThermalMonitor.shared.supportsFanControl {
+            register(CommandDescriptor(
+                id: "thermal.restoreAuto",
+                title: "恢复风扇自动控制",
+                subtitle: "将散热策略重置为系统默认",
+                iconName: "flame.fill",
+                category: .hardware,
+                featureID: .thermal,
+                aliases: ["fan", "thermal", "fs", "auto", "风扇", "恢复风扇", "自动风扇", "降温"],
+                run: {
+                    guard ThermalMonitor.shared.supportsFanControl else {
+                        return .failure("当前机型为被动散热，无风扇可控制")
+                    }
+                    ThermalMonitor.shared.restoreSystemControl()
+                    AppSettings.shared.fanPreset = .auto
+                    return .success("已恢复风扇自动控制")
+                }
+            ))
 
-        register(CommandDescriptor(
-            id: "thermal.fanFull",
-            title: "风扇全速运转",
-            subtitle: "紧急降温：将风扇转速设为 100%",
-            iconName: "flame.fill",
-            category: .hardware,
-            featureID: .thermal,
-            requiredPermissions: [.privilegedHelper],
-            aliases: ["fan", "thermal", "fs", "full", "全速", "满速", "风扇全速", "100%"],
-            run: {
-                AppSettings.shared.fanPreset = .manual
-                AppSettings.shared.customFanFraction = 1.0
-                return .success("风扇已设为全速运转")
-            }
-        ))
+            register(CommandDescriptor(
+                id: "thermal.fanFull",
+                title: "风扇全速运转",
+                subtitle: "紧急降温：将风扇转速设为 100%",
+                iconName: "flame.fill",
+                category: .hardware,
+                featureID: .thermal,
+                requiredPermissions: [.privilegedHelper],
+                aliases: ["fan", "thermal", "fs", "full", "全速", "满速", "风扇全速", "100%"],
+                run: {
+                    guard ThermalMonitor.shared.supportsFanControl else {
+                        return .failure("当前机型为被动散热，无风扇可控制")
+                    }
+                    AppSettings.shared.fanPreset = .manual
+                    AppSettings.shared.customFanFraction = 1.0
+                    return .success("风扇已设为全速运转")
+                }
+            ))
+        }
     }
 }
