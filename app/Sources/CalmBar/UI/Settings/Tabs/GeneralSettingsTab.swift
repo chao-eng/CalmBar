@@ -124,7 +124,7 @@ public struct GeneralSettingsTab: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("CalmBar")
                                     .font(.system(size: 13.5, weight: .bold))
-                                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.3.0"
+                                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.3.1"
                                 Text("Version \(version) (Native Swift 6 & SwiftUI)")
                                     .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
