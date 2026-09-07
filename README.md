@@ -5,7 +5,7 @@
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
 [![Language](https://img.shields.io/badge/language-Swift%206-orange.svg)](https://swift.org)
-[![Version](https://img.shields.io/badge/release-v2.3.1-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
+[![Version](https://img.shields.io/badge/release-v2.3.2-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 ---
@@ -195,10 +195,11 @@
 * **Vision OCR 后台索引**：自动提取图片中的多语言文字与二维码内容，配合空间感知隔离算法消除噪点，支持全局关键词检索。
 * **安全隐私过滤与失焦隐藏**：自动忽略密码管理器（1Password/Bitwarden）敏感数据，支持配置失去焦点时自动隐藏窗口。
 * **独立管理窗口与 Pin 固定**：支持分类筛选（文本/图片/链接/文件/已固定）、Pin 固定保护、LRU 淘汰与磁盘缓存管理。
+* **⚡ 快速复制键盘模式**：可在偏好设置中开启「快速复制」，打开窗口后 `↑/↓` 选择记录、`←/→` 切换分类、`⏎` 复制并显示成功反馈，0.5s 后窗口自动关闭，回原应用按 `⌘V` 粘贴；关闭开关即恢复纯鼠标操作。
 * **🕹️ 操作说明**：
   1. 按下全局快捷键 **`⌥ + ⌘ + V`**（或点击主面板中的 **「剪贴板」** 磁贴），即可一键唤出或收起独立剪贴板管理窗口。
   2. 顶部支持按「文本 / 图片 / 链接 / 文件 / 已固定」快速筛选，支持搜索框实时模糊检索。
-  3. 在偏好设置中可开启「允许窗口失焦隐藏」以及自定义最大存储上限与图片保存策略。
+  3. 在偏好设置中可开启「允许窗口失焦隐藏」「快速复制」以及自定义最大存储上限与图片保存策略。
 
 <p align="center">
   <img src="doc/images/clipboard_history.png" width="600" alt="剪贴板历史管理窗口示例" />
