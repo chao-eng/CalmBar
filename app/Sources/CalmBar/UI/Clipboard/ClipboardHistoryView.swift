@@ -4,11 +4,23 @@ import SwiftUI
 public struct ClipboardHistoryView: View {
     @ObservedObject private var historyManager = ClipboardHistoryManager.shared
     @ObservedObject private var monitor = ClipboardMonitor.shared
+    @ObservedObject private var settings = AppSettings.shared
 
     @State private var searchText: String = ""
     @State private var selectedFilter: ClipboardFilterType = .all
     @State private var copiedItemID: UUID?
     @State private var showClearAlert: Bool = false
+
+    // MARK: 快速复制（键盘导航）状态
+    // Internal（非 private）：供 KeyboardMonitor 扩展读写，仿 CommandPaletteKit 做法。
+    @State internal var selectedItemID: UUID?
+    @State internal var isFeedbackActive = false
+    @State internal var hoverGate = ClipboardHoverSelectionGate()
+    @State internal var clipboardKeyMonitor: Any?
+    @State internal var clipboardWindow: NSWindow?
+    @State private var autoCloseWorkItem: DispatchWorkItem?
+    @State internal var quickCopyEnabledSnapshot = AppSettings.shared.clipboardHistoryEnabled
+        && AppSettings.shared.clipboardQuickCopyEnabled
 
     private static let dateFormatter: DateFormatter = {
         let df = DateFormatter()
@@ -64,6 +76,11 @@ public struct ClipboardHistoryView: View {
         }
     }
 
+    /// 快速复制是否生效（BR-02）：总开关 + 快速复制开关都开启。
+    private var quickCopyEnabled: Bool {
+        settings.clipboardHistoryEnabled && settings.clipboardQuickCopyEnabled
+    }
+
     public var body: some View {
         VStack(spacing: 0) {
             headerBar
@@ -84,6 +101,29 @@ public struct ClipboardHistoryView: View {
         }
         .frame(minWidth: 520, minHeight: 480)
         .background(Color(NSColor.windowBackgroundColor))
+        #if os(macOS)
+        .background(ClipboardWindowReader { clipboardWindow = $0 })
+        #endif
+        .onAppear {
+            installClipboardKeyMonitor()
+            resetSelectionForCurrentResults()
+        }
+        .onDisappear {
+            removeClipboardKeyMonitor()
+            cancelAutoClose()
+        }
+        .onChange(of: selectedFilter) { _, _ in
+            resetSelectionForCurrentResults()
+        }
+        .onChange(of: searchText) { _, _ in
+            reconcileSelectionAfterResultsChange()
+        }
+        .onChange(of: settings.clipboardHistoryEnabled) { _, enabled in
+            refreshQuickCopyEnabledSnapshot()
+        }
+        .onChange(of: settings.clipboardQuickCopyEnabled) { _, enabled in
+            refreshQuickCopyEnabledSnapshot()
+        }
         .alert("清空剪贴板历史", isPresented: $showClearAlert) {
             Button("清空未固定记录", role: .destructive) {
                 historyManager.clearAll(keepPinned: true)
@@ -179,20 +219,32 @@ public struct ClipboardHistoryView: View {
     // MARK: - Items List View
 
     private var itemsListView: some View {
-        ScrollView {
-            LazyVStack(spacing: 8) {
-                ForEach(filteredItems) { item in
-                    clipboardItemCard(for: item)
+        ScrollViewReader { proxy in
+            ScrollView {
+                LazyVStack(spacing: 8) {
+                    ForEach(filteredItems) { item in
+                        clipboardItemCard(for: item)
+                            .id(item.id)
+                    }
+                }
+                .padding(12)
+            }
+            .onChange(of: selectedItemID) { _, newID in
+                guard let newID else { return }
+                withAnimation(.easeOut(duration: 0.12)) {
+                    proxy.scrollTo(newID, anchor: .center)
                 }
             }
-            .padding(12)
         }
     }
 
     // MARK: - Card View
 
     private func clipboardItemCard(for item: ClipboardItem) -> some View {
-        VStack(alignment: .leading, spacing: 6) {
+        let isSelected = (quickCopyEnabled && selectedItemID == item.id)
+        let isPinned = item.isPinned
+
+        return VStack(alignment: .leading, spacing: 6) {
             // 卡片顶栏：图标 + 类型 + 来源 App + 时间 + Pin 按钮
             HStack(spacing: 6) {
                 Image(systemName: item.type.iconName)
@@ -230,6 +282,10 @@ public struct ClipboardHistoryView: View {
                         .foregroundColor(item.isPinned ? .orange : .secondary)
                 }
                 .buttonStyle(.plain)
+                // 关闭系统对图钉按钮绘制的键盘焦点高亮（打开窗口时系统会给
+                // 聚焦控件画 focus ring，与快速复制开关无关；仅去掉焦点绘制，
+                // 不改变可点性与无障碍焦点行为）。
+                .focusEffectDisabled()
                 .help(item.isPinned ? "取消固定" : "固定置顶")
             }
 
@@ -315,8 +371,21 @@ public struct ClipboardHistoryView: View {
         )
         .overlay(
             RoundedRectangle(cornerRadius: 8)
-                .stroke(item.isPinned ? Color.orange.opacity(0.4) : Color.secondary.opacity(0.12), lineWidth: item.isPinned ? 1.5 : 1)
+                .stroke(
+                    isSelected ? Color.accentColor.opacity(0.85) :
+                    (isPinned ? Color.orange.opacity(0.4) : Color.secondary.opacity(0.12)),
+                    lineWidth: isSelected ? 2 : (isPinned ? 1.5 : 1)
+                )
         )
+        // 快速复制开启时，鼠标悬停使该卡片成为选中项（BR-09）；
+        // 键盘刚移动后短窗口内抑制 scroll 引起的误 hover（复刻 CommandPalette HoverSelectionGate）。
+        .contentShape(Rectangle())
+        .onHover { hovering in
+            guard quickCopyEnabled, hovering, hoverGate.allowsHoverSelection() else { return }
+            selectedItemID = item.id
+        }
+        .accessibilityElement(children: .contain)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     // MARK: - Content Preview
@@ -539,6 +608,7 @@ public struct ClipboardHistoryView: View {
         return nil
     }
 
+    /// 鼠标路径：点击"复制"按钮 → 写回剪贴板 + 停留窗口 + 1.5s 绿勾（BR-16，不改）。
     private func copyItemToPasteboard(item: ClipboardItem, plainTextOnly: Bool) {
         historyManager.copyToPasteboard(item: item, plainTextOnly: plainTextOnly)
         withAnimation(.easeInOut(duration: 0.2)) {
@@ -551,6 +621,102 @@ public struct ClipboardHistoryView: View {
                 }
             }
         }
+    }
+
+    // MARK: - 快速复制（键盘路径）逻辑
+
+    /// 键盘选中项是否仍存在于当前结果集（BR-06 保留校验）。
+    private var selectionExistsInResults: Bool {
+        guard let selectedItemID else { return false }
+        return filteredItems.contains { $0.id == selectedItemID }
+    }
+
+    /// 打开/切 Tab/搜索变更后校正选中项（BR-05/06）：
+    /// 结果非空且旧选中仍命中 → 保留；否则回退首位；结果空 → nil。
+    func reconcileSelectionAfterResultsChange() {
+        guard quickCopyEnabled else {
+            selectedItemID = nil
+            return
+        }
+        if selectionExistsInResults {
+            return
+        }
+        selectedItemID = filteredItems.first?.id
+    }
+
+    /// Tab 切换后选中置为结果首位（BR-05）。
+    private func resetSelectionForCurrentResults() {
+        guard quickCopyEnabled else {
+            selectedItemID = nil
+            return
+        }
+        selectedItemID = filteredItems.first?.id
+    }
+
+    /// 上下移动选中项（BR-07）：钳制边界，不循环越界。
+    func moveSelection(by delta: Int) {
+        guard quickCopyEnabled, !isFeedbackActive, !filteredItems.isEmpty else { return }
+        let currentIndex: Int
+        if let selectedItemID, let idx = filteredItems.firstIndex(where: { $0.id == selectedItemID }) {
+            currentIndex = idx
+        } else {
+            currentIndex = 0
+        }
+        let newIndex = min(max(currentIndex + delta, 0), filteredItems.count - 1)
+        guard filteredItems.indices.contains(newIndex) else { return }
+        selectedItemID = filteredItems[newIndex].id
+        hoverGate = hoverGate.keyboardDidMove()
+    }
+
+    /// 左右切换 Tab（BR-04）：首尾循环。
+    func cycleFilter(direction: Int) {
+        guard quickCopyEnabled, !isFeedbackActive else { return }
+        let all = ClipboardFilterType.allCases
+        guard let current = all.firstIndex(of: selectedFilter) else { return }
+        let nextIndex = (current + direction + all.count) % all.count
+        selectedFilter = all[nextIndex]
+        resetSelectionForCurrentResults()
+        hoverGate = hoverGate.keyboardDidMove()
+    }
+
+    /// 回车执行复制（UC-03 / BR-22）：复制 → 展示绿勾 → 0.5s 后自动关窗。
+    func performQuickCopy() {
+        guard quickCopyEnabled, !isFeedbackActive, selectionExistsInResults,
+              let item = filteredItems.first(where: { $0.id == selectedItemID }) else { return }
+
+        historyManager.copyToPasteboard(item: item, plainTextOnly: false)
+        isFeedbackActive = true
+        withAnimation(.easeInOut(duration: 0.15)) {
+            copiedItemID = item.id
+        }
+        scheduleAutoClose(delay: 0.5)
+    }
+
+    /// Esc 关闭窗口（BR-11a / BR-24）：取消在途自动关窗定时器并立即关窗。
+    func dismissClipboardWindow() {
+        cancelAutoClose()
+        ClipboardHistoryWindowController.shared.close()
+    }
+
+    /// 调度 0.5s 自动关窗（BR-22）。用 DispatchWorkItem 便于取消（BR-24）。
+    private func scheduleAutoClose(delay: TimeInterval) {
+        cancelAutoClose()
+        let workItem = DispatchWorkItem { [self] in
+            self.finishAutoClose()
+        }
+        autoCloseWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: workItem)
+    }
+
+    private func finishAutoClose() {
+        autoCloseWorkItem = nil
+        isFeedbackActive = false
+        ClipboardHistoryWindowController.shared.close()
+    }
+
+    private func cancelAutoClose() {
+        autoCloseWorkItem?.cancel()
+        autoCloseWorkItem = nil
     }
 }
 
@@ -581,5 +747,29 @@ private extension Color {
         }
 
         self.init(.sRGB, red: r, green: g, blue: b, opacity: a)
+    }
+}
+
+// MARK: - ClipboardHoverSelectionGate
+
+/// 抑制键盘移动后短窗口内的 scroll 引发的 hover 回抢（BR-09）。
+///
+/// 键盘移动会滚动列表，使静止光标下的卡片被替换，SwiftUI 会将其报告为一次 hover，
+/// 从而把键盘选中的那一格写回鼠标底下的卡片。此门控在键盘移动后短暂忽略 hover，
+/// 复刻 CommandPaletteKit 的 `HoverSelectionGate`。
+struct ClipboardHoverSelectionGate: Equatable {
+    static let suppressionInterval: TimeInterval = 0.25
+
+    private var suppressedUntil: Date = .distantPast
+
+    /// 记录一次键盘移动并返回新状态（`@State` 包装下不能直接 mutating，故返回副本）。
+    func keyboardDidMove(at time: Date = Date()) -> ClipboardHoverSelectionGate {
+        var copy = self
+        copy.suppressedUntil = time.addingTimeInterval(Self.suppressionInterval)
+        return copy
+    }
+
+    func allowsHoverSelection(at time: Date = Date()) -> Bool {
+        time >= suppressedUntil
     }
 }

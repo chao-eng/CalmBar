@@ -96,6 +96,15 @@ public struct ClipboardSettingsTab: View {
 
                         Divider()
 
+                        Toggle("快速复制", isOn: $settings.clipboardQuickCopyEnabled)
+                            .font(.system(size: 12.5, weight: .medium))
+
+                        Text("开启后可用 ↑↓ 选择记录、←→ 切换分类、回车复制。复制成功会短暂显示“已复制到剪贴板”，窗口随后自动关闭，回到原应用按 ⌘V 粘贴。关闭后方向键只移动搜索光标、回车只提交搜索，恢复纯鼠标操作。")
+                            .font(.system(size: 11.5))
+                            .foregroundColor(.secondary)
+
+                        Divider()
+
                         HStack(spacing: 12) {
                             Button(action: {
                                 ClipboardHistoryWindowController.shared.show()

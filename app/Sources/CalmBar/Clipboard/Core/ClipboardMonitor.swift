@@ -62,6 +62,15 @@ public final class ClipboardMonitor: ObservableObject {
         stopTimer()
     }
 
+    /// 标记一次由 CalmBar 自己发起的剪贴板写回（快速复制 / 历史复制写回）。
+    ///
+    /// 剪贴板由 0.5s 定时器轮询检测变化，若在两次 tick 之间读到本次写回，
+    /// 会把刚写回的内容当作"新复制"二次入库。复制写入侧必须在写回完成当下
+    /// 同步 `lastChangeCount`，使下一次轮询视其为"已见"，从根上消除自环窗口。
+    public func markCopyWriteback() {
+        self.lastChangeCount = pasteboard.changeCount
+    }
+
     private func startTimer() {
         stopTimer()
         self.lastChangeCount = pasteboard.changeCount

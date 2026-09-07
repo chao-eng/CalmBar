@@ -165,5 +165,92 @@ struct ClipboardTests {
         #expect(settings.clipboardFilterSensitive == true)
         #expect(settings.clipboardHideOnBlur == false || settings.clipboardHideOnBlur == true)
         #expect(settings.popoverShowClipboard == true)
+        #expect(settings.clipboardQuickCopyEnabled == true) // BR-01 默认开启
+    }
+}
+
+@Suite("Clipboard QuickCopy Keyboard Gating Tests")
+struct ClipboardQuickCopyGatingTests {
+
+    private func ev(
+        keyCode: UInt16 = 36,
+        inWindow: Bool = true,
+        quickCopy: Bool = true,
+        feedback: Bool = false,
+        selected: Bool = true,
+        markedText: Bool = false,
+        modifiers: Bool = false
+    ) -> ClipboardKeyEvent {
+        ClipboardKeyEvent(
+            keyCode: keyCode,
+            hasTextEditModifiers: modifiers,
+            isInClipboardWindow: inWindow,
+            isQuickCopyEnabled: quickCopy,
+            isFeedbackActive: feedback,
+            hasSelectedItem: selected,
+            hasMarkedText: markedText
+        )
+    }
+
+    @Test("Down arrow moves selection down")
+    func testDownArrow() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 125)) == .moveDown)
+    }
+
+    @Test("Up arrow moves selection up")
+    func testUpArrow() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 126)) == .moveUp)
+    }
+
+    @Test("Left/Right arrows cycle filter tabs")
+    func testTabCycle() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 123)) == .cycleTab(direction: -1))
+        #expect(clipboardKeyResponse(to: ev(keyCode: 124)) == .cycleTab(direction: 1))
+    }
+
+    @Test("Return with a selected item performs quick copy")
+    func testReturnCopiesWhenSelected() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 36)) == .quickCopy)
+        #expect(clipboardKeyResponse(to: ev(keyCode: 76)) == .quickCopy) // keypad Enter
+    }
+
+    @Test("Return with no selection passes through")
+    func testReturnWithoutSelection() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 36, selected: false)) == .passThrough)
+    }
+
+    @Test("Escape dismisses only without modifiers")
+    func testEscapeDismiss() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 53)) == .dismiss)
+        #expect(clipboardKeyResponse(to: ev(keyCode: 53, modifiers: true)) == .passThrough)
+    }
+
+    @Test("Events from other windows pass through untouched")
+    func testOtherWindowPassThrough() {
+        #expect(clipboardKeyResponse(to: ev(inWindow: false)) == .passThrough)
+    }
+
+    @Test("Quick copy disabled makes all keys pass through")
+    func testDisabledQuickCopyPassesThrough() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 125, quickCopy: false)) == .passThrough)
+        #expect(clipboardKeyResponse(to: ev(keyCode: 36, quickCopy: false)) == .passThrough)
+    }
+
+    @Test("Text-edit modifiers (⌘/⌥/⇧/⌃) pass through to the field")
+    func testModifiedArrowsPassThrough() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 123, modifiers: true)) == .passThrough)
+        #expect(clipboardKeyResponse(to: ev(keyCode: 124, modifiers: true)) == .passThrough)
+    }
+
+    @Test("Marked text (IME composition) returns are handed to the input method")
+    func testMarkedTextReturnPassesThrough() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 36, markedText: true)) == .passThrough)
+    }
+
+    @Test("Feedback window ignores navigation and copy keys")
+    func testFeedbackWindowIgnoresNavigation() {
+        #expect(clipboardKeyResponse(to: ev(keyCode: 125, feedback: true)) == .passThrough)
+        #expect(clipboardKeyResponse(to: ev(keyCode: 36, feedback: true)) == .passThrough)
+        #expect(clipboardKeyResponse(to: ev(keyCode: 53, feedback: true)) == .dismiss)
     }
 }

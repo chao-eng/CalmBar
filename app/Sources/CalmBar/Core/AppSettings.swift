@@ -180,6 +180,9 @@ public final class AppSettings: ObservableObject {
     @Published public var clipboardIgnoredApps: [String] {
         didSet { defaults.set(clipboardIgnoredApps, forKey: "clipboardIgnoredApps") }
     }
+    @Published public var clipboardQuickCopyEnabled: Bool {
+        didSet { defaults.set(clipboardQuickCopyEnabled, forKey: "clipboardQuickCopyEnabled") }
+    }
 
     // MARK: - General Settings
     @Published public var launchAtLogin: Bool {
@@ -324,6 +327,7 @@ public final class AppSettings: ObservableObject {
         self.clipboardFilterSensitive = defaults.object(forKey: "clipboardFilterSensitive") as? Bool ?? true
         self.clipboardHideOnBlur = defaults.object(forKey: "clipboardHideOnBlur") as? Bool ?? false
         self.clipboardIgnoredApps = defaults.stringArray(forKey: "clipboardIgnoredApps") ?? []
+        self.clipboardQuickCopyEnabled = defaults.object(forKey: "clipboardQuickCopyEnabled") as? Bool ?? true
 
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
 

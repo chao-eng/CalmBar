@@ -192,6 +192,11 @@ public final class ClipboardHistoryManager: ObservableObject {
     public func copyToPasteboard(item: ClipboardItem, plainTextOnly: Bool = false) {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
+        // BR-20：本方法为所有"历史 → 系统剪贴板"写入的唯一出口（鼠标复制按钮、
+        // 纯文本复制、快速复制回车均经此）。任何成功出口（含 fileURL/image 的
+        // 提前 return）都必须在写回完成当下同步 monitor 的 lastChangeCount，
+        // 使 0.5s 轮询视本次写回为"已见"，避免自身写回二次入库。
+        defer { ClipboardMonitor.shared.markCopyWriteback() }
 
         var itemsToWrite: [NSPasteboardItem] = []
         let pbItem = NSPasteboardItem()
