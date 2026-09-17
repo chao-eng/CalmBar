@@ -1,0 +1,71 @@
+---
+import { ExternalLinkIcon, HeartIcon } from '@lucide/vue'
+import LinkButton from '@/components/site/LinkButton.vue'
+import RewardCard from '@/components/site/RewardCard.vue'
+import SiteAvatar from '@/components/site/SiteAvatar.vue'
+import AuthorNote from '@/content/about-author.mdx'
+import { ACKNOWLEDGEMENTS, AUTHOR } from '@/lib/site'
+---
+
+<section id="about" class="section pb-0" aria-labelledby="about-title">
+  <div class="container-page">
+    <div class="reveal grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.6fr)] lg:gap-12">
+      <div>
+        <p class="section-eyebrow">关于作者</p>
+        <h2 id="about-title" class="section-title mt-2">一个人写，也会一直维护下去</h2>
+
+        <div class="mt-5 flex items-center gap-3">
+          <SiteAvatar
+            src={AUTHOR.avatar}
+            alt={`${AUTHOR.name} 的头像`}
+            class="size-11"
+          />
+          <div class="min-w-0">
+            <p class="text-sm font-medium">{AUTHOR.name}</p>
+            <p class="truncate text-xs text-muted-foreground">{AUTHOR.repoLabel}</p>
+          </div>
+        </div>
+
+        <p class="mt-4 text-sm leading-relaxed text-muted-foreground">{AUTHOR.intro}</p>
+
+        <div class="mt-5 flex flex-wrap gap-2">
+          {
+            AUTHOR.links.map((link) => (
+              <LinkButton href={link.href} external variant="outline" size="sm">
+                {link.label}
+                <ExternalLinkIcon data-icon="inline-end" />
+              </LinkButton>
+            ))
+          }
+        </div>
+      </div>
+
+      <div class="prose-calm">
+        <AuthorNote />
+      </div>
+    </div>
+
+    <div class="reveal mt-8">
+      <RewardCard client:visible />
+    </div>
+
+    <div class="reveal mt-6 flex flex-wrap items-center gap-x-2 gap-y-2 border-t border-border pt-6">
+      <span class="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+        <HeartIcon class="size-3.5 text-primary" />
+        致谢
+      </span>
+      {
+        ACKNOWLEDGEMENTS.map((item) => (
+          <a
+            href={item.url}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {item.name}
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

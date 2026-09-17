@@ -1,0 +1,47 @@
+---
+import { CircleCheckIcon, ShieldCheckIcon } from '@lucide/vue'
+import { SAFETY_BOUNDARIES, SITE, TRUST_STATS } from '@/lib/site'
+---
+
+<section id="trust" class="section border-y border-border bg-card" aria-labelledby="trust-title">
+  <div class="container-page">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="section-eyebrow">安全边界</p>
+      <h2 id="trust-title" class="section-title mt-2">为什么可以放心装进 Mac</h2>
+      <p class="section-desc">
+        一个能读写 SMC、能拦事件、能删文件的工具，理应先讲清它会做什么、不会做什么。
+      </p>
+    </div>
+
+    <ul class="reveal mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
+      {
+        TRUST_STATS.map((stat) => (
+          <li class="card-surface bg-background px-4 py-3 text-center">
+            <p class="text-2xl font-semibold tracking-tight text-primary">{stat.value}</p>
+            <p class="mt-1 text-xs text-muted-foreground">{stat.label}</p>
+          </li>
+        ))
+      }
+    </ul>
+
+    <div class="reveal card-surface mt-6 bg-background p-5 sm:p-6">
+      <h3 class="flex items-center gap-2 text-base font-medium">
+        <ShieldCheckIcon class="size-4 text-primary" />
+        写在代码里的硬约束
+      </h3>
+      <ul class="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
+        {
+          SAFETY_BOUNDARIES.map((item) => (
+            <li class="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
+              <CircleCheckIcon class="mt-0.5 size-4 shrink-0 text-primary" />
+              <span>{item}</span>
+            </li>
+          ))
+        }
+      </ul>
+      <p class="mt-5 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
+        基于 {SITE.license} 开源，全部源码公开可审计；当前版本 {SITE.version}，要求 {SITE.osRequirement}。
+      </p>
+    </div>
+  </div>
+</section>

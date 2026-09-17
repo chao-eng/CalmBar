@@ -1,0 +1,84 @@
+---
+import { CircleAlertIcon, DownloadIcon } from '@lucide/vue'
+import { Badge } from '@/components/ui/badge'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import CommandBlock from '@/components/site/CommandBlock.vue'
+import GitHubMark from '@/components/site/GitHubMark.vue'
+import LinkButton from '@/components/site/LinkButton.vue'
+import { DOWNLOAD_CHANNELS, INSTALL_COMMAND, SITE } from '@/lib/site'
+---
+
+<section id="download" class="section" aria-labelledby="download-title">
+  <div class="container-page">
+    <div class="reveal mx-auto max-w-2xl text-center">
+      <p class="section-eyebrow">下载</p>
+      <h2 id="download-title" class="section-title mt-2">立即下载 {SITE.name}</h2>
+      <p class="section-desc">
+        下载后拖入「应用程序」即可使用。建议先到 GitHub Releases 核对最新版本号。
+      </p>
+    </div>
+
+    <div class="reveal mx-auto mt-8 grid max-w-4xl gap-4 sm:grid-cols-2">
+      {
+        DOWNLOAD_CHANNELS.map((channel) => (
+          <Card class:list={['h-full', channel.recommended && 'ring-2 ring-primary/30']}>
+            <CardHeader>
+              <div class="flex items-center gap-2">
+                <Badge variant={channel.recommended ? 'default' : 'outline'} class="h-6 px-2.5">
+                  {channel.tag}
+                </Badge>
+                {channel.recommended && (
+                  <span class="text-xs font-medium text-primary">推荐国内用户</span>
+                )}
+              </div>
+              <CardTitle class="mt-4 text-lg">{channel.title}</CardTitle>
+            </CardHeader>
+            <CardContent class="flex flex-1 flex-col">
+              <p class="text-sm leading-relaxed text-muted-foreground">{channel.description}</p>
+              <LinkButton
+                href={channel.href}
+                external
+                variant={channel.recommended ? 'default' : 'outline'}
+                class="mt-5 w-full"
+              >
+                {channel.recommended ? <DownloadIcon /> : <GitHubMark size={16} />}
+                {channel.action}
+              </LinkButton>
+              <p class="mt-2 text-center text-xs text-muted-foreground">{channel.note}</p>
+            </CardContent>
+          </Card>
+        ))
+      }
+    </div>
+
+    <div class="reveal card-surface mt-6 max-w-4xl p-5 sm:p-6 lg:mx-auto">
+      <h3 class="text-base font-medium">安装与首次运行</h3>
+
+      <div class="mt-4 grid gap-5 lg:grid-cols-2">
+        <div>
+          <p class="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
+            <CircleAlertIcon class="mt-0.5 size-4 shrink-0 text-primary" />
+            <span>
+              下载 <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">CalmBar.app</code>
+              后拖入 <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications</code>。
+              项目未购买 Apple 商业签名证书，首次打开可能被 Gatekeeper 拦截并提示「应用程序已损坏」或「无法验证开发者」，这不是文件损坏。
+            </span>
+          </p>
+        </div>
+
+        <div>
+          <p class="text-sm leading-relaxed text-muted-foreground">
+            在终端执行下面的命令移除隔离标记即可正常启动；应用内的「应用去隔离」工具也支持拖拽一键修复。
+          </p>
+          <div class="mt-3">
+            <CommandBlock client:visible code={INSTALL_COMMAND} label="移除 Gatekeeper 隔离标记" />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <p class="mt-6 text-center text-xs text-muted-foreground">
+      系统要求：{SITE.osRequirement} · 适用芯片：{SITE.archRequirement}
+    </p>
+  </div>
+</section>

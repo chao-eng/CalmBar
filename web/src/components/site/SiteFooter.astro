@@ -1,0 +1,109 @@
+---
+import { ExternalLinkIcon, ScaleIcon } from '@lucide/vue'
+import { Separator } from '@/components/ui/separator'
+import GitHubMark from '@/components/site/GitHubMark.vue'
+import { NAV_ITEMS, SITE } from '@/lib/site'
+
+const year = new Date().getFullYear()
+const copyright = `Copyright © ${year} ${SITE.name}. ${SITE.license} 授权。`
+
+const licensePoints = [
+  '可自由使用、修改、分发，包括商业用途',
+  '再分发需保留版权声明、许可声明与变更说明',
+  '软件按「原样」提供，不附带任何担保',
+]
+
+const channels = [
+  { label: 'GitHub Releases', href: SITE.releases },
+  { label: '官方夸克网盘', href: SITE.quarkPan },
+  { label: '提交 Issue', href: SITE.issues },
+]
+---
+
+<footer class="border-t border-border bg-card">
+  <div class="container-page py-10">
+    <div class="grid gap-8 sm:grid-cols-2 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)_minmax(0,1.2fr)]">
+      <div>
+        <div class="flex items-center gap-2">
+          <img src="/images/app_icon_512.png" alt="" width="24" height="24" class="size-6 rounded-md" />
+          <span class="text-sm font-semibold tracking-tight">{SITE.name}</span>
+        </div>
+        <p class="mt-3 max-w-md text-xs leading-relaxed text-muted-foreground">
+          macOS 全能系统增强套件，Swift 6 原生打造。除本官网、GitHub 仓库与官方夸克网盘外，其他站点提供的安装包均未经授权。
+        </p>
+        <a
+          href={SITE.repo}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-4 inline-flex items-center gap-2 rounded-md border border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+        >
+          <GitHubMark :size="14" />
+          Star on GitHub
+        </a>
+      </div>
+
+      <nav aria-label="页面导航">
+        <h2 class="text-sm font-medium">页面导航</h2>
+        <ul class="mt-3 flex flex-wrap gap-x-5 gap-y-2 sm:block sm:space-y-2">
+          {
+            NAV_ITEMS.map((item) => (
+              <li>
+                <a
+                  href={item.href}
+                  class="text-xs text-muted-foreground transition-colors hover:text-foreground sm:text-sm"
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+
+      <div>
+        <h2 class="flex items-center gap-1.5 text-sm font-medium">
+          <ScaleIcon class="size-3.5 text-primary" />
+          开源协议
+        </h2>
+        <p class="mt-3 text-sm font-medium">{SITE.license}</p>
+        <ul class="mt-2 space-y-1.5">
+          {
+            licensePoints.map((point) => (
+              <li class="text-xs leading-relaxed text-muted-foreground">{point}</li>
+            ))
+          }
+        </ul>
+        <a
+          href={SITE.licenseUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="mt-3 inline-flex items-center gap-1.5 text-xs text-primary transition-colors hover:text-brand-hover"
+        >
+          查看协议原文
+          <ExternalLinkIcon class="size-3" />
+        </a>
+      </div>
+    </div>
+
+    <Separator class="my-6" />
+
+    <div class="flex flex-col gap-3 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+      <p>{copyright}</p>
+      <div class="flex flex-wrap gap-x-4 gap-y-1">
+        {
+          channels.map((item) => (
+            <a
+              href={item.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-1 transition-colors hover:text-foreground"
+            >
+              {item.label}
+              <ExternalLinkIcon class="size-3" />
+            </a>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</footer>

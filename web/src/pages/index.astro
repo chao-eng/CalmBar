@@ -1,0 +1,84 @@
+---
+import '@/styles/globals.css'
+import AboutSection from '@/components/sections/AboutSection.astro'
+import DownloadSection from '@/components/sections/DownloadSection.astro'
+import FaqSection from '@/components/sections/FaqSection.vue'
+import FeaturesSection from '@/components/sections/FeaturesSection.vue'
+import HeroSection from '@/components/sections/HeroSection.astro'
+import TrustSection from '@/components/sections/TrustSection.astro'
+import SiteFooter from '@/components/site/SiteFooter.astro'
+import SiteHeader from '@/components/site/SiteHeader.astro'
+import { SITE } from '@/lib/site'
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? `https://${SITE.domain}`).href
+const ogImage = new URL('/images/app_icon_512.png', Astro.site ?? `https://${SITE.domain}`).href
+
+const structuredData = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: SITE.name,
+  applicationCategory: 'UtilitiesApplication',
+  operatingSystem: SITE.osRequirement,
+  softwareVersion: SITE.version,
+  description: SITE.description,
+  license: SITE.licenseUrl,
+  url: canonical,
+  downloadUrl: SITE.releases,
+  offers: {
+    '@type': 'Offer',
+    price: '0',
+    priceCurrency: 'CNY',
+  },
+  author: {
+    '@type': 'Person',
+    name: 'chao-eng',
+    url: SITE.repo,
+  },
+}
+---
+
+<!doctype html>
+<html lang={SITE.locale}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{SITE.title}</title>
+    <meta name="description" content={SITE.description} />
+    <meta name="keywords" content={SITE.keywords} />
+    <meta name="author" content="chao-eng" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content={SITE.title} />
+    <meta property="og:description" content={SITE.description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={SITE.title} />
+    <meta name="twitter:description" content={SITE.description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+
+    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  </head>
+  <body id="top">
+    <SiteHeader />
+    <main>
+      <HeroSection />
+      <FeaturesSection client:visible />
+      <TrustSection />
+      <DownloadSection />
+      <FaqSection client:visible />
+      <AboutSection />
+    </main>
+    <SiteFooter />
+  </body>
+</html>

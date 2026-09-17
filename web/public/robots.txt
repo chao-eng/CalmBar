@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://calmbar.bujic.cc/sitemap-index.xml
