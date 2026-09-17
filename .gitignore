@@ -33,6 +33,7 @@ app/scratch/
 # IDE & Tooling
 .idea/
 .vscode/
+.openchamber/
 .antigravity/
 .gemini/
 

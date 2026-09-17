@@ -1,0 +1,48 @@
+---
+import { NAV_ITEMS, SITE } from '@/lib/site'
+import GitHubMark from './GitHubMark.vue'
+import LinkButton from './LinkButton.vue'
+import MobileNav from './MobileNav.vue'
+---
+
+<header class="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
+  <div class="container-page flex h-14 items-center justify-between gap-4">
+    <a href="#top" class="flex items-center gap-2 rounded-md" aria-label="CalmBar 首页">
+      <img
+        src="/images/app_icon_512.png"
+        alt=""
+        width="28"
+        height="28"
+        class="size-7 rounded-md"
+      />
+      <span class="text-base font-semibold tracking-tight">CalmBar</span>
+    </a>
+
+    <nav class="hidden items-center gap-0.5 lg:flex" aria-label="主导航">
+      {
+        NAV_ITEMS.map((item) => (
+          <a
+            href={item.href}
+            class="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <div class="flex items-center gap-1.5">
+      <a
+        href={SITE.repo}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="hidden rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:block"
+        aria-label="在 GitHub 查看源码"
+      >
+        <GitHubMark :size="16" />
+      </a>
+      <LinkButton href="#download" size="sm" class="hidden sm:inline-flex">下载</LinkButton>
+      <MobileNav client:media="(max-width: 1023px)" />
+    </div>
+  </div>
+</header>

@@ -1,0 +1,96 @@
+---
+import { ArrowRightIcon, CircleCheckIcon, DownloadIcon } from '@lucide/vue'
+import { Badge } from '@/components/ui/badge'
+import { Kbd } from '@/components/ui/kbd'
+import GitHubMark from '@/components/site/GitHubMark.vue'
+import LinkButton from '@/components/site/LinkButton.vue'
+import { SITE, SHORTCUTS } from '@/lib/site'
+
+const announcement = `${SITE.name} ${SITE.version} 已发布 · 适配 ${SITE.osRequirement}`
+---
+
+<section id="hero" class="section pb-16 pt-12 sm:pt-16 lg:pt-20" aria-labelledby="hero-title">
+  <div class="container-page">
+    <div class="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
+      <div class="hero-enter text-center lg:text-left">
+        <Badge variant="secondary" class="h-6 gap-2 px-3 text-xs text-muted-foreground">
+          <span class="size-1.5 rounded-full bg-brand"></span>
+          {announcement}
+        </Badge>
+
+        <h1 id="hero-title" class="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">
+          让你的 Mac<br />
+          <span class="text-primary">更冷静，更从容。</span>
+        </h1>
+
+        <p class="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0">
+          {SITE.subheadline}
+        </p>
+
+        <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
+          <LinkButton href="#download" size="lg" class="w-full px-6 sm:w-auto">
+            <DownloadIcon />
+            下载 {SITE.name}
+          </LinkButton>
+          <LinkButton
+            href={SITE.repo}
+            external
+            variant="outline"
+            size="lg"
+            class="w-full px-6 sm:w-auto"
+          >
+            <GitHubMark :size="16" />
+            GitHub 源码
+            <ArrowRightIcon data-icon="inline-end" />
+          </LinkButton>
+        </div>
+
+        <ul class="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground lg:justify-start">
+          {
+            SITE.specs.map((spec) => (
+              <li class="inline-flex items-center gap-1.5">
+                <CircleCheckIcon class="size-4 text-primary" />
+                {spec}
+              </li>
+            ))
+          }
+        </ul>
+      </div>
+
+      <div class="hero-enter-media flex justify-center lg:justify-end">
+        <img
+          src="/images/popover_main.webp"
+          width="732"
+          height="922"
+          alt="CalmBar 菜单栏主控制台，显示 CPU 与 GPU 温度、风扇转速、温控模式与功能磁贴"
+          loading="eager"
+          decoding="async"
+          class="h-auto w-full max-w-[300px]"
+        />
+      </div>
+    </div>
+
+    <div class="reveal mt-16">
+      <p class="text-center text-sm font-medium text-muted-foreground">六组全局快捷键，覆盖最高频的操作</p>
+      <ul class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+        {
+          SHORTCUTS.map((shortcut) => (
+            <li class="card-surface flex items-start gap-3 p-4">
+              <span class="flex shrink-0 items-center gap-1">
+                {shortcut.keys.map((key) => (
+                  <Kbd>{key}</Kbd>
+                ))}
+              </span>
+              <span class="min-w-0">
+                <span class="block text-sm font-medium">{shortcut.name}</span>
+                <span class="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                  {shortcut.description}
+                </span>
+              </span>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,304 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* shadcn-vue 生成组件依赖以下 data-* 变体，Tailwind v4 不自带，需显式声明；
+   `group-data-horizontal/tabs:` 这类组合写法会由 group-* 自动组合这些变体 */
+@custom-variant data-open (&[data-state="open"]);
+@custom-variant data-closed (&[data-state="closed"]);
+@custom-variant data-active (&[data-state="active"]);
+@custom-variant data-horizontal (&[data-orientation="horizontal"]);
+@custom-variant data-vertical (&[data-orientation="vertical"]);
+
+@theme {
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text",
+    "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-mono: "SF Mono", Menlo, Monaco, Consolas, "Courier New", monospace;
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@theme inline {
+  --font-heading: var(--font-sans);
+  --color-brand: var(--brand);
+  --color-brand-hover: var(--brand-hover);
+  --color-brand-bright: var(--brand-bright);
+  --color-mac-close: var(--mac-close);
+  --color-mac-minimize: var(--mac-minimize);
+  --color-mac-zoom: var(--mac-zoom);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+:root {
+  --radius: 0.75rem;
+
+  --brand: #0071e3;
+  --brand-hover: #0077ed;
+  --brand-bright: #2997ff;
+
+  --mac-close: #ff5f57;
+  --mac-minimize: #febc2e;
+  --mac-zoom: #28c840;
+
+  --background: #f5f5f7;
+  --foreground: #1d1d1f;
+  --card: #ffffff;
+  --card-foreground: #1d1d1f;
+  --popover: #ffffff;
+  --popover-foreground: #1d1d1f;
+  --primary: #0071e3;
+  --primary-foreground: #ffffff;
+  --secondary: #f5f5f7;
+  --secondary-foreground: #1d1d1f;
+  --muted: #f5f5f7;
+  --muted-foreground: #86868b;
+  --accent: #ebebed;
+  --accent-foreground: #1d1d1f;
+  --destructive: #d70015;
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.12);
+  --ring: #0071e3;
+
+  --chart-1: #0071e3;
+  --chart-2: #2997ff;
+  --chart-3: #5ac8fa;
+  --chart-4: #34c759;
+  --chart-5: #ff9500;
+
+  --sidebar: #ffffff;
+  --sidebar-foreground: #1d1d1f;
+  --sidebar-primary: #0071e3;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f5f5f7;
+  --sidebar-accent-foreground: #1d1d1f;
+  --sidebar-border: rgba(0, 0, 0, 0.08);
+  --sidebar-ring: #0071e3;
+}
+
+.dark {
+  --background: #000000;
+  --foreground: #f5f5f7;
+  --card: #1d1d1f;
+  --card-foreground: #f5f5f7;
+  --popover: #1d1d1f;
+  --popover-foreground: #f5f5f7;
+  --primary: #2997ff;
+  --primary-foreground: #000000;
+  --secondary: #1d1d1f;
+  --secondary-foreground: #f5f5f7;
+  --muted: #1d1d1f;
+  --muted-foreground: #a1a1a6;
+  --accent: #272729;
+  --accent-foreground: #f5f5f7;
+  --destructive: #ff453a;
+  --border: rgba(255, 255, 255, 0.14);
+  --input: rgba(255, 255, 255, 0.18);
+  --ring: #2997ff;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 5.5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    @apply bg-background font-sans text-foreground antialiased;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    @apply font-heading text-balance;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-ring;
+  }
+}
+
+@layer components {
+  .container-page {
+    @apply mx-auto w-full max-w-[1200px] px-5 sm:px-6 lg:px-8;
+  }
+
+  .section {
+    @apply py-12 sm:py-16 lg:py-20;
+  }
+
+  .section-eyebrow {
+    @apply text-sm font-semibold tracking-wide text-primary;
+  }
+
+  .section-title {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl lg:text-4xl;
+  }
+
+  .section-desc {
+    @apply mt-3 text-base leading-relaxed text-muted-foreground sm:text-lg;
+  }
+
+  .card-surface {
+    @apply rounded-2xl border border-border bg-card;
+  }
+
+  .screenshot {
+    @apply w-full rounded-lg border border-border bg-card object-cover;
+  }
+
+  .link-brand {
+    @apply text-primary underline-offset-4 transition-colors hover:text-brand-hover hover:underline;
+  }
+
+  .mono-block {
+    @apply overflow-x-auto rounded-lg border border-border bg-foreground/95 p-4 font-mono text-sm leading-relaxed text-background;
+  }
+
+  .prose-calm {
+    @apply text-base leading-7 text-muted-foreground;
+  }
+
+  .prose-calm > * + * {
+    @apply mt-4;
+  }
+
+  .prose-calm h2 {
+    @apply mt-8 text-xl font-semibold tracking-tight text-foreground;
+  }
+
+  .prose-calm h3 {
+    @apply mt-6 text-lg font-semibold text-foreground;
+  }
+
+  .prose-calm strong {
+    @apply font-semibold text-foreground;
+  }
+
+  .prose-calm ul {
+    @apply space-y-2 pl-5;
+  }
+
+  .prose-calm li {
+    @apply list-disc;
+  }
+
+  .prose-calm li::marker {
+    @apply text-primary;
+  }
+
+  .prose-calm code {
+    @apply rounded-sm bg-muted px-1.5 py-0.5 font-mono text-sm text-foreground;
+  }
+
+  /* 手风琴内容默认留在 DOM（供 SEO 与读屏读取），折叠态由高度归零收起。
+     reka 会把实测高度写入 --reka-collapsible-content-height，展开态无需额外约束。 */
+  [data-slot="accordion-content"][data-state="closed"] {
+    height: 0;
+  }
+}
+
+@layer utilities {
+  @keyframes reveal-up {
+    from {
+      opacity: 0;
+      transform: translate3d(0, 18px, 0);
+    }
+
+    to {
+      opacity: 1;
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  /* 首屏一次性进入：徽标 → 标题 → 副标题 → 按钮 → 规格 依次渐入，右侧弹窗稍后跟上 */
+  @media (prefers-reduced-motion: no-preference) {
+    .hero-enter > * {
+      animation: reveal-up 0.7s var(--ease-reveal) both;
+    }
+
+    .hero-enter > *:nth-child(2) {
+      animation-delay: 0.06s;
+    }
+
+    .hero-enter > *:nth-child(3) {
+      animation-delay: 0.12s;
+    }
+
+    .hero-enter > *:nth-child(4) {
+      animation-delay: 0.18s;
+    }
+
+    .hero-enter > *:nth-child(5) {
+      animation-delay: 0.24s;
+    }
+
+    .hero-enter-media {
+      animation: reveal-up 0.8s var(--ease-reveal) 0.2s both;
+    }
+  }
+
+  /* 其余版块随滚动进度渐入；不支持 scroll-driven 动画的浏览器保持静态显示，不会出现空白 */
+  @supports (animation-timeline: view()) {
+    @media (prefers-reduced-motion: no-preference) {
+      .reveal {
+        animation: reveal-up 0.6s var(--ease-reveal) both;
+        animation-timeline: view();
+        animation-range: entry 0% entry 35%;
+      }
+    }
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
