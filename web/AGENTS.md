@@ -2,7 +2,7 @@
 
 > 范围：本文件只约束 `web/` 目录（CalmBar 官方网站重构）。
 > 技术栈：Astro + Vue Islands + Tailwind CSS v4 + MDX + shadcn-vue。
-> 旧静态站 `site/` 为只读对照物；Swift 主工程 `app/` 不受本文件约束。
+> 旧静态站 `site/` 已删除（页面内容并入 `web/`，图片原图保留在 `doc/images/`）；Swift 主工程 `app/` 不受本文件约束。
 > 信息架构参考：`/Users/guojc/Downloads/参考/LightC — Windows C 盘智能清理工具 _ 官方网站.html`（干净的产品官网风、双渠道下载区、FAQ 手风琴、作者与鸣谢区）。
 
 ## 🚫 硬性红线（违反即错）
@@ -10,8 +10,8 @@
 | 编号  | 规则                                                                                                                        |
 |-------|-----------------------------------------------------------------------------------------------------------------------------|
 | RL-01 | 输出语言：面向用户的文案与代码注释用简体中文，标识符与代码保持英文；提交信息沿用仓库既有的英文 Conventional Commits 风格（见 `git log`） |
-| RL-02 | 工程边界：只允许新增/修改 `web/` 内文件；`site/`、`app/`、`doc/`、`README.md` 一律只读。唯一例外：仓库根 `LICENSE`（Apache License 2.0 全文），经作者确认后可维护 |
-| RL-03 | 事实来源：版本号、功能描述、性能数据、授权信息只能取自 `README.md`、`doc/` 与旧站 `site/index.html`（只读）；禁止编造、禁止自行造数 |
+| RL-02 | 工程边界：只允许新增/修改 `web/` 内文件；`app/`、`doc/`、`README.md` 一律只读，禁止重建 `site/`。唯一例外：仓库根 `LICENSE`（Apache License 2.0 全文），经作者确认后可维护 |
+| RL-03 | 事实来源：版本号、功能描述、性能数据、授权信息只能取自 `README.md` 与 `doc/`；禁止编造、禁止自行造数 |
 | RL-04 | 类型安全：禁止 `any`、`@ts-ignore`、`@ts-nocheck`；禁止非必要的 `as` 断言与非空断言 `!`                                        |
 | RL-05 | 组件检索：新增任何 UI 组件前，必须先用 shadcnVue MCP 检索并取回 add 命令；禁止凭记忆手写 shadcn-vue 组件名或 API               |
 | RL-06 | 组件优先：轮播、手风琴、标签页、弹窗、导航菜单、滚动区等已有 shadcn-vue 组件的 UI，禁止手写等价实现                            |
@@ -19,7 +19,7 @@
 | RL-08 | 禁状态库：禁止引入 Vue Router、Pinia、Vuex 或任何全局状态库；官网是静态单页 + 锚点导航                                        |
 | RL-09 | 水合克制：交互 Vue 组件必须显式声明 `client:*`；默认 `client:visible`，仅首屏必需交互用 `client:load`，禁止无差别 `client:load` |
 | RL-10 | 颜色：禁止裸色值（`#0071e3`、`rgb(...)`、`bg-[#fff]`），必须使用 Tailwind token 或 `src/styles/globals.css` 的 CSS 变量         |
-| RL-11 | 图片：必须带 `width` + `height` 或 `aspect-ratio`；资源统一位于 `web/public/images/`；禁止跨目录引用 `../site/images/**`        |
+| RL-11 | 图片：必须带 `width` + `height` 或 `aspect-ratio`；资源统一位于 `web/public/images/`；禁止跨目录引用 `web/` 之外的原始图（如 `../doc/images/**`） |
 | RL-12 | 文件长度：`.astro` / `.vue` ≤ 250 行，`.ts` ≤ 400 行，`.mdx` ≤ 400 行；超出必须拆分                                          |
 | RL-13 | 逻辑外置：`.astro` 组件只做数据取值与渲染；条件分支、数据变换必须放 `src/lib/**` 或 `.vue` 组件                                |
 | RL-14 | 交付验证：每次改动后必须执行 `npm run check` 与 `npm run build`，任一失败不得交付                                              |
@@ -162,7 +162,7 @@
 12. **部署**
 
 - 产物为纯静态 `dist/`，部署 Cloudflare Pages（构建 `npm run build`，输出目录 `dist`）
-- 站点安全与缓存头迁移到 `web/public/_headers`（参考 `site/_headers`）
+- 站点安全与缓存头维护在 `web/public/_headers`，不依赖旧站
 - `robots.txt` 与 `sitemap` 由 `@astrojs/sitemap` 生成，禁止手写重复文件
 
 13. **常用命令**
@@ -192,7 +192,7 @@ web/
 ├── public/
 │   ├── _headers
 │   ├── robots.txt
-│   └── images/               # 由 site/images 与 doc/images 迁移并转 webp
+│   └── images/               # 由 doc/images 迁移并转 webp（迁移已完成）
 └── src/
     ├── styles/
     │   └── globals.css       # @import "tailwindcss" + data-* 自定义变体 + @theme + shadcn 变量
@@ -230,7 +230,7 @@ web/
 
 | 错误示例                                                                        | 原因                                                                             |
 |---------------------------------------------------------------------------------|----------------------------------------------------------------------------------|
-| 向 `site/index.html` 写入新内容                                                 | 违反 RL-02，旧站只读，新站只在 `web/` 内建设                                      |
+| 试图恢复或写回已删除的 `site/`                                                  | 违反 RL-02，旧站已删除，官网只在 `web/` 内建设                                    |
 | FAQ 里写「支持 macOS 12.0 及以上」                                              | 违反 RL-03，`README.md` 为 macOS 14.0+                                            |
 | `const props: any = Astro.props`                                                | 违反 RL-04，禁止 `any`                                                            |
 | 自写 `components/sections/FaqAccordion.vue` 实现手风琴                          | 违反 RL-06，应安装 `shadcn-vue accordion`                                         |
@@ -240,7 +240,7 @@ web/
 | `src/stores/theme.ts` 配合 `pinia`                                              | 违反 RL-08，静态站禁状态库                                                        |
 | `<ShowcaseCarousel client:load />` 用在非首屏截图区                             | 违反 RL-09，非首屏应 `client:visible`                                             |
 | `style="color:#0071e3"` / `class="bg-[#0071e3]"`                                | 违反 RL-10，必须走 CSS 变量或 Token                                               |
-| `<img src="../../site/images/popover_main.png">`                                | 违反 RL-02 / RL-11，资源须迁入 `web/public/images/` 并带尺寸                       |
+| `<img src="../../doc/images/popover_main.png">`                                 | 违反 RL-02 / RL-11，资源须先迁入 `web/public/images/` 并带尺寸                     |
 | 在 `HeroSection.astro` 中写 `{version === '2.3.2' ? ... : ...}` 业务分支         | 违反 RL-13，逻辑应移到 `src/lib/site.ts`                                          |
 | 单个 `HeroSection.astro` 写到 400 行                                            | 违反 RL-12，需拆分                                                                |
 | 从 `node_modules/shadcn-vue/` 翻组件源码                                        | 违反 RL-15，用法走 MCP，生成物在 `src/components/ui/`                             |
