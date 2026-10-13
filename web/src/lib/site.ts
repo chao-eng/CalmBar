@@ -14,15 +14,20 @@ export interface TrustStat {
   label: string
 }
 
+export interface DownloadOption {
+  label: string
+  href: string
+}
+
 export interface DownloadChannel {
   id: string
   tag: string
   title: string
   description: string
-  action: string
-  href: string
   note: string
-  recommended: boolean
+  variant: 'default' | 'outline'
+  icon: 'download' | 'github'
+  options: DownloadOption[]
 }
 
 export interface Acknowledgement {
@@ -47,7 +52,7 @@ export const SITE = {
     'CalmBar 是一款使用 Swift 6 原生打造的 macOS 菜单栏系统增强套件：硬件温控与风扇调速、菜单栏收纳、鼠标滚轮解耦、媒体启动拦截、防休眠防离开、80% 电池上限、剪贴板历史、离线 OCR 识字、AI 划词翻译、应用深度卸载与开发者缓存清理。开源免费，纯离线零外联。',
   keywords:
     'CalmBar,macOS 增强,菜单栏管理,Mac 风扇控制,电池 80% 保护,开发者清理,macOS OCR,noTunes,Gatekeeper 去隔离,AI 划词翻译',
-  version: 'v2.3.2',
+  version: 'v2.4.0',
   license: 'Apache License 2.0',
   subheadline:
     '硬件温控 · 菜单栏收纳 · 电池上限 · 离线识字 · AI 划词翻译 · 开发者清理',
@@ -58,7 +63,7 @@ export const SITE = {
   releases: 'https://github.com/chao-eng/CalmBar/releases',
   issues: 'https://github.com/chao-eng/CalmBar/issues',
   licenseUrl: 'https://github.com/chao-eng/CalmBar/blob/main/LICENSE',
-  quarkPan: 'https://pan.quark.cn/s/43e4bd2be8c5',
+  downloadBase: 'https://downloads.bujic.cc/calmbar',
 } as const
 
 export const NAV_ITEMS: NavItem[] = [
@@ -80,31 +85,36 @@ export const SHORTCUTS: Shortcut[] = [
 
 export const TRUST_STATS: TrustStat[] = [
   { value: '0.1%', label: '后台 CPU 占用' },
-  { value: '约 10MB', label: '本体体积' },
+  { value: '不到 10MB', label: '本体体积' },
   { value: '100%', label: '离线本地运行' },
   { value: '24+', label: '工具链清理覆盖' },
 ]
 
 export const DOWNLOAD_CHANNELS: DownloadChannel[] = [
   {
-    id: 'quark',
-    tag: '国内直链',
-    title: '夸克网盘下载',
-    description: '免特殊网络环境获取 DMG，与仓库版本同步更新。',
-    action: '前往夸克网盘下载',
-    href: SITE.quarkPan,
-    note: '国内访问更稳定',
-    recommended: true,
+    id: 'cloudflare',
+    tag: '国内直连',
+    title: 'Cloudflare 直链下载',
+    description: '按芯片架构直接下载安装包，与仓库版本同步更新。',
+    note: '无需登录，下载更稳定',
+    variant: 'default',
+    icon: 'download',
+    options: [
+      { label: 'Apple 芯片 (M 系列)', href: `${SITE.downloadBase}/CalmBar-${SITE.version}-arm.zip` },
+      { label: 'Intel 芯片', href: `${SITE.downloadBase}/CalmBar-${SITE.version}-intel.zip` },
+    ],
   },
   {
     id: 'github',
     tag: '官方开源仓库',
     title: 'GitHub Releases 与源码',
     description: '获取最新 Release、核对版本号，或查看全部源码。',
-    action: '访问 GitHub 仓库',
-    href: SITE.repo,
     note: '支持 Star 与 Issue 反馈',
-    recommended: false,
+    variant: 'outline',
+    icon: 'github',
+    options: [
+      { label: '访问 GitHub 仓库', href: SITE.repo },
+    ],
   },
 ]
 

@@ -89,6 +89,11 @@ public struct GeneralSettingsTab: View {
                                 Label("AI 划词翻译快捷入口", systemImage: "character.bubble.fill")
                             }
                             .font(.system(size: 12.5, weight: .medium))
+
+                            Toggle(isOn: $settings.popoverShowLaunchManager) {
+                                Label("自启与常驻服务管理", systemImage: "gearshape.arrow.triangle.2.circlepath")
+                            }
+                            .font(.system(size: 12.5, weight: .medium))
                         }
                     }
                     .padding(8)
@@ -96,11 +101,40 @@ public struct GeneralSettingsTab: View {
                 }
 
                 // 全局快捷键按键展示
-                GroupBox(label: Label("全局快捷键速查", systemImage: "keyboard")) {
+                GroupBox(label:
+                    HStack {
+                        Label("全局快捷键速查", systemImage: "keyboard")
+                        Spacer()
+                        HStack(spacing: 8) {
+                            Text(settings.globalHotKeysEnabled ? "已启用全局快捷键" : "已禁用全局快捷键")
+                                .font(.system(size: 11.5))
+                                .foregroundColor(settings.globalHotKeysEnabled ? .secondary : .orange)
+                            Toggle("", isOn: $settings.globalHotKeysEnabled)
+                                .toggleStyle(.switch)
+                                .controlSize(.mini)
+                                .labelsHidden()
+                                .focusable(false)
+                                .focusEffectDisabled()
+                                .help(settings.globalHotKeysEnabled ? "点击禁用全局快捷键" : "点击启用全局快捷键")
+                        }
+                    }
+                ) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("CalmBar 支持通过以下全局快捷键在任意 App 中即时呼出功能：")
-                            .font(.system(size: 11.5))
-                            .foregroundColor(.secondary)
+                        if !settings.globalHotKeysEnabled {
+                            HStack(spacing: 6) {
+                                Image(systemName: "slash.circle.fill")
+                                    .foregroundColor(.orange)
+                                    .font(.system(size: 12))
+                                Text("当前已禁用全局快捷键，所有系统热键均已注销释放，不会拦截系统按键。")
+                                    .font(.system(size: 11.5))
+                                    .foregroundColor(.orange)
+                            }
+                            .padding(.vertical, 2)
+                        } else {
+                            Text("CalmBar 支持通过以下全局快捷键在任意 App 中即时呼出功能：")
+                                .font(.system(size: 11.5))
+                                .foregroundColor(.secondary)
+                        }
 
                         LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 8) {
                             shortcutRow(title: "呼出命令面板 / 启动器", keys: ["⌥", "⌘", "K"])
@@ -110,6 +144,7 @@ public struct GeneralSettingsTab: View {
                             shortcutRow(title: "展开 / 折叠菜单栏图标", keys: ["⌥", "⌘", "H"])
                             shortcutRow(title: "双击划词就地翻译 (连按)", keys: ["⌘", "C", "×2"])
                         }
+                        .opacity(settings.globalHotKeysEnabled ? 1.0 : 0.45)
                     }
                     .padding(8)
                     .frame(maxWidth: .infinity, alignment: .leading)
@@ -124,7 +159,7 @@ public struct GeneralSettingsTab: View {
                             VStack(alignment: .leading, spacing: 2) {
                                 Text("CalmBar")
                                     .font(.system(size: 13.5, weight: .bold))
-                                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.3.2"
+                                let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.4.0"
                                 Text("Version \(version) (Native Swift 6 & SwiftUI)")
                                     .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)

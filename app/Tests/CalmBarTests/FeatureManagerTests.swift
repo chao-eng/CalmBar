@@ -116,7 +116,7 @@ struct FeatureManagerTests {
         let manager = FeatureManager()
         manager.registerDefaultFeatures()
 
-        #expect(manager.allFeatures().count == 11)
+        #expect(manager.allFeatures().count == 12)
         #expect(manager.feature(id: .thermal) != nil)
         #expect(manager.feature(id: .battery) != nil)
         #expect(manager.feature(id: .caffeine) != nil)
@@ -128,6 +128,7 @@ struct FeatureManagerTests {
         #expect(manager.feature(id: .gatekeeper) != nil)
         #expect(manager.feature(id: .menuBar) != nil)
         #expect(manager.feature(id: .translation) != nil)
+        #expect(manager.feature(id: .launchManager) != nil)
 
         let dashboardItems = manager.allDashboardItems()
         #expect(!dashboardItems.isEmpty)

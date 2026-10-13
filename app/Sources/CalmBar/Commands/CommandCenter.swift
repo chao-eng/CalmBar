@@ -203,7 +203,7 @@ public final class CommandCenter: ObservableObject {
                     id: fcmd.id,
                     title: fcmd.title,
                     subtitle: fcmd.subtitle,
-                    iconName: iconName(for: feature.id),
+                    iconName: iconName(for: feature.id, commandID: fcmd.id),
                     category: commandCategory,
                     featureID: feature.id,
                     requiredPermissions: perms,
@@ -218,7 +218,9 @@ public final class CommandCenter: ObservableObject {
         }
     }
 
-    private func iconName(for featureID: FeatureID) -> String {
+    private func iconName(for featureID: FeatureID, commandID: String = "") -> String {
+        if commandID.contains("crontab") { return "clock" }
+        if commandID.contains("scanPorts") || commandID.contains("ports") { return "antenna.radiowaves.left.and.right" }
         switch featureID {
         case .thermal: return "flame.fill"
         case .battery: return "battery.100.bolt"
@@ -231,6 +233,7 @@ public final class CommandCenter: ObservableObject {
         case .gatekeeper: return "lock.shield"
         case .menuBar: return "menubar.rectangle"
         case .translation: return "character.bubble.fill"
+        case .launchManager: return "gearshape.arrow.triangle.2.circlepath"
         }
     }
 
@@ -259,8 +262,13 @@ public final class CommandCenter: ObservableObject {
             aliases.append(contentsOf: ["菜单栏", "收纳", "折叠", "隐藏图标", "menubar", "hide", "fold", "collapse", "organizer", "cdl", "sn", "zd", "yc"])
         case .translation:
             aliases.append(contentsOf: ["翻译", "划词翻译", "ai翻译", "双击复制", "hy-mt2", "openai", "translation", "translate", "fanyi", "fy", "hc", "hcfy", "trans"])
+        case .launchManager:
+            aliases.append(contentsOf: ["启动项", "服务", "自启动", "常驻服务", "launch", "daemon", "agent", "ports", "duankou", "qidong", "fuwu"])
         }
 
+        if commandID.contains("crontab") {
+            aliases.append(contentsOf: ["crontab", "cron", "定时任务", "计划任务", "周期任务", "定时", "dingshi", "jihua", "dsrw", "jhrw", "jh", "ds"])
+        }
         if commandID.contains("settings") {
             aliases.append(contentsOf: ["设置", "偏好设置", "配置", "选项", "settings", "preferences", "config", "sz", "ph", "pz"])
         }
@@ -509,5 +517,51 @@ public final class CommandCenter: ObservableObject {
                 }
             ))
         }
+
+        // 10. LaunchManager
+        register(CommandDescriptor(
+            id: "launchManager.open",
+            title: "启动项与常驻服务管理",
+            subtitle: "查看与管理 LaunchAgents、Daemons 及本地监听端口",
+            iconName: "gearshape.arrow.triangle.2.circlepath",
+            category: .system,
+            featureID: .launchManager,
+            requiredPermissions: [],
+            aliases: ["launch-manager", "launchctl", "daemon", "agent", "qidong", "fuwu"],
+            run: {
+                LaunchManagerWindowController.shared.show()
+                return .success("已打开启动项与服务管理面板")
+            }
+        ))
+
+        register(CommandDescriptor(
+            id: "launchManager.crontab",
+            title: "Crontab 计划任务",
+            subtitle: "查看与配置系统及用户周期性定时指令",
+            iconName: "clock",
+            category: .system,
+            featureID: .launchManager,
+            requiredPermissions: [],
+            aliases: ["crontab", "cron", "定时任务", "计划任务", "周期任务", "定时", "dingshi", "jihua", "dsrw", "jhrw", "jh", "ds"],
+            run: {
+                LaunchManagerWindowController.shared.show(initialTab: .crontab)
+                return .success("已打开 Crontab 计划任务面板")
+            }
+        ))
+
+        register(CommandDescriptor(
+            id: "launchManager.scanPorts",
+            title: "服务监听与端口排查",
+            subtitle: "排查本地占用端口的开发进程或后台服务",
+            iconName: "antenna.radiowaves.left.and.right",
+            category: .system,
+            featureID: .launchManager,
+            requiredPermissions: [],
+            aliases: ["ports", "listen", "lsof", "duankou", "服务监听"],
+            run: {
+                LaunchManagerWindowController.shared.show(initialTab: .services)
+                return .success("已切换至服务监听看板")
+            }
+        ))
     }
 }

@@ -65,4 +65,19 @@ struct PopoverVisibilitySettingsTests {
         caffeine.deactivate()
         #expect(settings.caffeineEnabled == false)
     }
+
+    @Test("Test Global HotKeys toggle and registration state")
+    @MainActor
+    func testGlobalHotKeysToggle() {
+        let settings = AppSettings.shared
+        let original = settings.globalHotKeysEnabled
+
+        settings.globalHotKeysEnabled = false
+        #expect(settings.globalHotKeysEnabled == false)
+
+        settings.globalHotKeysEnabled = true
+        #expect(settings.globalHotKeysEnabled == true)
+
+        settings.globalHotKeysEnabled = original
+    }
 }

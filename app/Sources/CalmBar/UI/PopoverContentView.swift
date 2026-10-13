@@ -473,6 +473,7 @@ public struct PopoverContentView: View {
         case clipboard
         case cleaner
         case gatekeeper
+        case launchManager
     }
 
     private enum GuardianItem: Hashable {
@@ -490,6 +491,7 @@ public struct PopoverContentView: View {
         if settings.popoverShowClipboard { items.append(.clipboard) }
         if settings.popoverShowCleaner { items.append(.cleaner) }
         if settings.popoverShowGatekeeper { items.append(.gatekeeper) }
+        if settings.popoverShowLaunchManager { items.append(.launchManager) }
         return items
     }
 
@@ -599,6 +601,28 @@ public struct PopoverContentView: View {
                 }
             )
             .help("修复未签名或损坏应用提示")
+
+        case .launchManager:
+            ToolTileButton(
+                icon: "gearshape.arrow.triangle.2.circlepath",
+                title: LaunchManager.shared.crashLoopingItems.isEmpty ? "自启管理" : "自启异常",
+                color: LaunchManager.shared.crashLoopingItems.isEmpty ? .orange : .red,
+                action: {
+                    StatusBarManager.shared.closePopover()
+                    LaunchManagerWindowController.shared.show(initialTab: LaunchManager.shared.crashLoopingItems.isEmpty ? .userAgents : .crashLooping)
+                }
+            )
+            .contextMenu {
+                Button("打开启动项与服务管理") {
+                    StatusBarManager.shared.closePopover()
+                    LaunchManagerWindowController.shared.show()
+                }
+                Button("排查服务监听端口") {
+                    StatusBarManager.shared.closePopover()
+                    LaunchManagerWindowController.shared.show(initialTab: .services)
+                }
+            }
+            .help(LaunchManager.shared.crashLoopingItems.isEmpty ? "管理后台自启项、常驻守护服务与监听端口" : "检测到后台任务反复崩溃，点击进入排查")
         }
     }
 

@@ -170,6 +170,8 @@ public final class PermissionManager: ObservableObject {
             return [FeaturePermissionRequirement(type: .screenRecording, level: .required, reason: "屏幕选区截屏")]
         case .cleaner:
             return [FeaturePermissionRequirement(type: .fullDiskAccess, level: .advanced, reason: "完整缓存与残留扫描")]
+        case .launchManager:
+            return [FeaturePermissionRequirement(type: .privilegedHelper, level: .optional, reason: "管理全局 LaunchAgents 与系统级 LaunchDaemons 需要特权助手支持")]
         case .clipboard, .noTunes, .menuBar, .translation:
             return []
         }

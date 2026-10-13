@@ -144,6 +144,8 @@ public struct SettingsView: View {
                         PermissionCenterView()
                     case .gatekeeper:
                         GatekeeperUnlockerView()
+                    case .launchManager:
+                        LaunchManagerSettingsTab()
                     case .general:
                         GeneralSettingsTab()
                     }

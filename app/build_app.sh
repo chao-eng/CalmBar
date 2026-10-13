@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
-VERSION="2.3.2"
+VERSION="2.4.0"
 APP_NAME="CalmBar"
 HELPER_NAME="CalmBarHelper"
 BUNDLE_ID="com.chao.CalmBar"
@@ -45,8 +45,13 @@ build_arch() {
     chmod +x "$MACOS/$APP_NAME"
     chmod +x "$MACOS/$HELPER_NAME"
 
+    # 剥离调试与本地符号，显著减小 release 二进制体积
+    strip -x "$MACOS/$APP_NAME" "$MACOS/$HELPER_NAME" 2>/dev/null || true
+
     if [ -d "$DIR/Resources" ]; then
         cp -R "$DIR/Resources/"* "$RESOURCES/"
+        # 剔除构建期冗余图标资源（AppIcon.icns 已含全部尺寸，iconset 与 png 仅供生成 icns）
+        rm -rf "$RESOURCES/AppIcon.iconset" "$RESOURCES/AppIcon.png"
     fi
 
     cat <<EOF > "$CONTENTS/Info.plist"
@@ -81,7 +86,9 @@ build_arch() {
 EOF
 
     echo "==> Signing app bundle ($ARCH)..."
-    codesign --force --deep -s - --requirements '=designated => identifier "com.chaoeng.CalmBar"' "$APP_BUNDLE"
+    codesign --force -s - "$MACOS/$HELPER_NAME"
+    codesign --force -s - "$MACOS/$APP_NAME"
+    codesign --force -s - "$APP_BUNDLE"
 
     echo "==> Creating Zip Archive at $ZIP_PATH..."
     rm -f "$ZIP_PATH"

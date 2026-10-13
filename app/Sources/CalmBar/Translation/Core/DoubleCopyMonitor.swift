@@ -58,6 +58,11 @@ public final class DoubleCopyMonitor: ObservableObject {
         }
 
         // 2. 结合全局快捷键监视（当具有辅助功能权限时可加速响应）
+        installKeyboardMonitorIfNeeded()
+    }
+
+    private func installKeyboardMonitorIfNeeded() {
+        guard keyMonitor == nil else { return }
         keyMonitor = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] event in
             guard event.keyCode == 8 else { return } // 8 = 'C'
             let flags = event.modifierFlags.intersection(.deviceIndependentFlagsMask)
@@ -71,13 +76,17 @@ public final class DoubleCopyMonitor: ObservableObject {
         }
     }
 
-    public func stop() {
-        timer?.invalidate()
-        timer = nil
+    private func removeKeyboardMonitor() {
         if let keyMonitor {
             NSEvent.removeMonitor(keyMonitor)
             self.keyMonitor = nil
         }
+    }
+
+    public func stop() {
+        timer?.invalidate()
+        timer = nil
+        removeKeyboardMonitor()
         detector.reset()
     }
 
