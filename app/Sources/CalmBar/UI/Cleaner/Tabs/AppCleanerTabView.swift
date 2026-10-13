@@ -29,6 +29,8 @@ public struct AppCleanerTabView: View {
                                     .foregroundStyle(.secondary)
                             }
                             .buttonStyle(.plain)
+                            .focusable(false)
+                            .focusEffectDisabled()
                         }
                     }
                     .padding(6)

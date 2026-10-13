@@ -67,6 +67,8 @@ public struct TranslationHistoryView: View {
                             .foregroundColor(.secondary)
                     }
                     .buttonStyle(.plain)
+                    .focusable(false)
+                    .focusEffectDisabled()
                 }
 
                 Spacer()

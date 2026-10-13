@@ -87,6 +87,8 @@ public struct OCRHistoryView: View {
                                 .foregroundColor(.secondary)
                         }
                         .buttonStyle(.plain)
+                        .focusable(false)
+                        .focusEffectDisabled()
                     }
                 }
                 .padding(6)
@@ -243,6 +245,8 @@ public struct OCRHistoryView: View {
                         .foregroundColor(.secondary.opacity(0.7))
                 }
                 .buttonStyle(.plain)
+                .focusable(false)
+                .focusEffectDisabled()
                 .help("删除此项")
             }
 

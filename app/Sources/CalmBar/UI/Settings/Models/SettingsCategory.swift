@@ -13,6 +13,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     case clipboard
     case cleaner
     case permissions
+    case launchManager
     case general
 
     public var id: String { rawValue }
@@ -31,6 +32,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .clipboard: return "剪贴板"
         case .cleaner: return "清理工具"
         case .permissions: return "权限安全"
+        case .launchManager: return "自启管理"
         case .general: return "通用设置"
         }
     }
@@ -49,6 +51,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .clipboard: return "doc.on.clipboard.fill"
         case .cleaner: return "trash.fill"
         case .permissions: return "shield.lefthalf.filled"
+        case .launchManager: return "gearshape.arrow.triangle.2.circlepath"
         case .general: return "gearshape.fill"
         }
     }
@@ -61,7 +64,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return .desktop
         case .clipboard, .translation, .ocr, .cleaner:
             return .productivity
-        case .permissions, .gatekeeper, .general:
+        case .permissions, .gatekeeper, .launchManager, .general:
             return .system
         }
     }
@@ -92,6 +95,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return "深度扫描并清理应用残留、开发构建缓存与垃圾文件"
         case .permissions:
             return "集中管理辅助功能与 SMC LaunchDaemon 特权后台服务"
+        case .launchManager:
+            return "统一纳管用户自启项、全局守护服务与本地监听端口"
         case .general:
             return "开机自启、菜单栏温度展示与全局快捷键配置"
         }
@@ -120,11 +125,13 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .cleaner:
             return [Color(red: 0.9, green: 0.3, blue: 0.3), Color(red: 0.75, green: 0.2, blue: 0.2)]
         case .permissions:
-            return [Color(red: 0.45, green: 0.5, blue: 0.58), Color(red: 0.35, green: 0.4, blue: 0.48)]
+            return [Color(red: 0.25, green: 0.55, blue: 0.95), Color(red: 0.15, green: 0.4, blue: 0.85)]
         case .gatekeeper:
-            return [Color(red: 0.5, green: 0.55, blue: 0.6), Color(red: 0.38, green: 0.42, blue: 0.48)]
+            return [Color(red: 0.2, green: 0.74, blue: 0.46), Color(red: 0.12, green: 0.56, blue: 0.32)]
+        case .launchManager:
+            return [Color.orange, Color(red: 0.9, green: 0.45, blue: 0.1)]
         case .general:
-            return [Color(red: 0.55, green: 0.55, blue: 0.6), Color(red: 0.42, green: 0.42, blue: 0.46)]
+            return [Color(red: 0.6, green: 0.38, blue: 0.95), Color(red: 0.46, green: 0.24, blue: 0.82)]
         }
     }
 
@@ -154,6 +161,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return ["权限", "辅助功能", "特权服务", "LaunchDaemon", "permission", "accessibility"]
         case .gatekeeper:
             return ["公证", "授权", "打不开", "损坏", "隔离", "gatekeeper", "quarantine", "xattr"]
+        case .launchManager:
+            return ["启动项", "服务", "自启动", "常驻", "守护", "launchctl", "daemon", "agent", "ports", "duankou"]
         case .general:
             return ["通用", "开机自启", "快捷键", "关于", "外观", "general", "shortcut"]
         }
@@ -186,7 +195,7 @@ public enum SettingsCategory: String, CaseIterable, Identifiable {
         case .productivity:
             return [.clipboard, .translation, .ocr, .cleaner]
         case .system:
-            return [.permissions, .gatekeeper, .general]
+            return [.permissions, .gatekeeper, .launchManager, .general]
         }
     }
 }

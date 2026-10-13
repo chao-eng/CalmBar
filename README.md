@@ -5,7 +5,7 @@
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
 [![Language](https://img.shields.io/badge/language-Swift%206-orange.svg)](https://swift.org)
-[![Version](https://img.shields.io/badge/release-v2.3.2-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
+[![Version](https://img.shields.io/badge/release-v2.4.0-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 ---
@@ -130,7 +130,7 @@
 
 ### 7. 🔋 充电管理与电池上限 (Battery Charge Limit)
 * **SMC 寄存器充电控制**：通过向 SMC 写入 `CH0C` / `CHTE` 寄存器指令控制充电逻辑，达到设定阈值（默认 80%）后停止对电池充电，转由电源适配器供电（适配支持相关寄存器的 Apple Silicon 与 Intel Mac 机型）。
-* **回差巡航模式 (Sailing Mode)**：支持配置回差跨度（如 75% ~ 80%），电量自然消耗回落至下限时才恢复涓流补电，避免在 80% 边缘反复高频微充。
+* **回差巡航模式 (Sailing Mode)**：支持配置回差跨度（如 75% ~ 80%）。达到上限后停止充电并转由适配器旁路供电；巡航不主动放电，只有当电量因拔掉电源使用或长时间静置自然回落至下限以下时，才恢复涓流补电，避免在 80% 边缘反复高频微充。
 * **底层安全熔断机制 (Safety Melt)**：电量低于 15% 或电池温度过高时，强制终止放电并取消阻断，确保硬件电芯绝对安全。
 * **临时充至 100% (Top Up)**：提供一键临时充满模式，放开限制充至满电后自动恢复设定上限，适合出门前临时蓄电。
 * **电池健康监控**：实时展示电池健康度 (Health %)、循环计数 (Cycle Count)、电池实时温度及供电功率。

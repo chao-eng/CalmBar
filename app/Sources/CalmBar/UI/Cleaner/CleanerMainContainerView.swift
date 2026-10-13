@@ -59,6 +59,8 @@ public struct CleanerMainContainerView: View {
                         .foregroundStyle(.secondary)
                 }
                 .buttonStyle(.plain)
+                .focusable(false)
+                .focusEffectDisabled()
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)

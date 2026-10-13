@@ -191,6 +191,12 @@ public final class AppSettings: ObservableObject {
             LaunchAtLoginHelper.setEnabled(launchAtLogin)
         }
     }
+    @Published public var globalHotKeysEnabled: Bool {
+        didSet {
+            defaults.set(globalHotKeysEnabled, forKey: "globalHotKeysEnabled")
+            HotKeyManager.shared.updateRegistrationState()
+        }
+    }
 
     // MARK: - Popover Left-Click Menu Item Visibility
     @Published public var popoverShowGauges: Bool {
@@ -265,6 +271,29 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(popoverShowTranslation, forKey: "popoverShowTranslation") }
     }
 
+    // MARK: - Launch Manager Settings
+    @Published public var launchManagerDeveloperModeEnabled: Bool {
+        didSet { defaults.set(launchManagerDeveloperModeEnabled, forKey: "launchManagerDeveloperModeEnabled") }
+    }
+    @Published public var launchManagerAutoBackupEnabled: Bool {
+        didSet { defaults.set(launchManagerAutoBackupEnabled, forKey: "launchManagerAutoBackupEnabled") }
+    }
+    @Published public var launchManagerShowSystemDaemons: Bool {
+        didSet { defaults.set(launchManagerShowSystemDaemons, forKey: "launchManagerShowSystemDaemons") }
+    }
+    @Published public var launchManagerShowAppleProtected: Bool {
+        didSet { defaults.set(launchManagerShowAppleProtected, forKey: "launchManagerShowAppleProtected") }
+    }
+    @Published public var launchManagerScanDevPorts: Bool {
+        didSet { defaults.set(launchManagerScanDevPorts, forKey: "launchManagerScanDevPorts") }
+    }
+    @Published public var launchManagerCrashLoopAlertThreshold: Int {
+        didSet { defaults.set(launchManagerCrashLoopAlertThreshold, forKey: "launchManagerCrashLoopAlertThreshold") }
+    }
+    @Published public var popoverShowLaunchManager: Bool {
+        didSet { defaults.set(popoverShowLaunchManager, forKey: "popoverShowLaunchManager") }
+    }
+
     private init() {
         self.thermalEnabled = defaults.object(forKey: "thermalEnabled") as? Bool ?? true
         let presetStr = defaults.string(forKey: "fanPreset") ?? FanPreset.smart.rawValue
@@ -330,6 +359,7 @@ public final class AppSettings: ObservableObject {
         self.clipboardQuickCopyEnabled = defaults.object(forKey: "clipboardQuickCopyEnabled") as? Bool ?? true
 
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
+        self.globalHotKeysEnabled = defaults.object(forKey: "globalHotKeysEnabled") as? Bool ?? true
 
         self.popoverShowGauges = defaults.object(forKey: "popoverShowGauges") as? Bool ?? true
         self.popoverShowMenuBar = defaults.object(forKey: "popoverShowMenuBar") as? Bool ?? true
@@ -356,6 +386,14 @@ public final class AppSettings: ObservableObject {
         self.translationDoubleCopyInterval = defaults.object(forKey: "translationDoubleCopyInterval") as? Double ?? 0.8
         self.translationAutoDismiss = defaults.object(forKey: "translationAutoDismiss") as? Bool ?? true
         self.translationAutoDismissDelay = defaults.object(forKey: "translationAutoDismissDelay") as? Double ?? 8.0
+
+        self.launchManagerDeveloperModeEnabled = defaults.object(forKey: "launchManagerDeveloperModeEnabled") as? Bool ?? false
+        self.launchManagerAutoBackupEnabled = defaults.object(forKey: "launchManagerAutoBackupEnabled") as? Bool ?? true
+        self.launchManagerShowSystemDaemons = defaults.object(forKey: "launchManagerShowSystemDaemons") as? Bool ?? true
+        self.launchManagerShowAppleProtected = defaults.object(forKey: "launchManagerShowAppleProtected") as? Bool ?? false
+        self.launchManagerScanDevPorts = defaults.object(forKey: "launchManagerScanDevPorts") as? Bool ?? true
+        self.launchManagerCrashLoopAlertThreshold = defaults.object(forKey: "launchManagerCrashLoopAlertThreshold") as? Int ?? 3
+        self.popoverShowLaunchManager = defaults.object(forKey: "popoverShowLaunchManager") as? Bool ?? true
     }
 }
 

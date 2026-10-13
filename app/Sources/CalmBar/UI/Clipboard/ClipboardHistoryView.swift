@@ -167,6 +167,8 @@ public struct ClipboardHistoryView: View {
                             .font(.system(size: 11))
                     }
                     .buttonStyle(.plain)
+                    .focusable(false)
+                    .focusEffectDisabled()
                 }
             }
             .padding(.horizontal, 8)

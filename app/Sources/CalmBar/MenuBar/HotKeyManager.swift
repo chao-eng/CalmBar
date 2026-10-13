@@ -13,10 +13,23 @@ public final class HotKeyManager {
     private var hotKeyRefTranslation: EventHotKeyRef?
 
     private init() {
-        registerGlobalHotKey()
+        if AppSettings.shared.globalHotKeysEnabled {
+            registerGlobalHotKey()
+        }
+    }
+
+    public func updateRegistrationState() {
+        if AppSettings.shared.globalHotKeysEnabled {
+            registerGlobalHotKey()
+        } else {
+            unregister()
+        }
     }
 
     public func registerGlobalHotKey() {
+        unregister()
+        guard AppSettings.shared.globalHotKeysEnabled else { return }
+
         var eventType = EventTypeSpec()
         eventType.eventClass = OSType(kEventClassKeyboard)
         eventType.eventKind = OSType(kEventHotKeyPressed)
@@ -24,6 +37,7 @@ public final class HotKeyManager {
         InstallEventHandler(
             GetApplicationEventTarget(),
             { (_, event, _) -> OSStatus in
+                guard AppSettings.shared.globalHotKeysEnabled else { return noErr }
                 var hotKeyID = EventHotKeyID()
                 let status = GetEventParameter(
                     event,

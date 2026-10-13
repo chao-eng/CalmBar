@@ -192,7 +192,7 @@ public struct BatterySettingsTab: View {
                                     .font(.system(size: 11.5, design: .monospaced))
                             }
 
-                            Text("当电量达到 \(settings.batteryChargeLimit)% 后停止充电，电量自然消耗回落到 \(max(20, settings.batteryChargeLimit - settings.batterySailingDelta))% 时才恢复补充充电，避免在临界值反复触发微充微放。")
+                            Text("当电量达到 \(settings.batteryChargeLimit)% 后停止充电并转由适配器旁路供电。巡航本身不会主动放电，电量需靠拔掉电源使用或长时间静置自然回落；只有当回落至 \(max(20, settings.batteryChargeLimit - settings.batterySailingDelta))% 以下时才恢复补充充电，避免在临界值反复触发微充微放。若需要插电时主动降到目标值，请开启下方的「自动放电」。")
                                 .font(.system(size: 11.5))
                                 .foregroundColor(.secondary)
                                 .lineSpacing(2)
