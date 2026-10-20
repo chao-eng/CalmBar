@@ -21,6 +21,7 @@ export type FeatureIconKey =
   | 'shield'
   | 'lock'
   | 'settings'
+  | 'rocket'
 
 export interface FeatureItem {
   icon: FeatureIconKey
@@ -181,8 +182,8 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   },
   {
     id: 'disk-security',
-    label: '磁盘与权限',
-    summary: '清理要清得干净，越界的事一件都不做。',
+    label: '系统维护',
+    summary: '清理要清得干净，后台要看得明白，越界的事一件都不做。',
     items: [
       {
         icon: 'trash',
@@ -198,6 +199,11 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
         icon: 'lock',
         title: '统一权限看板',
         description: '辅助功能、屏幕录制、完全磁盘访问与助手状态一屏可查。',
+      },
+      {
+        icon: 'rocket',
+        title: '启动项与常驻服务管理',
+        description: '纳管 launchd 自启项与守护服务，崩溃告警、端口透视与快照回滚，系统核心项只读。',
       },
       {
         icon: 'settings',
