@@ -9,6 +9,7 @@ import {
   MouseIcon,
   MusicIcon,
   PanelTopIcon,
+  RocketIcon,
   ScanTextIcon,
   SettingsIcon,
   ShieldCheckIcon,
@@ -38,6 +39,7 @@ const ICONS: Record<FeatureIconKey, Component> = {
   shield: ShieldCheckIcon,
   lock: LockIcon,
   settings: SettingsIcon,
+  rocket: RocketIcon,
 }
 </script>
 

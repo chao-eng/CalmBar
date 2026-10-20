@@ -78,7 +78,7 @@ onBeforeUnmount(() => window.removeEventListener('keydown', onKeydown))
           核心功能与界面
         </p>
         <h2 id="features-title" class="section-title mt-2">
-          十四项能力，收进一个菜单栏图标
+          十五项能力，收进一个菜单栏图标
         </h2>
         <p class="section-desc">
           按使用场景分成五组。每组的真实界面截图默认收起，点击「查看截图」可放大并连续翻看全部截图。
