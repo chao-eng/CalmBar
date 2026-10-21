@@ -442,9 +442,9 @@ def inference(
 # ==================================================
 
 def split_text_chunks(text: str) -> List[str]:
-    """将文本切分为适合流式传输的自然块（中文字符、英文词汇、标点）"""
-    # 匹配英文单词、中日韩单个文字、空格或标点符号
-    pattern = r'[\u4e00-\u9fa5]|\b[A-Za-z0-9_\'-]+\b|[^\w\s]|[\s]+'
+    """将文本切分为适合流式传输的自然块（中文单字、词、标点），必须不丢字符"""
+    # 末两项兜底覆盖所有字符，否则日文假名、韩文、西里尔字母等非 ASCII 文字会被吞掉
+    pattern = r"[\u4e00-\u9fa5]|\w+|\s+|[^\w\s]"
     tokens = re.findall(pattern, text)
     return tokens if tokens else [text]
 
