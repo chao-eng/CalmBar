@@ -68,6 +68,9 @@ const structuredData = {
     <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
 
     <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+
+    <!-- Umami 统计（沿用旧站配置，defer 加载不阻塞首屏） -->
+    <script is:inline defer src="https://um.bujic.cc/script.js" data-website-id="0bbb1ad6-dcc5-4af9-bd97-b6872c7ae869"></script>
   </head>
   <body id="top">
     <SiteHeader />
