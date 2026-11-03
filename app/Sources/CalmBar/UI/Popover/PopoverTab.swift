@@ -98,6 +98,8 @@ enum PopoverLayout {
     static let toolGridSpacing: CGFloat = 8
     static let minViewportHeight: CGFloat = 200
     static let maxViewportHeight: CGFloat = 360
+    /// 窗口高度恒定值：视口取最大值，Tab 切换只动内部内容高度
+    static let maxPanelHeight: CGFloat = chromeHeight + maxViewportHeight
     // BR-03：28 padding + 24 header + 28 gaps + 30 tabbar + 32 title + 18 footer
     static let chromeHeight: CGFloat = padding * 2 + headerHeight + sectionGap * 2 + tabBarHeight + titleHeight + blockGap + footerHeight
     static let tabBarAnimation: Double = 0.12

@@ -65,7 +65,7 @@ public struct FanRPMGaugeView: View {
             HStack(spacing: 3) {
                 Image(systemName: "fanblades.fill")
                     .font(.system(size: 10, weight: .semibold))
-                    .foregroundStyle(.blue)
+                    .foregroundStyle(.secondary)
                 Text(title)
                     .font(.system(size: 10.5, weight: .medium))
                     .foregroundColor(.secondary)

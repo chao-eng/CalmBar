@@ -24,6 +24,35 @@ struct PopoverPanelView: View {
     }
 
     var body: some View {
+        panelBody
+            .frame(width: PopoverLayout.panelWidth, height: route.totalHeight)
+            .background(.regularMaterial, in: panelShape)
+            .overlay {
+                panelShape
+                    .strokeBorder(
+                        Color.primary.opacity(NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? 0.32 : 0.12),
+                        lineWidth: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? 1.0 : 0.5
+                    )
+            }
+            .clipShape(panelShape)
+            // 窗口高度恒定：内容贴着顶边向下延长，避免窗口 resize 引起的重建抖动
+            .frame(width: PopoverLayout.panelWidth, height: PopoverLayout.maxPanelHeight, alignment: .top)
+            .animation(
+                NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+                    ? nil
+                    : Animation.easeInOut(duration: PopoverLayout.heightAnimation),
+                value: route.totalHeight
+            )
+            // 面板内所有控件统一不绘制系统焦点环，保持黑灰单色观感
+            .focusable(false)
+            .focusEffectDisabled()
+    }
+
+    private var panelShape: RoundedRectangle {
+        RoundedRectangle(cornerRadius: 16, style: .continuous)
+    }
+
+    private var panelBody: some View {
         VStack(spacing: 0) {
             header
                 .frame(height: PopoverLayout.headerHeight)
@@ -57,16 +86,6 @@ struct PopoverPanelView: View {
                 .accessibilityLabel("底栏")
         }
         .padding(PopoverLayout.padding)
-        .frame(width: PopoverLayout.panelWidth, height: route.totalHeight)
-        .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .strokeBorder(
-                    Color.primary.opacity(NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? 0.32 : 0.12),
-                    lineWidth: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? 1.0 : 0.5
-                )
-        }
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 
     // MARK: 头部
@@ -99,32 +118,32 @@ struct PopoverPanelView: View {
     @ViewBuilder
     private var headerStatus: some View {
         if !dashboard.isSMCConnected {
-            statusBadge(icon: "exclamationmark.triangle.fill", text: "无 SMC 驱动", color: .orange)
+            statusBadge(icon: "exclamationmark.triangle.fill", text: "无 SMC 驱动")
         } else if settings.thermalEnabled && dashboard.safetyAction != .none {
-            statusBadge(icon: "flame.fill", text: "温控保护中", color: .red)
+            statusBadge(icon: "flame.fill", text: "温控保护中")
         } else if !settings.thermalEnabled {
-            statusBadge(icon: nil, text: "温控已停用", color: .secondary)
+            statusBadge(icon: nil, text: "温控已停用")
         } else if helper.needsHelperUpdate {
-            statusBadge(icon: "lock.shield", text: "助手需更新", color: .orange)
+            statusBadge(icon: "lock.shield", text: "助手需更新")
         } else {
-            statusBadge(icon: nil, text: thermal.isFanless ? "温度监控中" : "温控运行中", color: .secondary)
+            statusBadge(icon: nil, text: thermal.isFanless ? "温度监控中" : "温控运行中")
         }
     }
 
-    private func statusBadge(icon: String?, text: String, color: Color) -> some View {
+    private func statusBadge(icon: String?, text: String) -> some View {
         HStack(spacing: 4) {
             if let icon {
                 Image(systemName: icon)
                     .font(.system(size: 9))
-                    .foregroundStyle(color)
+                    .foregroundStyle(.secondary)
             } else {
                 Circle()
-                    .fill(color == .secondary ? Color.secondary.opacity(0.6) : color)
+                    .fill(Color.secondary.opacity(0.6))
                     .frame(width: 6, height: 6)
             }
             Text(text)
                 .font(.system(size: 10, weight: .medium))
-                .foregroundStyle(color == .secondary ? Color.secondary : color)
+                .foregroundStyle(.secondary)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("状态：\(text)")

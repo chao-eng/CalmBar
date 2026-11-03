@@ -94,7 +94,7 @@ struct ThermalSectionView: View {
         if dashboard.needsHelperAttention {
             HStack {
                 Image(systemName: "lock.shield")
-                    .foregroundStyle(.orange)
+                    .foregroundStyle(.secondary)
                 VStack(alignment: .leading, spacing: 1) {
                     let title = helper.needsHelperUpdate ? "特权助手需更新" : (helper.isHelperBlockedBySystem ? "特权助手被后台阻止" : "特权助手未激活")
                     Text(title)
@@ -111,7 +111,7 @@ struct ThermalSectionView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.mini)
-                        .tint(.accentColor)
+                        .tint(Color.primary)
 
                         Button {
                             HelperClient.shared.checkHelperStatus()
@@ -135,11 +135,11 @@ struct ThermalSectionView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.mini)
-                    .tint(.accentColor)
+                    .tint(Color.primary)
                 }
             }
             .padding(8)
-            .background(Color.orange.opacity(0.12))
+            .background(Color.primary.opacity(0.06))
             .cornerRadius(8)
         }
     }
@@ -166,13 +166,13 @@ struct ThermalSectionView: View {
                 title: "CPU",
                 temp: settings.thermalEnabled ? thermal.cpuTemp : 0,
                 icon: "cpu",
-                color: .orange
+                color: .secondary
             )
             TemperatureGaugeView(
                 title: "GPU",
                 temp: settings.thermalEnabled ? thermal.gpuTemp : 0,
                 icon: "square.stack.3d.up.fill",
-                color: .purple
+                color: .secondary
             )
 
             if supportsFanControl, let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
@@ -182,7 +182,7 @@ struct ThermalSectionView: View {
                     title: "电池",
                     temp: thermal.batteryTemp,
                     icon: "battery.100.bolt",
-                    color: .green
+                    color: .secondary
                 )
             }
 
@@ -205,7 +205,9 @@ struct ThermalSectionView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            // 保留键盘可聚焦，仅关闭系统焦点环绘制
+            .tint(Color.primary)
+            // 关闭系统焦点环绘制，避免选中态出现蓝色方框
+            .focusable(false)
             .focusEffectDisabled()
 
             HStack {
@@ -216,7 +218,7 @@ struct ThermalSectionView: View {
                     .toggleStyle(.switch)
                     .labelsHidden()
                     .controlSize(.mini)
-                    .tint(.accentColor)
+                    .tint(Color.primary)
                     .accessibilityLabel("左右风扇联动")
             }
             .padding(.top, 2)
@@ -224,10 +226,10 @@ struct ThermalSectionView: View {
             HStack(spacing: 10) {
                 Image(systemName: "fan")
                     .font(.system(size: 14))
-                    .foregroundColor((settings.fanPreset == .auto || !settings.thermalEnabled) ? .secondary : .accentColor)
+                    .foregroundColor((settings.fanPreset == .auto || !settings.thermalEnabled) ? .secondary : .primary)
 
                 Slider(value: sliderBinding, in: 0.0...1.0)
-                    .tint(.accentColor)
+                    .tint(Color.primary)
                     .accessibilityLabel("风扇转速")
                     .accessibilityValue("\(Int(activeFanFraction * 100))%")
 
@@ -271,7 +273,7 @@ struct ThermalSectionView: View {
                         .frame(width: 48, alignment: .leading)
 
                     Slider(value: $settings.fan0CustomFraction, in: 0.0...1.0)
-                        .tint(.accentColor)
+                        .tint(Color.primary)
                         .accessibilityLabel(thermal.fanSnapshots.count > 1 ? "风扇 1 转速" : "风扇转速")
 
                     let rpm0 = Int(thermal.fanSnapshots.first?.actualRPM ?? Float(settings.fan0CustomFraction * 5000 + 1200))
@@ -287,7 +289,7 @@ struct ThermalSectionView: View {
                             .frame(width: 48, alignment: .leading)
 
                         Slider(value: $settings.fan1CustomFraction, in: 0.0...1.0)
-                            .tint(.accentColor)
+                            .tint(Color.primary)
                             .accessibilityLabel("风扇 2 转速")
 
                         let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
@@ -301,7 +303,7 @@ struct ThermalSectionView: View {
             if settings.fanPreset == .smart {
                 HStack(spacing: 6) {
                     Image(systemName: "waveform.path.ecg")
-                        .foregroundStyle(.tint)
+                        .foregroundStyle(.secondary)
                         .font(.system(size: 11))
                     Text("加速区间: \(Int(settings.smartStartTemp))°C ~ \(Int(settings.smartFullTemp))°C")
                         .font(.system(size: 10))
