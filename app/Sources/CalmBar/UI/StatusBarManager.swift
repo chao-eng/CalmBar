@@ -9,6 +9,13 @@ private final class StatusPanel: NSPanel {
     override func cancelOperation(_ sender: Any?) {
         StatusBarManager.shared.closePopover()
     }
+
+    override func keyDown(with event: NSEvent) {
+        if StatusBarManager.shared.handlePopoverKey(event) {
+            return
+        }
+        super.keyDown(with: event)
+    }
 }
 
 @MainActor
@@ -19,9 +26,11 @@ public final class StatusBarManager: ObservableObject {
 
     private var statusItem: NSStatusItem?
     private var panel: StatusPanel?
+    private var popoverModel: PopoverPanelModel?
     private var settingsWindow: NSWindow?
     private var eventMonitor: Any?
     private var cancellables = Set<AnyCancellable>()
+    private var lastMenuBarRefresh = Date.distantPast
 
     private init() {
         setupStatusItem()
@@ -62,10 +71,22 @@ public final class StatusBarManager: ObservableObject {
         panel.isOpaque = false
         panel.hasShadow = true
 
+        let model = PopoverPanelModel()
+        model.onTabChange = { [weak self] tab in
+            self?.applyPopoverHeight(for: tab)
+        }
+        popoverModel = model
+
         panel.contentViewController = NSHostingController(
-            rootView: PopoverContentView(openSettingsAction: { [weak self] tab in
-                self?.openSettingsWindow(tab: tab)
-            })
+            rootView: PopoverPanelView(
+                model: model,
+                openSettingsAction: { [weak self] tab in
+                    self?.openSettingsWindow(tab: tab)
+                },
+                closePanel: { [weak self] in
+                    self?.closePopover()
+                }
+            )
         )
         self.panel = panel
     }
@@ -85,26 +106,57 @@ public final class StatusBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
-        AppSettings.shared.$showTempInMenuBar
+        AppSettings.shared.$systemMonitorEnabled
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
+                self?.updateMenuBarDemand(AppSettings.shared.menuBarReadoutItems)
                 self?.updateStatusItemTitle()
             }
             .store(in: &cancellables)
+
+        AppSettings.shared.$menuBarReadoutItems
+            .receive(on: RunLoop.main)
+            .sink { [weak self] items in
+                self?.updateMenuBarDemand(items)
+                self?.updateStatusItemTitle()
+            }
+            .store(in: &cancellables)
+
+        SystemMonitorService.shared.$snapshot
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.scheduleMenuBarRefresh()
+            }
+            .store(in: &cancellables)
+
+        updateMenuBarDemand(AppSettings.shared.menuBarReadoutItems)
+    }
+
+    /// 菜单栏读数 3s 刷新一次，避免 1s 采样直接驱动状态栏
+    private func scheduleMenuBarRefresh() {
+        let now = Date()
+        guard now.timeIntervalSince(lastMenuBarRefresh) >= 3 else { return }
+        lastMenuBarRefresh = now
+        updateStatusItemTitle()
+    }
+
+    private func updateMenuBarDemand(_ items: [String]) {
+        let needsSample = AppSettings.shared.systemMonitorEnabled && items.contains { $0 != "temperature" }
+        SystemMonitorService.shared.setMenuBarDemand(needsSample)
     }
 
     private func updateStatusItemTitle() {
         guard let button = statusItem?.button else { return }
-        let showTemp = AppSettings.shared.thermalEnabled && AppSettings.shared.showTempInMenuBar
-        let temp = Int(ThermalMonitor.shared.primaryTemp)
-
-        if showTemp && temp > 0 {
-            button.title = " \(temp)°"
-            button.imagePosition = .imageLeading
-        } else {
-            button.title = ""
-            button.imagePosition = .imageOnly
-        }
+        let settings = AppSettings.shared
+        let title = MenuBarReadout.title(
+            sample: SystemMonitorService.shared.snapshot,
+            temperature: Double(ThermalMonitor.shared.primaryTemp),
+            thermalEnabled: settings.thermalEnabled,
+            items: settings.menuBarReadoutItems,
+            monitorEnabled: settings.systemMonitorEnabled
+        )
+        button.title = title
+        button.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
     }
 
     @objc private func togglePopover(_ sender: AnyObject?) {
@@ -135,21 +187,27 @@ public final class StatusBarManager: ObservableObject {
 
         guard let panel = panel else { return }
 
-        positionPanel(panel, relativeTo: button)
+        // BR-04：分区先按持久化值恢复，再做任何异步刷新
+        popoverModel?.syncWithPersistedSelection()
+
+        SystemMonitorService.shared.acquire(.panel)
+
+        let height = PopoverTabRoute.route(for: currentPopoverTab).totalHeight
+        positionPanel(panel, relativeTo: button, height: height)
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
         startMonitoring()
     }
 
-    private func positionPanel(_ panel: NSPanel, relativeTo button: NSStatusBarButton) {
+    private func positionPanel(_ panel: NSPanel, relativeTo button: NSStatusBarButton, height: CGFloat) {
         guard let buttonWindow = button.window else { return }
         let buttonRect = buttonWindow.convertToScreen(button.bounds)
         let screen = buttonWindow.screen ?? NSScreen.main ?? NSScreen.screens.first
         let screenFrame = screen?.visibleFrame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
 
-        let fittingSize = panel.contentViewController?.view.fittingSize ?? NSSize(width: 320, height: 380)
-        let panelWidth = max(320, fittingSize.width)
-        let panelHeight = fittingSize.height > 50 ? fittingSize.height : 380
+        // BR-01 / BR-03：宽度与高度均由路由常量表驱动，不使用 fittingSize
+        let panelWidth = PopoverLayout.panelWidth
+        let panelHeight = height
 
         var x = buttonRect.midX - (panelWidth / 2.0)
         if x + panelWidth > screenFrame.maxX - 8 {
@@ -159,12 +217,109 @@ public final class StatusBarManager: ObservableObject {
             x = screenFrame.minX + 8
         }
 
+        // BR-02：面板顶边恒等于状态栏按钮下沿 - 4pt
         let y = buttonRect.minY - panelHeight - 4
-        panel.setFrame(NSRect(x: x, y: y, width: panelWidth, height: panelHeight), display: true)
+        let frame = NSRect(x: x, y: y, width: panelWidth, height: panelHeight)
+        panel.setFrame(frame, display: true)
+    }
+
+    // MARK: - 分区切换与高度动画（顶边不变量）
+
+    /// 当前面板分区（无面板时回退温控）
+    var currentPopoverTab: PopoverTab {
+        popoverModel?.currentTab ?? .thermal
+    }
+
+    /// 供隔离回归使用的面板窗口
+    var popoverWindow: NSWindow? {
+        panel
+    }
+
+    @discardableResult
+    func selectPopoverTab(_ tab: PopoverTab) -> Bool {
+        popoverModel?.select(tab) ?? false
+    }
+
+    /// 键盘映射：⌘1–⌘5 固定顺序，←/→ 环内移动；未启用分区不响应（BR-10）
+    func handlePopoverKey(_ event: NSEvent) -> Bool {
+        guard let model = popoverModel else { return false }
+
+        if event.modifierFlags.intersection(.deviceIndependentFlagsMask).contains(.command),
+           let characters = event.charactersIgnoringModifiers,
+           let index = Int(characters) {
+            return model.selectByShortcutIndex(index - 1)
+        }
+
+        switch event.keyCode {
+        case 116, 121, 115, 119:
+            return scrollPopover(keyCode: event.keyCode)
+        case 123:
+            return model.move(by: -1)
+        case 124:
+            return model.move(by: 1)
+        default:
+            return false
+        }
+    }
+
+    /// PageUp / PageDown / Home / End：滚动当前分区的长内容，不切换分区
+    private func scrollPopover(keyCode: UInt16) -> Bool {
+        guard let panel, let scrollView = firstScrollView(in: panel.contentView) else { return true }
+        guard let documentView = scrollView.documentView else { return true }
+
+        let viewHeight = scrollView.contentView.bounds.height
+        let maxOffset = max(0, documentView.bounds.height - viewHeight)
+        let current = scrollView.contentView.bounds.origin.y
+        let target: CGFloat
+        switch keyCode {
+        case 116: target = current - viewHeight
+        case 121: target = current + viewHeight
+        case 115: target = 0
+        case 119: target = maxOffset
+        default: return false
+        }
+
+        let clamped = min(max(target, 0), maxOffset)
+        guard abs(clamped - current) > 0.5 else { return true }
+        scrollView.contentView.scroll(to: NSPoint(x: scrollView.contentView.bounds.origin.x, y: clamped))
+        scrollView.reflectScrolledClipView(scrollView.contentView)
+        return true
+    }
+
+    private func firstScrollView(in view: NSView?) -> NSScrollView? {
+        guard let view else { return nil }
+        if let scrollView = view as? NSScrollView { return scrollView }
+        for subview in view.subviews {
+            if let found = firstScrollView(in: subview) { return found }
+        }
+        return nil
+    }
+
+    /// 高度切换只改高度并保持顶边不动（BR-02）
+    private func applyPopoverHeight(for tab: PopoverTab) {
+        guard let panel else { return }
+        let targetHeight = PopoverTabRoute.route(for: tab).totalHeight
+        guard abs(panel.frame.height - targetHeight) > 0.5 else { return }
+
+        let topBefore = panel.frame.maxY
+        let target = NSRect(
+            x: panel.frame.minX,
+            y: topBefore - targetHeight,
+            width: PopoverLayout.panelWidth,
+            height: targetHeight
+        )
+        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = reduceMotion ? 0 : PopoverLayout.heightAnimation
+            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            panel.animator().setFrame(target, display: true)
+        }
     }
 
     private func startMonitoring() {
         stopMonitoring()
+        // 无人值守 M8 回归期间不启用外部点击关闭，避免幽灵点击打断用例
+        guard !CommandLine.arguments.contains("--m8") else { return }
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             guard let self = self, let panel = self.panel, panel.isVisible else { return }
             let mouseLocation = NSEvent.mouseLocation
@@ -193,6 +348,7 @@ public final class StatusBarManager: ObservableObject {
 
     public func closePopover() {
         stopMonitoring()
+        SystemMonitorService.shared.release(.panel)
         panel?.orderOut(nil)
     }
 

@@ -563,5 +563,21 @@ public final class CommandCenter: ObservableObject {
                 return .success("已切换至服务监听看板")
             }
         ))
+
+        // 11. 面板可见项三分组深链（M6，UC-U05）
+        for group in PopoverVisibilityGroup.allCases {
+            register(CommandDescriptor(
+                id: "popover.\(group.rawValue)",
+                title: "设置\(group.title)分区显示项",
+                subtitle: "打开偏好设置并定位到「\(group.settingsTitle)」分组",
+                iconName: group.icon,
+                category: .general,
+                aliases: ["popover", "panel", group.rawValue, "\(group.title)分区", "面板\(group.title)", "显示项"],
+                run: {
+                    PopoverSettingsDeepLink.shared.open(group)
+                    return .success("已定位到「\(group.settingsTitle)」分组")
+                }
+            ))
+        }
     }
 }
