@@ -84,7 +84,7 @@ struct MonitorSectionView: View {
                 icon: "memorychip",
                 title: "内存",
                 value: sample.map { "\(Int(($0.memoryUsage * 100).rounded()))%" } ?? "—",
-                tint: memoryTint(sample?.memoryPressure)
+                tint: .primary
             ),
             MetricCardModel(
                 id: "network",
@@ -94,14 +94,6 @@ struct MonitorSectionView: View {
                 tint: .primary
             )
         ]
-    }
-
-    private func memoryTint(_ pressure: MemoryPressureLevel?) -> Color {
-        switch pressure {
-        case .critical: .red
-        case .warning: .orange
-        default: .primary
-        }
     }
 
     private func metricCard(_ metric: MetricCardModel) -> some View {
@@ -153,7 +145,7 @@ struct MonitorSectionView: View {
                 Spacer(minLength: 0)
                 Text(trendStatusText)
                     .font(.system(size: 9))
-                    .foregroundStyle(monitor.isStale ? .orange : .secondary)
+                    .foregroundStyle(.secondary)
             }
             if values.count >= 2 {
                 SparklineView(values: values)
@@ -162,6 +154,7 @@ struct MonitorSectionView: View {
                 HStack(spacing: 6) {
                     ProgressView()
                         .controlSize(.small)
+                        .tint(Color.secondary)
                     Text("积累中 · 至少需要 2 个采样点")
                         .font(.system(size: 10))
                         .foregroundStyle(.secondary)
@@ -207,12 +200,12 @@ struct MonitorSectionView: View {
             .buttonStyle(.plain)
             .accessibilityLabel("忽略告警提示")
         }
-        .foregroundStyle(.orange)
+        .foregroundStyle(.secondary)
         .padding(.horizontal, 8)
         .frame(height: 20)
         .background {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.orange.opacity(0.12))
+                .fill(Color.primary.opacity(0.06))
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -264,20 +257,10 @@ private struct SparklineView: View {
 
             ZStack(alignment: .bottomLeading) {
                 areaPath(width: width, height: height)
-                    .fill(
-                        LinearGradient(
-                            colors: [Color(red: 0.39, green: 0.82, blue: 1).opacity(0.22), .clear],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
+                    .fill(Color.primary.opacity(0.10))
                 linePath(height: height, step: step)
                     .stroke(
-                        LinearGradient(
-                            colors: [Color(red: 0.39, green: 0.82, blue: 1), Color(red: 0.04, green: 0.52, blue: 1)],
-                            startPoint: .leading,
-                            endPoint: .trailing
-                        ),
+                        Color.primary.opacity(0.7),
                         style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round)
                     )
             }

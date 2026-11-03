@@ -25,17 +25,6 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
     }
 
     @MainActor
-    var color: Color {
-        switch self {
-        case .ocr, .translation: .blue
-        case .clipboard: .cyan
-        case .cleaner: .purple
-        case .gatekeeper: .teal
-        case .launchManager: LaunchManager.shared.crashLoopingItems.isEmpty ? .orange : .red
-        }
-    }
-
-    @MainActor
     var title: String {
         switch self {
         case .ocr: "截屏识字"
@@ -157,7 +146,7 @@ private struct ToolGridTile: View {
             VStack(spacing: 4) {
                 Image(systemName: item.icon)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(item.color)
+                    .foregroundStyle(.primary)
                     .frame(width: 20, height: 20)
 
                 Text(item.title)

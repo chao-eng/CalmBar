@@ -74,7 +74,7 @@ struct GuardianSectionView: View {
     private var accessibilityBanner: some View {
         HStack {
             Image(systemName: "hand.raised.fill")
-                .foregroundStyle(.yellow)
+                .foregroundStyle(.secondary)
             VStack(alignment: .leading, spacing: 1) {
                 Text("未授予辅助功能权限")
                     .font(.system(size: 11, weight: .semibold))
@@ -89,10 +89,10 @@ struct GuardianSectionView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.mini)
-            .tint(.accentColor)
+            .tint(Color.primary)
         }
         .padding(8)
-        .background(Color.yellow.opacity(0.12))
+        .background(Color.primary.opacity(0.06))
         .cornerRadius(8)
     }
 
@@ -100,7 +100,7 @@ struct GuardianSectionView: View {
 
     private var caffeineCard: some View {
         HStack(spacing: 6) {
-            CaffeineIconView(size: 18, isActive: caffeine.isActive)
+            CaffeineIconView(size: 18, isActive: caffeine.isActive, monochrome: true)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("防休眠")
@@ -108,7 +108,7 @@ struct GuardianSectionView: View {
                     .lineLimit(1)
                 Text(caffeine.isActive ? (caffeine.timeRemaining != nil ? caffeine.formattedTimeRemaining() : "无限期") : "已停用")
                     .font(.system(size: 9, weight: caffeine.isActive ? .semibold : .regular))
-                    .foregroundColor(caffeine.isActive ? .brown : .secondary)
+                    .foregroundColor(caffeine.isActive ? .primary : .secondary)
                     .lineLimit(1)
             }
 
@@ -166,7 +166,7 @@ struct GuardianSectionView: View {
             .toggleStyle(.switch)
             .labelsHidden()
             .controlSize(.mini)
-            .tint(.accentColor)
+            .tint(Color.primary)
             .accessibilityLabel("防休眠开关")
         }
         .guardianCardStyle()
@@ -180,7 +180,8 @@ struct GuardianSectionView: View {
                 size: 18,
                 isCharging: batteryMonitor.isCharging,
                 isBypassed: chargeManager.isChargingInhibited,
-                isDischarging: chargeManager.operationStatus == .discharging
+                isDischarging: chargeManager.operationStatus == .discharging,
+                monochrome: true
             )
 
             VStack(alignment: .leading, spacing: 1) {
@@ -189,7 +190,7 @@ struct GuardianSectionView: View {
                     .lineLimit(1)
                 Text(settings.batteryChargeLimitEnabled ? (settings.batteryTopUpActive ? "临时充满" : "\(settings.batteryChargeLimit)% 旁路") : "已停用")
                     .font(.system(size: 9, weight: settings.batteryChargeLimitEnabled ? .semibold : .regular))
-                    .foregroundColor(settings.batteryChargeLimitEnabled ? .accentColor : .secondary)
+                    .foregroundColor(settings.batteryChargeLimitEnabled ? .primary : .secondary)
                     .lineLimit(1)
             }
 
@@ -201,7 +202,7 @@ struct GuardianSectionView: View {
                 }) {
                     Image(systemName: settings.batteryTopUpActive ? "bolt.slash" : "bolt.badge.checkmark")
                         .font(.system(size: 10))
-                        .foregroundColor(settings.batteryTopUpActive ? .orange : .secondary)
+                        .foregroundColor(settings.batteryTopUpActive ? .primary : .secondary)
                 }
                 .buttonStyle(.plain)
                 .help(settings.batteryTopUpActive ? "取消单次充至100%" : "临时充至 100%")
@@ -212,7 +213,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(.accentColor)
+                .tint(Color.primary)
                 .accessibilityLabel("充电保护开关")
         }
         .guardianCardStyle()
@@ -224,7 +225,7 @@ struct GuardianSectionView: View {
         HStack(spacing: 6) {
             Image(systemName: "computermouse.fill")
                 .font(.system(size: 13))
-                .foregroundStyle(.teal)
+                .foregroundStyle(.secondary)
                 .frame(width: 18, height: 18)
 
             VStack(alignment: .leading, spacing: 1) {
@@ -243,7 +244,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(.accentColor)
+                .tint(Color.primary)
                 .accessibilityLabel("自然滚动开关")
         }
         .guardianCardStyle()
@@ -253,7 +254,7 @@ struct GuardianSectionView: View {
 
     private var noTunesCard: some View {
         HStack(spacing: 6) {
-            NoTunesIconView(size: 18)
+            NoTunesIconView(size: 18, monochrome: true)
                 .frame(width: 18, height: 18)
 
             VStack(alignment: .leading, spacing: 1) {
@@ -272,7 +273,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(.accentColor)
+                .tint(Color.primary)
                 .accessibilityLabel("Music 拦截开关")
         }
         .guardianCardStyle()
@@ -284,7 +285,7 @@ struct GuardianSectionView: View {
         HStack(spacing: 6) {
             Image(systemName: "menubar.rectangle")
                 .font(.system(size: 13))
-                .foregroundStyle(settings.menuBarOrganizerEnabled ? .indigo : .secondary)
+                .foregroundStyle(settings.menuBarOrganizerEnabled ? .primary : .secondary)
                 .frame(width: 18, height: 18)
 
             VStack(alignment: .leading, spacing: 1) {
@@ -293,7 +294,7 @@ struct GuardianSectionView: View {
                     .fixedSize(horizontal: true, vertical: false)
                 Text(settings.menuBarOrganizerEnabled ? (menuBar.isCollapsed ? "已收纳" : "已展开") : "已停用")
                     .font(.system(size: 9))
-                    .foregroundColor(settings.menuBarOrganizerEnabled ? .indigo : .secondary)
+                    .foregroundColor(settings.menuBarOrganizerEnabled ? .primary : .secondary)
                     .lineLimit(1)
             }
 
@@ -318,7 +319,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(.accentColor)
+                .tint(Color.primary)
                 .accessibilityLabel("菜单收纳开关")
         }
         .guardianCardStyle()

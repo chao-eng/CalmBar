@@ -26,14 +26,14 @@ struct PopoverTabBar: View {
                                 .transition(.opacity)
                         }
                     }
-                    .foregroundStyle(isSelected ? Color.accentColor : Color.secondary)
+                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
                     .frame(
                         width: isSelected ? PopoverLayout.pillSelectedWidth : PopoverLayout.pillIdleWidth,
                         height: PopoverLayout.pillHeight
                     )
                     .background {
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(isSelected ? Color.accentColor.opacity(0.12) : Color.clear)
+                            .fill(isSelected ? Color.primary.opacity(0.10) : Color.clear)
                     }
                     // 命中区扩到 44×30，不参与布局
                     .background {

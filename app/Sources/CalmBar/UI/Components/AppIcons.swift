@@ -49,14 +49,32 @@ public enum AppIcons {
 public struct NoTunesIconView: View {
     public var size: CGFloat = 20
     public var isStatusTemplate: Bool = false
+    /// 面板内使用无彩色版本
+    public var monochrome: Bool = false
 
-    public init(size: CGFloat = 20, isStatusTemplate: Bool = false) {
+    public init(size: CGFloat = 20, isStatusTemplate: Bool = false, monochrome: Bool = false) {
         self.size = size
         self.isStatusTemplate = isStatusTemplate
+        self.monochrome = monochrome
     }
 
     public var body: some View {
-        if isStatusTemplate, let templateImg = AppIcons.noTunesStatusIcon {
+        if monochrome {
+            ZStack {
+                RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
+                    .fill(Color.primary.opacity(0.10))
+
+                Image(systemName: "music.note")
+                    .font(.system(size: size * 0.52, weight: .bold))
+                    .foregroundColor(.primary)
+
+                Rectangle()
+                    .fill(Color.primary)
+                    .frame(width: size * 0.75, height: 1.5)
+                    .rotationEffect(.degrees(-45))
+            }
+            .frame(width: size, height: size)
+        } else if isStatusTemplate, let templateImg = AppIcons.noTunesStatusIcon {
             Image(nsImage: templateImg)
                 .resizable()
                 .renderingMode(.template)
@@ -122,29 +140,35 @@ public struct GatekeeperIconView: View {
 public struct CaffeineIconView: View {
     public var size: CGFloat = 20
     public var isActive: Bool = true
+    /// 面板内使用无彩色版本
+    public var monochrome: Bool = false
 
-    public init(size: CGFloat = 20, isActive: Bool = true) {
+    public init(size: CGFloat = 20, isActive: Bool = true, monochrome: Bool = false) {
         self.size = size
         self.isActive = isActive
+        self.monochrome = monochrome
     }
 
     public var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                .fill(isActive ? LinearGradient(
-                    colors: [Color(red: 0.62, green: 0.44, blue: 0.32), Color(red: 0.48, green: 0.30, blue: 0.18)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ) : LinearGradient(
-                    colors: [Color.gray.opacity(0.4), Color.gray.opacity(0.6)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
-                .shadow(color: Color.black.opacity(0.10), radius: 1, x: 0, y: 0.5)
+                .fill(monochrome
+                    ? AnyShapeStyle(Color.primary.opacity(isActive ? 0.12 : 0.06))
+                    : AnyShapeStyle(isActive ? LinearGradient(
+                        colors: [Color(red: 0.62, green: 0.44, blue: 0.32), Color(red: 0.48, green: 0.30, blue: 0.18)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ) : LinearGradient(
+                        colors: [Color.gray.opacity(0.4), Color.gray.opacity(0.6)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                )
+                .shadow(color: Color.black.opacity(monochrome ? 0 : 0.10), radius: 1, x: 0, y: 0.5)
 
             Image(systemName: "cup.and.saucer.fill")
                 .font(.system(size: size * 0.50, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(monochrome ? .primary : .white)
         }
         .frame(width: size, height: size)
     }
@@ -155,39 +179,45 @@ public struct BatteryIconView: View {
     public var isCharging: Bool = false
     public var isBypassed: Bool = false
     public var isDischarging: Bool = false
+    /// 面板内使用无彩色版本
+    public var monochrome: Bool = false
 
-    public init(size: CGFloat = 20, isCharging: Bool = false, isBypassed: Bool = false, isDischarging: Bool = false) {
+    public init(size: CGFloat = 20, isCharging: Bool = false, isBypassed: Bool = false, isDischarging: Bool = false, monochrome: Bool = false) {
         self.size = size
         self.isCharging = isCharging
         self.isBypassed = isBypassed
         self.isDischarging = isDischarging
+        self.monochrome = monochrome
     }
 
     public var body: some View {
         ZStack {
             RoundedRectangle(cornerRadius: size * 0.22, style: .continuous)
-                .fill(isDischarging ? LinearGradient(
-                    colors: [Color(red: 0.28, green: 0.42, blue: 0.54), Color(red: 0.18, green: 0.30, blue: 0.42)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ) : isBypassed ? LinearGradient(
-                    colors: [Color(red: 0.16, green: 0.50, blue: 0.72), Color(red: 0.10, green: 0.38, blue: 0.58)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ) : isCharging ? LinearGradient(
-                    colors: [Color(red: 0.18, green: 0.52, blue: 0.90), Color(red: 0.10, green: 0.40, blue: 0.75)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ) : LinearGradient(
-                    colors: [Color(red: 0.25, green: 0.48, blue: 0.68), Color(red: 0.18, green: 0.38, blue: 0.55)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
-                .shadow(color: Color.black.opacity(0.10), radius: 1, x: 0, y: 0.5)
+                .fill(monochrome
+                    ? AnyShapeStyle(Color.primary.opacity(0.10))
+                    : AnyShapeStyle(isDischarging ? LinearGradient(
+                        colors: [Color(red: 0.28, green: 0.42, blue: 0.54), Color(red: 0.18, green: 0.30, blue: 0.42)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ) : isBypassed ? LinearGradient(
+                        colors: [Color(red: 0.16, green: 0.50, blue: 0.72), Color(red: 0.10, green: 0.38, blue: 0.58)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ) : isCharging ? LinearGradient(
+                        colors: [Color(red: 0.18, green: 0.52, blue: 0.90), Color(red: 0.10, green: 0.40, blue: 0.75)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ) : LinearGradient(
+                        colors: [Color(red: 0.25, green: 0.48, blue: 0.68), Color(red: 0.18, green: 0.38, blue: 0.55)],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    ))
+                )
+                .shadow(color: Color.black.opacity(monochrome ? 0 : 0.10), radius: 1, x: 0, y: 0.5)
 
             Image(systemName: isDischarging ? "arrow.down.forward.and.arrow.up.backward" : (isBypassed ? "powerplug.fill" : (isCharging ? "bolt.fill" : "battery.100")))
                 .font(.system(size: size * 0.48, weight: .semibold))
-                .foregroundColor(.white)
+                .foregroundColor(monochrome ? .primary : .white)
         }
         .frame(width: size, height: size)
     }

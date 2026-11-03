@@ -16,6 +16,19 @@ private final class StatusPanel: NSPanel {
         }
         super.keyDown(with: event)
     }
+
+    override func sendEvent(_ event: NSEvent) {
+        // 窗口高度恒为最大值，内容下方是透明区：点击该区域等价于点击面板外部
+        if event.type == .leftMouseDown || event.type == .rightMouseDown {
+            let activeHeight = PopoverTabRoute
+                .route(for: StatusBarManager.shared.currentPopoverTab).totalHeight
+            if event.locationInWindow.y < frame.height - activeHeight {
+                StatusBarManager.shared.closePopover()
+                return
+            }
+        }
+        super.sendEvent(event)
+    }
 }
 
 @MainActor
@@ -57,7 +70,7 @@ public final class StatusBarManager: ObservableObject {
 
     private func setupPanel() {
         let panel = StatusPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 320, height: 380),
+            contentRect: NSRect(x: 0, y: 0, width: PopoverLayout.panelWidth, height: PopoverLayout.maxPanelHeight),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -72,8 +85,9 @@ public final class StatusBarManager: ObservableObject {
         panel.hasShadow = true
 
         let model = PopoverPanelModel()
-        model.onTabChange = { [weak self] tab in
-            self?.applyPopoverHeight(for: tab)
+        model.onTabChange = { [weak self] _ in
+            // 窗口尺寸不变但内容高度变化，需让系统重算圆角卡片的投影
+            self?.panel?.invalidateShadow()
         }
         popoverModel = model
 
@@ -192,7 +206,7 @@ public final class StatusBarManager: ObservableObject {
 
         SystemMonitorService.shared.acquire(.panel)
 
-        let height = PopoverTabRoute.route(for: currentPopoverTab).totalHeight
+        let height = PopoverLayout.maxPanelHeight
         positionPanel(panel, relativeTo: button, height: height)
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -293,27 +307,6 @@ public final class StatusBarManager: ObservableObject {
             if let found = firstScrollView(in: subview) { return found }
         }
         return nil
-    }
-
-    /// 高度切换只改高度并保持顶边不动（BR-02）
-    private func applyPopoverHeight(for tab: PopoverTab) {
-        guard let panel else { return }
-        let targetHeight = PopoverTabRoute.route(for: tab).totalHeight
-        guard abs(panel.frame.height - targetHeight) > 0.5 else { return }
-
-        let topBefore = panel.frame.maxY
-        let target = NSRect(
-            x: panel.frame.minX,
-            y: topBefore - targetHeight,
-            width: PopoverLayout.panelWidth,
-            height: targetHeight
-        )
-        let reduceMotion = NSWorkspace.shared.accessibilityDisplayShouldReduceMotion
-        NSAnimationContext.runAnimationGroup { context in
-            context.duration = reduceMotion ? 0 : PopoverLayout.heightAnimation
-            context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
-            panel.animator().setFrame(target, display: true)
-        }
     }
 
     private func startMonitoring() {
