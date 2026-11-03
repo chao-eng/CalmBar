@@ -7,6 +7,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     case noTunes
     case caffeine
     case battery
+    case monitor
     case gatekeeper
     case ocr
     case translation
@@ -26,6 +27,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .noTunes: return "音乐拦截"
         case .caffeine: return "防休眠"
         case .battery: return "充电管理"
+        case .monitor: return "系统监控"
         case .gatekeeper: return "应用授权"
         case .ocr: return "文字识别"
         case .translation: return "智能翻译"
@@ -45,6 +47,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .noTunes: return "music.note"
         case .caffeine: return "cup.and.saucer.fill"
         case .battery: return "battery.100.bolt"
+        case .monitor: return "gauge.with.needle"
         case .gatekeeper: return "lock.shield.fill"
         case .ocr: return "text.viewfinder"
         case .translation: return "character.bubble.fill"
@@ -58,7 +61,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
 
     public var category: SettingsCategory {
         switch self {
-        case .thermal, .battery:
+        case .thermal, .battery, .monitor:
             return .hardware
         case .menuBar, .scroll, .caffeine, .noTunes:
             return .desktop
@@ -83,6 +86,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return "临时阻止系统与屏幕进入睡眠休眠，保持工作常亮"
         case .battery:
             return "设定 80% 充电上限与回差巡航，延长锂电池使用寿命"
+        case .monitor:
+            return "实时查看 CPU、内存、磁盘与网络，并按阈值发送告警提醒"
         case .gatekeeper:
             return "一键清除应用已损坏与未受信任警告，绕过 macOS 公证拦截"
         case .ocr:
@@ -108,6 +113,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return [Color.red, Color.orange]
         case .battery:
             return [Color(red: 0.18, green: 0.8, blue: 0.44), Color(red: 0.12, green: 0.65, blue: 0.35)]
+        case .monitor:
+            return [Color(red: 0.39, green: 0.82, blue: 1.0), Color(red: 0.04, green: 0.52, blue: 1.0)]
         case .menuBar:
             return [Color(red: 0.2, green: 0.6, blue: 1.0), Color(red: 0.1, green: 0.45, blue: 0.9)]
         case .scroll:
@@ -141,6 +148,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return ["温控", "温度", "风扇", "SMC", "转速", "散热", "传感器", "cpu", "thermal", "fan"]
         case .battery:
             return ["电池", "充电", "80%", "健康", "循环", "充电上限", "放电", "battery", "charge"]
+        case .monitor:
+            return ["系统监控", "CPU", "内存", "磁盘", "网络", "告警", "阈值", "monitor", "alert", "gauge"]
         case .menuBar:
             return ["菜单栏", "收纳", "折叠", "隐藏", "图标", "bartender", "menubar", "hide"]
         case .scroll:
@@ -189,7 +198,7 @@ public enum SettingsCategory: String, CaseIterable, Identifiable {
     public var tabs: [SettingsTab] {
         switch self {
         case .hardware:
-            return [.thermal, .battery]
+            return [.thermal, .battery, .monitor]
         case .desktop:
             return [.menuBar, .scroll, .caffeine, .noTunes]
         case .productivity:

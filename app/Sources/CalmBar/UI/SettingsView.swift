@@ -124,6 +124,8 @@ public struct SettingsView: View {
                         ThermalSettingsTab()
                     case .battery:
                         BatterySettingsTab()
+                    case .monitor:
+                        MonitorSettingsTab()
                     case .menuBar:
                         MenuBarSettingsTab()
                     case .scroll:

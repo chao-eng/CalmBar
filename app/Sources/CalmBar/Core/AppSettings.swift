@@ -293,6 +293,93 @@ public final class AppSettings: ObservableObject {
     @Published public var popoverShowLaunchManager: Bool {
         didSet { defaults.set(popoverShowLaunchManager, forKey: "popoverShowLaunchManager") }
     }
+    // MARK: - Popover Reserved Tabs（Phase 2 模块上线后置 true）
+    @Published public var popoverShowMonitor: Bool {
+        didSet { defaults.set(popoverShowMonitor, forKey: "popoverShowMonitor") }
+    }
+    @Published public var popoverShowAudio: Bool {
+        didSet { defaults.set(popoverShowAudio, forKey: "popoverShowAudio") }
+    }
+    // MARK: - Popover Selected Tab（面板上次停留的分区）
+    @Published public var popoverSelectedTab: String {
+        didSet { defaults.set(popoverSelectedTab, forKey: "popoverSelectedTab") }
+    }
+
+    // MARK: - System Monitor Settings（PRD UC-M01 ~ UC-M04）
+    @Published public var systemMonitorEnabled: Bool {
+        didSet { defaults.set(systemMonitorEnabled, forKey: "systemMonitorEnabled") }
+    }
+    @Published public var systemMonitorSampleInterval: Int {
+        didSet { defaults.set(systemMonitorSampleInterval, forKey: "systemMonitorSampleInterval") }
+    }
+    @Published public var systemMonitorHistoryWindow: Int {
+        didSet { defaults.set(systemMonitorHistoryWindow, forKey: "systemMonitorHistoryWindow") }
+    }
+    @Published public var systemMonitorShowGPU: Bool {
+        didSet { defaults.set(systemMonitorShowGPU, forKey: "systemMonitorShowGPU") }
+    }
+    @Published public var menuBarReadoutItems: [String] {
+        didSet { defaults.set(menuBarReadoutItems, forKey: "menuBarReadoutItems") }
+    }
+    @Published public var monitorAlertsEnabled: Bool {
+        didSet { defaults.set(monitorAlertsEnabled, forKey: "monitorAlertsEnabled") }
+    }
+    @Published public var monitorAlertCPU: Bool {
+        didSet { defaults.set(monitorAlertCPU, forKey: "monitorAlertCPU") }
+    }
+    @Published public var monitorAlertMemory: Bool {
+        didSet { defaults.set(monitorAlertMemory, forKey: "monitorAlertMemory") }
+    }
+    @Published public var monitorAlertDisk: Bool {
+        didSet { defaults.set(monitorAlertDisk, forKey: "monitorAlertDisk") }
+    }
+    @Published public var monitorAlertBattery: Bool {
+        didSet { defaults.set(monitorAlertBattery, forKey: "monitorAlertBattery") }
+    }
+    @Published public var monitorAlertTemperature: Bool {
+        didSet { defaults.set(monitorAlertTemperature, forKey: "monitorAlertTemperature") }
+    }
+    @Published public var monitorAlertCPUThreshold: Double {
+        didSet { defaults.set(monitorAlertCPUThreshold, forKey: "monitorAlertCPUThreshold") }
+    }
+    @Published public var monitorAlertCPUDuration: Int {
+        didSet { defaults.set(monitorAlertCPUDuration, forKey: "monitorAlertCPUDuration") }
+    }
+    @Published public var monitorAlertMemoryDuration: Int {
+        didSet { defaults.set(monitorAlertMemoryDuration, forKey: "monitorAlertMemoryDuration") }
+    }
+    @Published public var monitorAlertDiskFreeGB: Double {
+        didSet { defaults.set(monitorAlertDiskFreeGB, forKey: "monitorAlertDiskFreeGB") }
+    }
+    @Published public var monitorAlertBatteryThreshold: Int {
+        didSet { defaults.set(monitorAlertBatteryThreshold, forKey: "monitorAlertBatteryThreshold") }
+    }
+    @Published public var monitorAlertTemperatureThreshold: Double {
+        didSet { defaults.set(monitorAlertTemperatureThreshold, forKey: "monitorAlertTemperatureThreshold") }
+    }
+    @Published public var monitorAlertCooldownMinutes: Int {
+        didSet { defaults.set(monitorAlertCooldownMinutes, forKey: "monitorAlertCooldownMinutes") }
+    }
+
+    /// BR-24：菜单栏读数最多 3 项
+    public static let menuBarReadoutLimit = 3
+    public static let menuBarReadoutOrder = ["temperature", "cpu", "memory", "network", "disk"]
+
+    public func setMenuBarReadoutItem(_ id: String, enabled: Bool) {
+        var items = menuBarReadoutItems
+        if enabled {
+            guard !items.contains(id), items.count < Self.menuBarReadoutLimit else { return }
+            items.append(id)
+        } else {
+            items.removeAll { $0 == id }
+        }
+        items.sort { lhs, rhs in
+            let left = Self.menuBarReadoutOrder.firstIndex(of: lhs) ?? Int.max
+            let right = Self.menuBarReadoutOrder.firstIndex(of: rhs) ?? Int.max
+            return left < right
+        }
+        menuBarReadoutItems = items
+    }
 
     private init() {
         self.thermalEnabled = defaults.object(forKey: "thermalEnabled") as? Bool ?? true
@@ -394,6 +481,35 @@ public final class AppSettings: ObservableObject {
         self.launchManagerScanDevPorts = defaults.object(forKey: "launchManagerScanDevPorts") as? Bool ?? true
         self.launchManagerCrashLoopAlertThreshold = defaults.object(forKey: "launchManagerCrashLoopAlertThreshold") as? Int ?? 3
         self.popoverShowLaunchManager = defaults.object(forKey: "popoverShowLaunchManager") as? Bool ?? true
+        // 监控模块已上线，面板分区默认展示；音频仍为预留
+        self.popoverShowMonitor = defaults.object(forKey: "popoverShowMonitor") as? Bool ?? true
+        self.popoverShowAudio = defaults.object(forKey: "popoverShowAudio") as? Bool ?? false
+        self.popoverSelectedTab = defaults.string(forKey: "popoverSelectedTab") ?? "thermal"
+
+        // 系统监控（PRD §7.3）
+        self.systemMonitorEnabled = defaults.object(forKey: "systemMonitorEnabled") as? Bool ?? true
+        self.systemMonitorSampleInterval = defaults.object(forKey: "systemMonitorSampleInterval") as? Int ?? 1
+        self.systemMonitorHistoryWindow = defaults.object(forKey: "systemMonitorHistoryWindow") as? Int ?? 60
+        self.systemMonitorShowGPU = defaults.object(forKey: "systemMonitorShowGPU") as? Bool ?? true
+
+        // BR-25：旧 showTempInMenuBar 一次性迁移为「温度」读数项
+        let legacyShowTemp = defaults.object(forKey: "showTempInMenuBar") as? Bool ?? true
+        self.menuBarReadoutItems = defaults.stringArray(forKey: "menuBarReadoutItems")
+            ?? (legacyShowTemp ? ["temperature"] : [])
+
+        self.monitorAlertsEnabled = defaults.object(forKey: "monitorAlertsEnabled") as? Bool ?? true
+        self.monitorAlertCPU = defaults.object(forKey: "monitorAlertCPU") as? Bool ?? true
+        self.monitorAlertMemory = defaults.object(forKey: "monitorAlertMemory") as? Bool ?? true
+        self.monitorAlertDisk = defaults.object(forKey: "monitorAlertDisk") as? Bool ?? true
+        self.monitorAlertBattery = defaults.object(forKey: "monitorAlertBattery") as? Bool ?? true
+        self.monitorAlertTemperature = defaults.object(forKey: "monitorAlertTemperature") as? Bool ?? true
+        self.monitorAlertCPUThreshold = defaults.object(forKey: "monitorAlertCPUThreshold") as? Double ?? 90
+        self.monitorAlertCPUDuration = defaults.object(forKey: "monitorAlertCPUDuration") as? Int ?? 60
+        self.monitorAlertMemoryDuration = defaults.object(forKey: "monitorAlertMemoryDuration") as? Int ?? 30
+        self.monitorAlertDiskFreeGB = defaults.object(forKey: "monitorAlertDiskFreeGB") as? Double ?? 10
+        self.monitorAlertBatteryThreshold = defaults.object(forKey: "monitorAlertBatteryThreshold") as? Int ?? 20
+        self.monitorAlertTemperatureThreshold = defaults.object(forKey: "monitorAlertTemperatureThreshold") as? Double ?? 95
+        self.monitorAlertCooldownMinutes = defaults.object(forKey: "monitorAlertCooldownMinutes") as? Int ?? 30
     }
 }
 
