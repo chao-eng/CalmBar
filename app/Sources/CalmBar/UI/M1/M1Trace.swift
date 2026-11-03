@@ -5,6 +5,7 @@ import AppKit
 enum M1Trace {
     private static var logPath: String {
         let args = CommandLine.arguments
+        if args.contains("--visual") { return "/tmp/calmbar_visual.log" }
         if args.contains("--m8") { return "/tmp/calmbar_m8.log" }
         if args.contains("--m7") || args.contains("--m7-empty") { return "/tmp/calmbar_m7.log" }
         if args.contains("--m6") || args.contains("--m6-empty") { return "/tmp/calmbar_m6.log" }

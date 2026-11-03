@@ -39,6 +39,17 @@ enum PopoverTab: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// 分区主题色（Tab 图标与分区内强调色）
+    var accent: Color {
+        switch self {
+        case .thermal: PopoverPalette.thermalAccent
+        case .guardian: PopoverPalette.guardianAccent
+        case .tools: PopoverPalette.toolsAccent
+        case .monitor: PopoverPalette.monitorAccent
+        case .audio: PopoverPalette.audioAccent
+        }
+    }
+
     static var phaseOne: [PopoverTab] { allCases.filter(\.isPhaseOne) }
 }
 

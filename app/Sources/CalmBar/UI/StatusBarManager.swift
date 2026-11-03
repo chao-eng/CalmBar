@@ -311,8 +311,8 @@ public final class StatusBarManager: ObservableObject {
 
     private func startMonitoring() {
         stopMonitoring()
-        // 无人值守 M8 回归期间不启用外部点击关闭，避免幽灵点击打断用例
-        guard !CommandLine.arguments.contains("--m8") else { return }
+        // 无人值守 M8/视觉验收回归期间不启用外部点击关闭，避免幽灵点击打断用例
+        guard !CommandLine.arguments.contains("--m8"), !CommandLine.arguments.contains("--visual") else { return }
         eventMonitor = NSEvent.addGlobalMonitorForEvents(matching: [.leftMouseDown, .rightMouseDown]) { [weak self] _ in
             guard let self = self, let panel = self.panel, panel.isVisible else { return }
             let mouseLocation = NSEvent.mouseLocation

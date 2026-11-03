@@ -30,7 +30,7 @@ struct PopoverPanelView: View {
             .overlay {
                 panelShape
                     .strokeBorder(
-                        Color.primary.opacity(NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? 0.32 : 0.12),
+                        PopoverPalette.separatorEmphasized,
                         lineWidth: NSWorkspace.shared.accessibilityDisplayShouldIncreaseContrast ? 1.0 : 0.5
                     )
             }
@@ -118,27 +118,27 @@ struct PopoverPanelView: View {
     @ViewBuilder
     private var headerStatus: some View {
         if !dashboard.isSMCConnected {
-            statusBadge(icon: "exclamationmark.triangle.fill", text: "无 SMC 驱动")
+            statusBadge(icon: "exclamationmark.triangle.fill", text: "无 SMC 驱动", tint: PopoverPalette.statusCritical)
         } else if settings.thermalEnabled && dashboard.safetyAction != .none {
-            statusBadge(icon: "flame.fill", text: "温控保护中")
+            statusBadge(icon: "flame.fill", text: "温控保护中", tint: PopoverPalette.statusWarning)
         } else if !settings.thermalEnabled {
             statusBadge(icon: nil, text: "温控已停用")
         } else if helper.needsHelperUpdate {
-            statusBadge(icon: "lock.shield", text: "助手需更新")
+            statusBadge(icon: "lock.shield", text: "助手需更新", tint: PopoverPalette.statusWarning)
         } else {
-            statusBadge(icon: nil, text: thermal.isFanless ? "温度监控中" : "温控运行中")
+            statusBadge(icon: nil, text: thermal.isFanless ? "温度监控中" : "温控运行中", tint: PopoverPalette.statusSuccess)
         }
     }
 
-    private func statusBadge(icon: String?, text: String) -> some View {
+    private func statusBadge(icon: String?, text: String, tint: Color = .secondary) -> some View {
         HStack(spacing: 4) {
             if let icon {
                 Image(systemName: icon)
                     .font(.system(size: 9))
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(tint)
             } else {
                 Circle()
-                    .fill(Color.secondary.opacity(0.6))
+                    .fill(tint)
                     .frame(width: 6, height: 6)
             }
             Text(text)

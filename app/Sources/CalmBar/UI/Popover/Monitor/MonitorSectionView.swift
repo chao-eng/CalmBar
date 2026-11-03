@@ -37,6 +37,7 @@ struct MonitorSectionView: View {
                 HStack(spacing: 6) {
                     Image(systemName: "bell.badge")
                         .font(.system(size: 11))
+                        .foregroundStyle(PopoverPalette.statusWarning)
                     Text("告警设置")
                         .font(.system(size: 10, weight: .medium))
                     Spacer(minLength: 0)
@@ -48,7 +49,7 @@ struct MonitorSectionView: View {
                 .frame(height: 24)
                 .background {
                     RoundedRectangle(cornerRadius: 8, style: .continuous)
-                        .fill(Color.primary.opacity(0.04))
+                        .fill(PopoverPalette.surfaceCard)
                 }
                 .contentShape(Rectangle())
             }
@@ -183,22 +184,24 @@ struct MonitorSectionView: View {
     }
 
     private func metricCard(_ metric: MetricCardModel) -> some View {
-        VStack(alignment: .leading, spacing: 4) {
+        let accent = PopoverPalette.metricColor(metric.id)
+        return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 4) {
                 Image(systemName: metric.icon)
                     .font(.system(size: 9))
+                    .foregroundStyle(accent)
                 Text(metric.title)
                     .font(.system(size: 9))
+                    .foregroundStyle(.secondary)
                 Spacer(minLength: 2)
-                badgeView(metric.badge)
+                badgeView(metric.badge, accent: accent)
             }
-            .foregroundStyle(.secondary)
 
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(metric.value)
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
                     .monospacedDigit()
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(accent)
                     .lineLimit(1)
                     .minimumScaleFactor(0.6)
                 Text(metric.unit)
@@ -208,7 +211,7 @@ struct MonitorSectionView: View {
 
             Spacer(minLength: 0)
 
-            accessoryView(metric.accessory)
+            accessoryView(metric.accessory, accent: accent)
                 .frame(height: 14)
 
             Text(metric.footnote)
@@ -223,13 +226,13 @@ struct MonitorSectionView: View {
         .frame(height: 96)
         .background {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.primary.opacity(0.04))
+                .fill(PopoverPalette.surfaceCard)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(metric.title) \(metric.value)\(metric.unit)，\(metric.badge.text)，\(metric.footnote)")
     }
 
-    private func badgeView(_ badge: MetricBadge) -> some View {
+    private func badgeView(_ badge: MetricBadge, accent: Color) -> some View {
         HStack(spacing: 2) {
             if badge.tone == .alert {
                 Image(systemName: "exclamationmark")
@@ -238,32 +241,40 @@ struct MonitorSectionView: View {
             Text(badge.text)
                 .font(.system(size: 9, weight: .medium))
         }
-        .foregroundStyle(badge.tone == .quiet ? Color.secondary : Color.primary)
+        .foregroundStyle(badgeForeground(badge.tone, accent: accent))
         .padding(.horizontal, 5)
         .frame(height: 14)
         .background {
             Capsule(style: .continuous)
-                .fill(badgeToneFill(badge.tone))
+                .fill(badgeToneFill(badge.tone, accent: accent))
         }
     }
 
-    private func badgeToneFill(_ tone: BadgeTone) -> Color {
+    private func badgeForeground(_ tone: BadgeTone, accent: Color) -> Color {
+        switch tone {
+        case .quiet: .secondary
+        case .normal: accent
+        case .alert: PopoverPalette.statusCritical
+        }
+    }
+
+    private func badgeToneFill(_ tone: BadgeTone, accent: Color) -> Color {
         switch tone {
         case .quiet: .clear
-        case .normal: Color.primary.opacity(0.06)
-        case .alert: Color.primary.opacity(0.16)
+        case .normal: accent.opacity(0.12)
+        case .alert: PopoverPalette.statusCritical.opacity(0.14)
         }
     }
 
     @ViewBuilder
-    private func accessoryView(_ accessory: Accessory) -> some View {
+    private func accessoryView(_ accessory: Accessory, accent: Color) -> some View {
         switch accessory {
         case .sparkline(let values):
-            MiniBarSparklineView(values: values)
+            MiniBarSparklineView(values: values, tint: accent)
         case .progress(let ratio):
             VStack(spacing: 0) {
                 Spacer(minLength: 0)
-                RatioBar(ratio: ratio)
+                RatioBar(ratio: ratio, tint: accent)
                     .frame(height: 4)
                 Spacer(minLength: 0)
             }
@@ -332,7 +343,7 @@ struct MonitorSectionView: View {
                     .lineLimit(1)
             }
             if values.count >= 2 {
-                SparklineView(values: values)
+                SparklineView(values: values, tint: PopoverPalette.metricColor("cpu"))
                     .frame(height: 52)
             } else {
                 HStack(spacing: 6) {
@@ -350,7 +361,7 @@ struct MonitorSectionView: View {
         .frame(width: PopoverLayout.contentWidth, height: 76)
         .background {
             RoundedRectangle(cornerRadius: 8, style: .continuous)
-                .fill(Color.primary.opacity(0.04))
+                .fill(PopoverPalette.surfaceCard)
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(values.count >= 2
@@ -370,6 +381,7 @@ struct MonitorSectionView: View {
         HStack(spacing: 5) {
             Image(systemName: "bell.slash")
                 .font(.system(size: 9))
+                .foregroundStyle(PopoverPalette.statusCritical)
             Text("通知不可用 · \(compactText(event))")
                 .font(.system(size: 9, weight: .medium))
                 .lineLimit(1)
@@ -389,7 +401,7 @@ struct MonitorSectionView: View {
         .frame(height: 20)
         .background {
             RoundedRectangle(cornerRadius: 6, style: .continuous)
-                .fill(Color.primary.opacity(0.06))
+                .fill(PopoverPalette.surfaceWell)
         }
         .contentShape(Rectangle())
         .onTapGesture {
@@ -444,6 +456,7 @@ struct MonitorSectionView: View {
 
 private struct MiniBarSparklineView: View {
     let values: [Double]
+    var tint: Color = .primary
 
     var body: some View {
         GeometryReader { proxy in
@@ -461,7 +474,7 @@ private struct MiniBarSparklineView: View {
                         bottomTrailingRadius: 0,
                         topTrailingRadius: 1
                     )
-                        .fill(Color.primary.opacity(index == count - 1 ? 0.7 : 0.35))
+                        .fill(index == count - 1 ? tint : tint.opacity(0.4))
                         .frame(
                             width: barWidth,
                             height: max(1.5, proxy.size.height * CGFloat(min(1, value / peak)))
@@ -478,14 +491,15 @@ private struct MiniBarSparklineView: View {
 
 private struct RatioBar: View {
     let ratio: Double
+    var tint: Color = .primary
 
     var body: some View {
         GeometryReader { proxy in
             ZStack(alignment: .leading) {
                 Capsule(style: .continuous)
-                    .fill(Color.primary.opacity(0.10))
+                    .fill(PopoverPalette.barTrack)
                 Capsule(style: .continuous)
-                    .fill(Color.primary.opacity(0.55))
+                    .fill(tint.opacity(0.75))
                     .frame(width: max(2, proxy.size.width * CGFloat(min(1, max(0, ratio)))))
             }
         }
@@ -497,6 +511,7 @@ private struct RatioBar: View {
 
 private struct SparklineView: View {
     let values: [Double]
+    var tint: Color = .primary
 
     var body: some View {
         GeometryReader { proxy in
@@ -506,10 +521,10 @@ private struct SparklineView: View {
 
             ZStack(alignment: .bottomLeading) {
                 areaPath(width: width, height: height)
-                    .fill(Color.primary.opacity(0.10))
+                    .fill(tint.opacity(0.10))
                 linePath(height: height, step: step)
                     .stroke(
-                        Color.primary.opacity(0.7),
+                        tint.opacity(0.85),
                         style: StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round)
                     )
             }

@@ -21,6 +21,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         if args.contains("--m8"), args.contains("--dark") {
             NSApp.appearance = NSAppearance(named: .darkAqua)
         }
+        // 视觉验收：先锁定浅色外观，深色由驱动运行中切换
+        if args.contains("--visual") {
+            NSApp.appearance = NSAppearance(named: .aqua)
+        }
 
         // M1 骨架模式：独立窗口，不启动现有面板
         if M1WindowController.shared.presentIfRequested() {
@@ -51,6 +55,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // M8：生产面板接入回归（真实状态栏面板路径）
         M8SmokeDriver.shared.startIfRequested()
+
+        // 色彩令牌视觉验收（临时，真实面板路径）
+        VisualCheckDriver.shared.startIfRequested()
     }
 
     /// 通知权限可能在本 App 之外被修改（如跳转系统设置），回前台时复查

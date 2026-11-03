@@ -111,7 +111,7 @@ struct ThermalSectionView: View {
                         }
                         .buttonStyle(.borderedProminent)
                         .controlSize(.mini)
-                        .tint(Color.primary)
+                        .tint(PopoverPalette.thermalAccent)
 
                         Button {
                             HelperClient.shared.checkHelperStatus()
@@ -135,11 +135,11 @@ struct ThermalSectionView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .controlSize(.mini)
-                    .tint(Color.primary)
+                    .tint(PopoverPalette.thermalAccent)
                 }
             }
             .padding(8)
-            .background(Color.primary.opacity(0.06))
+            .background(PopoverPalette.surfaceWell)
             .cornerRadius(8)
         }
     }
@@ -166,13 +166,13 @@ struct ThermalSectionView: View {
                 title: "CPU",
                 temp: settings.thermalEnabled ? thermal.cpuTemp : 0,
                 icon: "cpu",
-                color: .secondary
+                color: PopoverPalette.tempColor(Double(settings.thermalEnabled ? thermal.cpuTemp : 0))
             )
             TemperatureGaugeView(
                 title: "GPU",
                 temp: settings.thermalEnabled ? thermal.gpuTemp : 0,
                 icon: "square.stack.3d.up.fill",
-                color: .secondary
+                color: PopoverPalette.tempColor(Double(settings.thermalEnabled ? thermal.gpuTemp : 0))
             )
 
             if supportsFanControl, let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
@@ -182,7 +182,7 @@ struct ThermalSectionView: View {
                     title: "电池",
                     temp: thermal.batteryTemp,
                     icon: "battery.100.bolt",
-                    color: .secondary
+                    color: PopoverPalette.tempColor(Double(thermal.batteryTemp))
                 )
             }
 
@@ -205,7 +205,7 @@ struct ThermalSectionView: View {
             }
             .pickerStyle(.segmented)
             .labelsHidden()
-            .tint(Color.primary)
+            .tint(PopoverPalette.thermalAccent)
             // 关闭系统焦点环绘制，避免选中态出现蓝色方框
             .focusable(false)
             .focusEffectDisabled()
@@ -218,7 +218,7 @@ struct ThermalSectionView: View {
                     .toggleStyle(.switch)
                     .labelsHidden()
                     .controlSize(.mini)
-                    .tint(Color.primary)
+                    .tint(PopoverPalette.thermalAccent)
                     .accessibilityLabel("左右风扇联动")
             }
             .padding(.top, 2)
@@ -229,7 +229,7 @@ struct ThermalSectionView: View {
                     .foregroundColor((settings.fanPreset == .auto || !settings.thermalEnabled) ? .secondary : .primary)
 
                 Slider(value: sliderBinding, in: 0.0...1.0)
-                    .tint(Color.primary)
+                    .tint(PopoverPalette.thermalAccent)
                     .accessibilityLabel("风扇转速")
                     .accessibilityValue("\(Int(activeFanFraction * 100))%")
 
@@ -273,7 +273,7 @@ struct ThermalSectionView: View {
                         .frame(width: 48, alignment: .leading)
 
                     Slider(value: $settings.fan0CustomFraction, in: 0.0...1.0)
-                        .tint(Color.primary)
+                        .tint(PopoverPalette.thermalAccent)
                         .accessibilityLabel(thermal.fanSnapshots.count > 1 ? "风扇 1 转速" : "风扇转速")
 
                     let rpm0 = Int(thermal.fanSnapshots.first?.actualRPM ?? Float(settings.fan0CustomFraction * 5000 + 1200))
@@ -289,7 +289,7 @@ struct ThermalSectionView: View {
                             .frame(width: 48, alignment: .leading)
 
                         Slider(value: $settings.fan1CustomFraction, in: 0.0...1.0)
-                            .tint(Color.primary)
+                            .tint(PopoverPalette.thermalAccent)
                             .accessibilityLabel("风扇 2 转速")
 
                         let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
@@ -316,11 +316,11 @@ struct ThermalSectionView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(0.04))
+                .fill(PopoverPalette.surfaceCard)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+                .stroke(PopoverPalette.separatorHairline, lineWidth: 0.5)
         )
         .disabled(!settings.thermalEnabled)
         .opacity(settings.thermalEnabled ? 1.0 : 0.45)
@@ -348,11 +348,11 @@ struct ThermalSectionView: View {
         .padding(10)
         .background(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .fill(Color.primary.opacity(0.04))
+                .fill(PopoverPalette.surfaceCard)
         )
         .overlay(
             RoundedRectangle(cornerRadius: 10, style: .continuous)
-                .stroke(Color.primary.opacity(0.05), lineWidth: 0.5)
+                .stroke(PopoverPalette.separatorHairline, lineWidth: 0.5)
         )
         .disabled(!settings.thermalEnabled)
         .opacity(settings.thermalEnabled ? 1.0 : 0.45)
