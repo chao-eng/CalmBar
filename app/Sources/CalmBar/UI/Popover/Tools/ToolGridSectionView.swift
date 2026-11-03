@@ -24,6 +24,18 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
         }
     }
 
+    /// 工具主题色（图标着色，浅色加深保证对比度）
+    var accent: Color {
+        switch self {
+        case .ocr: PopoverPalette.accentBlue
+        case .translation: PopoverPalette.accentPurple
+        case .clipboard: PopoverPalette.accentTeal
+        case .cleaner: PopoverPalette.accentOrange
+        case .gatekeeper: PopoverPalette.accentRed
+        case .launchManager: PopoverPalette.accentIndigo
+        }
+    }
+
     @MainActor
     var title: String {
         switch self {
@@ -146,7 +158,7 @@ private struct ToolGridTile: View {
             VStack(spacing: 4) {
                 Image(systemName: item.icon)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundStyle(.primary)
+                    .foregroundStyle(item.accent)
                     .frame(width: 20, height: 20)
 
                 Text(item.title)
@@ -158,11 +170,11 @@ private struct ToolGridTile: View {
             .frame(width: PopoverLayout.toolTileWidth, height: PopoverLayout.toolTileHeight)
             .background {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.primary.opacity(isHovered ? 0.08 : 0.04))
+                    .fill(isHovered ? PopoverPalette.surfaceCardHover : PopoverPalette.surfaceCard)
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(isHovered ? 0.12 : 0.05), lineWidth: 0.5)
+                    .strokeBorder(isHovered ? PopoverPalette.separatorEmphasized : PopoverPalette.separatorHairline, lineWidth: 0.5)
             }
             .contentShape(Rectangle())
         }

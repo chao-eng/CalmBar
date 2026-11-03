@@ -47,12 +47,12 @@ struct AudioSectionView: View {
         let value = row.wrappedValue
         return HStack(spacing: 6) {
             RoundedRectangle(cornerRadius: 4, style: .continuous)
-                .fill(Color.primary.opacity(0.06))
+                .fill(value.accent.opacity(0.14))
                 .frame(width: 18, height: 18)
                 .overlay {
                     Image(systemName: value.icon)
                         .font(.system(size: 9))
-                        .foregroundStyle(.primary)
+                        .foregroundStyle(value.accent)
                 }
 
             Text(value.appName)
@@ -76,7 +76,7 @@ struct AudioSectionView: View {
                 .frame(width: 78, height: 20)
                 .background {
                     RoundedRectangle(cornerRadius: 5, style: .continuous)
-                        .fill(Color.primary.opacity(0.06))
+                        .fill(PopoverPalette.surfaceWell)
                 }
                 .contentShape(Rectangle())
             }
@@ -96,7 +96,7 @@ struct AudioSectionView: View {
             )
             .controlSize(.mini)
             .frame(width: 56)
-            .tint(Color.primary)
+            .tint(PopoverPalette.audioAccent)
             .accessibilityLabel("\(value.appName) 音量")
 
             Text("\(value.volume)%")
@@ -134,14 +134,15 @@ struct AudioRowStub: Identifiable {
     let id: String
     let appName: String
     let icon: String
+    let accent: Color
     var device: String
     var volume: Int
     var isMuted: Bool
 
     static let defaults: [AudioRowStub] = [
-        AudioRowStub(id: "discord", appName: "Discord", icon: "bubble.left.fill", device: "默认", volume: 29, isMuted: false),
-        AudioRowStub(id: "music", appName: "Music", icon: "music.note", device: "默认", volume: 187, isMuted: false),
-        AudioRowStub(id: "safari", appName: "Safari", icon: "safari.fill", device: "扬声器", volume: 100, isMuted: false),
-        AudioRowStub(id: "zoom", appName: "Zoom", icon: "video.fill", device: "默认", volume: 75, isMuted: false)
+        AudioRowStub(id: "discord", appName: "Discord", icon: "bubble.left.fill", accent: PopoverPalette.accentIndigo, device: "默认", volume: 29, isMuted: false),
+        AudioRowStub(id: "music", appName: "Music", icon: "music.note", accent: PopoverPalette.accentPink, device: "默认", volume: 187, isMuted: false),
+        AudioRowStub(id: "safari", appName: "Safari", icon: "safari.fill", accent: PopoverPalette.accentBlue, device: "扬声器", volume: 100, isMuted: false),
+        AudioRowStub(id: "zoom", appName: "Zoom", icon: "video.fill", accent: PopoverPalette.accentGreen, device: "默认", volume: 75, isMuted: false)
     ]
 }

@@ -89,10 +89,10 @@ struct GuardianSectionView: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.mini)
-            .tint(Color.primary)
+            .tint(PopoverPalette.guardianAccent)
         }
         .padding(8)
-        .background(Color.primary.opacity(0.06))
+        .background(PopoverPalette.surfaceWell)
         .cornerRadius(8)
     }
 
@@ -100,7 +100,7 @@ struct GuardianSectionView: View {
 
     private var caffeineCard: some View {
         HStack(spacing: 6) {
-            CaffeineIconView(size: 18, isActive: caffeine.isActive, monochrome: true)
+            CaffeineIconView(size: 18, isActive: caffeine.isActive, monochrome: false)
 
             VStack(alignment: .leading, spacing: 1) {
                 Text("防休眠")
@@ -166,7 +166,7 @@ struct GuardianSectionView: View {
             .toggleStyle(.switch)
             .labelsHidden()
             .controlSize(.mini)
-            .tint(Color.primary)
+            .tint(PopoverPalette.guardianAccent)
             .accessibilityLabel("防休眠开关")
         }
         .guardianCardStyle()
@@ -181,7 +181,7 @@ struct GuardianSectionView: View {
                 isCharging: batteryMonitor.isCharging,
                 isBypassed: chargeManager.isChargingInhibited,
                 isDischarging: chargeManager.operationStatus == .discharging,
-                monochrome: true
+                monochrome: false
             )
 
             VStack(alignment: .leading, spacing: 1) {
@@ -213,7 +213,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(Color.primary)
+                .tint(PopoverPalette.guardianAccent)
                 .accessibilityLabel("充电保护开关")
         }
         .guardianCardStyle()
@@ -244,7 +244,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(Color.primary)
+                .tint(PopoverPalette.guardianAccent)
                 .accessibilityLabel("自然滚动开关")
         }
         .guardianCardStyle()
@@ -254,7 +254,7 @@ struct GuardianSectionView: View {
 
     private var noTunesCard: some View {
         HStack(spacing: 6) {
-            NoTunesIconView(size: 18, monochrome: true)
+            NoTunesIconView(size: 18, monochrome: false)
                 .frame(width: 18, height: 18)
 
             VStack(alignment: .leading, spacing: 1) {
@@ -273,7 +273,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(Color.primary)
+                .tint(PopoverPalette.guardianAccent)
                 .accessibilityLabel("Music 拦截开关")
         }
         .guardianCardStyle()
@@ -319,7 +319,7 @@ struct GuardianSectionView: View {
                 .toggleStyle(.switch)
                 .labelsHidden()
                 .controlSize(.mini)
-                .tint(Color.primary)
+                .tint(PopoverPalette.guardianAccent)
                 .accessibilityLabel("菜单收纳开关")
         }
         .guardianCardStyle()
@@ -336,11 +336,11 @@ private extension View {
             .frame(maxWidth: .infinity, alignment: .leading)
             .background {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .fill(Color.primary.opacity(0.04))
+                    .fill(PopoverPalette.surfaceCard)
             }
             .overlay {
                 RoundedRectangle(cornerRadius: 8, style: .continuous)
-                    .strokeBorder(Color.primary.opacity(0.05), lineWidth: 0.5)
+                    .strokeBorder(PopoverPalette.separatorHairline, lineWidth: 0.5)
             }
     }
 }

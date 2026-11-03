@@ -20,20 +20,21 @@ struct PopoverTabBar: View {
                     HStack(spacing: 4) {
                         Image(systemName: tab.icon)
                             .font(.system(size: 12))
+                            .foregroundStyle(isSelected ? tab.accent : tab.accent.opacity(0.55))
                         if isSelected {
                             Text(tab.title)
                                 .font(.system(size: 11, weight: .medium))
+                                .foregroundStyle(Color.primary)
                                 .transition(.opacity)
                         }
                     }
-                    .foregroundStyle(isSelected ? Color.primary : Color.secondary)
                     .frame(
                         width: isSelected ? PopoverLayout.pillSelectedWidth : PopoverLayout.pillIdleWidth,
                         height: PopoverLayout.pillHeight
                     )
                     .background {
                         RoundedRectangle(cornerRadius: 6, style: .continuous)
-                            .fill(isSelected ? Color.primary.opacity(0.10) : Color.clear)
+                            .fill(isSelected ? tab.accent.opacity(0.14) : Color.clear)
                     }
                     // 命中区扩到 44×30，不参与布局
                     .background {
@@ -63,7 +64,7 @@ struct PopoverTabBar: View {
         .frame(width: PopoverLayout.contentWidth, height: PopoverLayout.tabBarHeight)
         .background {
             RoundedRectangle(cornerRadius: 9, style: .continuous)
-                .fill(Color.primary.opacity(0.05))
+                .fill(PopoverPalette.surfaceBarTrack)
         }
     }
 }
