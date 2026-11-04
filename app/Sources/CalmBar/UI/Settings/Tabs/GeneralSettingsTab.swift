@@ -5,6 +5,7 @@ import CalmBarKit
 public struct GeneralSettingsTab: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var deepLink = PopoverSettingsDeepLink.shared
+    @ObservedObject private var updater = Updater.shared
 
     public init() {}
 
@@ -136,8 +137,7 @@ public struct GeneralSettingsTab: View {
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text("CalmBar")
                                         .font(.system(size: 13.5, weight: .bold))
-                                    let version = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "2.4.0"
-                                    Text("Version \(version) (Native Swift 6 & SwiftUI)")
+                                    Text("Version \(Updater.currentVersionText) (Native Swift 6 & SwiftUI)")
                                         .font(.system(size: 11.5))
                                         .foregroundColor(.secondary)
                                 }
@@ -148,6 +148,27 @@ public struct GeneralSettingsTab: View {
                                 .foregroundColor(.secondary)
                                 .lineSpacing(2)
 
+                            Divider()
+                            HStack(spacing: 8) {
+                                Button("检查更新…") {
+                                    updater.checkForUpdates()
+                                }
+                                .disabled(!updater.canCheck)
+                                .focusable(false)
+                                .focusEffectDisabled()
+
+                                Button("更新设置…") {
+                                    UpdateSettingsWindow.shared.show()
+                                }
+                                .focusable(false)
+                                .focusEffectDisabled()
+
+                                if updater.isChecking {
+                                    ProgressView()
+                                        .controlSize(.small)
+                                }
+                                Spacer()
+                            }
                             Divider()
                             HStack(spacing: 6) {
                                 Text("开源项目与源码：")

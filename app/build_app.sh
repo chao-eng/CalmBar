@@ -1,128 +1,128 @@
 #!/bin/bash
-set -e
+# 构建 CalmBar.app：编译（默认 arm64 + x86_64 通用二进制）→ 组装 Bundle → ad-hoc 签名。
+#
+# 用法：
+#   ./build_app.sh          # 编译并组装通用 (Universal) App（供 DMG 打包）
+#   ./build_app.sh arm      # 仅编译 Apple Silicon 版本
+#   ./build_app.sh intel    # 仅编译 Intel 版本
+#
+# 版本号唯一来源是 Resources/Info.plist，发版时由 scripts/release.sh 递增。
 
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+set -euo pipefail
+
+DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 cd "$DIR"
 
-VERSION="2.4.0"
 APP_NAME="CalmBar"
 HELPER_NAME="CalmBarHelper"
-BUNDLE_ID="com.chao.CalmBar"
+INFO_PLIST="$DIR/Resources/Info.plist"
 BUILD_ROOT="$DIR/build"
+SPARKLE_RPATH="@executable_path/../Frameworks"
 
-# Usage:
-#   ./build_app.sh          # 编译并打包 ARM (Apple Silicon) 与 Intel 双版本 Zip
-#   ./build_app.sh arm      # 仅编译并打包 ARM (Apple Silicon) 版本
-#   ./build_app.sh intel    # 仅编译并打包 Intel (x86_64) 版本
 TARGET_ARCH="${1:-all}"
 
+if [[ ! -f "$INFO_PLIST" ]]; then
+  echo "缺少 $INFO_PLIST" >&2
+  exit 1
+fi
+
+VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$INFO_PLIST")
+
 build_arch() {
-    local ARCH="$1"        # "arm64" 或 "x86_64"
-    local TRIPLE="$2"      # "arm64-apple-macosx" 或 "x86_64-apple-macosx"
-    local SUFFIX="$3"      # "arm" 或 "intel"
+    local ARCH="$1"        # arm64 / x86_64
+    local TRIPLE="$2"
     local ARCH_DIR="$BUILD_ROOT/$ARCH"
     local APP_BUNDLE="$ARCH_DIR/$APP_NAME.app"
     local CONTENTS="$APP_BUNDLE/Contents"
     local MACOS="$CONTENTS/MacOS"
     local RESOURCES="$CONTENTS/Resources"
-    local ZIP_NAME="${APP_NAME}-v${VERSION}-${SUFFIX}.zip"
-    local ZIP_PATH="$BUILD_ROOT/$ZIP_NAME"
 
     echo ""
     echo "=========================================================="
-    echo "==> Building $APP_NAME for $ARCH ($SUFFIX)..."
+    echo "==> Building $APP_NAME $VERSION for $ARCH..."
     echo "=========================================================="
-    
-    swift build -c release --triple "$TRIPLE"
+
+    swift build -c release --triple "$TRIPLE" --disable-sandbox
 
     echo "==> Packaging App Bundle at $APP_BUNDLE..."
     rm -rf "$ARCH_DIR"
-    mkdir -p "$MACOS"
-    mkdir -p "$RESOURCES"
+    mkdir -p "$MACOS" "$RESOURCES" "$CONTENTS/Frameworks"
 
     cp "$DIR/.build/$TRIPLE/release/$APP_NAME" "$MACOS/$APP_NAME"
     cp "$DIR/.build/$TRIPLE/release/$HELPER_NAME" "$MACOS/$HELPER_NAME"
-    chmod +x "$MACOS/$APP_NAME"
-    chmod +x "$MACOS/$HELPER_NAME"
+    chmod +x "$MACOS/$APP_NAME" "$MACOS/$HELPER_NAME"
 
     # 剥离调试与本地符号，显著减小 release 二进制体积
     strip -x "$MACOS/$APP_NAME" "$MACOS/$HELPER_NAME" 2>/dev/null || true
 
-    if [ -d "$DIR/Resources" ]; then
-        cp -R "$DIR/Resources/"* "$RESOURCES/"
-        # 剔除构建期冗余图标资源（AppIcon.icns 已含全部尺寸，iconset 与 png 仅供生成 icns）
-        rm -rf "$RESOURCES/AppIcon.iconset" "$RESOURCES/AppIcon.png"
+    cp "$INFO_PLIST" "$CONTENTS/Info.plist"
+
+    # Sparkle：SPM 以 @rpath/Sparkle.framework 链接，需内嵌框架并补 rpath
+    local SPARKLE_FRAMEWORK=".build/$TRIPLE/release/Sparkle.framework"
+    if [[ -d "$SPARKLE_FRAMEWORK" ]]; then
+        cp -R "$SPARKLE_FRAMEWORK" "$CONTENTS/Frameworks/"
+        install_name_tool -add_rpath "$SPARKLE_RPATH" "$MACOS/$APP_NAME" 2>/dev/null || true
     fi
 
-    cat <<EOF > "$CONTENTS/Info.plist"
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>CFBundleExecutable</key>
-    <string>$APP_NAME</string>
-    <key>CFBundleIconFile</key>
-    <string>AppIcon</string>
-    <key>CFBundleIdentifier</key>
-    <string>com.chaoeng.CalmBar</string>
-    <key>CFBundleName</key>
-    <string>$APP_NAME</string>
-    <key>CFBundlePackageType</key>
-    <string>APPL</string>
-    <key>CFBundleShortVersionString</key>
-    <string>$VERSION</string>
-    <key>CFBundleVersion</key>
-    <string>1</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>14.0</string>
-    <key>LSUIElement</key>
-    <true/>
-    <key>NSHighResolutionCapable</key>
-    <true/>
-    <key>NSPrincipalClass</key>
-    <string>NSApplication</string>
-</dict>
-</plist>
-EOF
+    # 复制运行时资源（AppIcon.icns 已含全部尺寸，iconset 与 png 仅供生成 icns）
+    for item in "$DIR"/Resources/*; do
+        [[ -e "$item" ]] || continue
+        case "$(basename "$item")" in
+            Info.plist|AppIcon.iconset|AppIcon.png) continue ;;
+        esac
+        cp -R "$item" "$RESOURCES/"
+    done
 
     echo "==> Signing app bundle ($ARCH)..."
-    codesign --force -s - "$MACOS/$HELPER_NAME"
-    codesign --force -s - "$MACOS/$APP_NAME"
-    codesign --force -s - "$APP_BUNDLE"
-
-    echo "==> Creating Zip Archive at $ZIP_PATH..."
-    rm -f "$ZIP_PATH"
-    ditto -c -k --sequesterRsrc --keepParent "$APP_BUNDLE" "$ZIP_PATH"
-
-    echo "✅ Successfully generated: $ZIP_PATH"
+    codesign --force --deep --sign - "$APP_BUNDLE"
 }
 
 mkdir -p "$BUILD_ROOT"
 
-if [ "$TARGET_ARCH" = "arm" ] || [ "$TARGET_ARCH" = "arm64" ]; then
-    build_arch "arm64" "arm64-apple-macosx" "arm"
-    rm -rf "$BUILD_ROOT/$APP_NAME.app"
-    cp -R "$BUILD_ROOT/arm64/$APP_NAME.app" "$BUILD_ROOT/$APP_NAME.app"
-elif [ "$TARGET_ARCH" = "intel" ] || [ "$TARGET_ARCH" = "x86_64" ]; then
-    build_arch "x86_64" "x86_64-apple-macosx" "intel"
-    rm -rf "$BUILD_ROOT/$APP_NAME.app"
-    cp -R "$BUILD_ROOT/x86_64/$APP_NAME.app" "$BUILD_ROOT/$APP_NAME.app"
-else
-    build_arch "arm64" "arm64-apple-macosx" "arm"
-    build_arch "x86_64" "x86_64-apple-macosx" "intel"
-
-    # 默认将当前主机架构的 App 镜像拷贝到 build/ 根目录供本地调试/部署
-    HOST_ARCH="$(uname -m)"
-    rm -rf "$BUILD_ROOT/$APP_NAME.app"
-    if [ "$HOST_ARCH" = "arm64" ]; then
+case "$TARGET_ARCH" in
+    arm|arm64)
+        build_arch "arm64" "arm64-apple-macosx"
+        rm -rf "$BUILD_ROOT/$APP_NAME.app"
         cp -R "$BUILD_ROOT/arm64/$APP_NAME.app" "$BUILD_ROOT/$APP_NAME.app"
-    else
+        ;;
+    intel|x86_64)
+        build_arch "x86_64" "x86_64-apple-macosx"
+        rm -rf "$BUILD_ROOT/$APP_NAME.app"
         cp -R "$BUILD_ROOT/x86_64/$APP_NAME.app" "$BUILD_ROOT/$APP_NAME.app"
-    fi
-fi
+        ;;
+    all|universal)
+        build_arch "arm64" "arm64-apple-macosx"
+        build_arch "x86_64" "x86_64-apple-macosx"
+
+        echo ""
+        echo "==> Merging arm64 + x86_64 into universal bundle..."
+        rm -rf "$BUILD_ROOT/$APP_NAME.app"
+        cp -R "$BUILD_ROOT/arm64/$APP_NAME.app" "$BUILD_ROOT/$APP_NAME.app"
+
+        lipo -create \
+            "$BUILD_ROOT/arm64/$APP_NAME.app/Contents/MacOS/$APP_NAME" \
+            "$BUILD_ROOT/x86_64/$APP_NAME.app/Contents/MacOS/$APP_NAME" \
+            -output "$BUILD_ROOT/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+        lipo -create \
+            "$BUILD_ROOT/arm64/$APP_NAME.app/Contents/MacOS/$HELPER_NAME" \
+            "$BUILD_ROOT/x86_64/$APP_NAME.app/Contents/MacOS/$HELPER_NAME" \
+            -output "$BUILD_ROOT/$APP_NAME.app/Contents/MacOS/$HELPER_NAME"
+        chmod +x "$BUILD_ROOT/$APP_NAME.app/Contents/MacOS/$APP_NAME" \
+                 "$BUILD_ROOT/$APP_NAME.app/Contents/MacOS/$HELPER_NAME"
+
+        echo "==> Re-signing universal bundle..."
+        codesign --force --deep --sign - "$BUILD_ROOT/$APP_NAME.app"
+        ;;
+    *)
+        echo "未知参数：$TARGET_ARCH（可用：all / arm / intel）" >&2
+        exit 2
+        ;;
+esac
 
 echo ""
 echo "=========================================================="
-echo "🎉 Build & Packaging Completed! Generated Release Files:"
-ls -lh "$BUILD_ROOT"/*.zip
+echo "🎉 App Bundle Ready: $BUILD_ROOT/$APP_NAME.app"
+lipo -info "$BUILD_ROOT/$APP_NAME.app/Contents/MacOS/$APP_NAME"
+echo "Version: $VERSION"
+echo "下一步打包 DMG: ./scripts/make-dmg.sh"
 echo "=========================================================="

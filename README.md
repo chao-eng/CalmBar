@@ -5,7 +5,7 @@
 [![Platform](https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg)](https://apple.com/macos)
 [![Architecture](https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg)](https://apple.com)
 [![Language](https://img.shields.io/badge/language-Swift%206-orange.svg)](https://swift.org)
-[![Version](https://img.shields.io/badge/release-v2.4.0-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
+[![Version](https://img.shields.io/badge/release-v2.5.0-brightgreen.svg)](https://github.com/chao-eng/CalmBar/releases)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 ---
@@ -293,8 +293,12 @@
 ```text
 CalmBar/
 ├── app/
-│   ├── Package.swift                    # SPM 模块与依赖定义
-│   ├── build_app.sh                     # 自动编译、签名与打包脚本
+│   ├── Package.swift                    # SPM 模块与依赖定义（含 Sparkle）
+│   ├── build_app.sh                     # 通用二进制编译、签名与 App Bundle 组装
+│   ├── scripts/
+│   │   ├── make-dmg.sh                  # 将 App Bundle 打包为 DMG
+│   │   └── release.sh                   # 递增版本号、打包、EdDSA 签名并写入 appcast
+│   ├── Resources/Info.plist             # 版本号与 Sparkle 更新配置的唯一来源
 │   └── Sources/
 │       ├── CalmBar/                     # 主 App 逻辑与 SwiftUI 界面
 │       │   ├── AppDelegate.swift        # App 生命周期与菜单栏初始化
@@ -315,10 +319,12 @@ CalmBar/
 │       │   ├── Services/                # Service 抽象层与生命周期管理
 │       │   ├── Thermal/                 # 温控轮询引擎与 XPC 通信客户端
 │       │   ├── Translation/             # HTTP OpenAI & HY-MT2 翻译引擎、双击复制监听、悬浮浮窗与历史
+│       │   ├── Update/                  # Sparkle 自动更新、更新代理与本地转发服务
 │       │   └── UI/                      # SwiftUI 状态栏控制台、权限安全看板与偏好设置
 │       ├── CalmBarKit/                  # 硬件 SMC 读写、安全策略与驱动通信共享库
 │       ├── CommandPaletteKit/           # 独立轻量命令面板核心渲染组件
 │       └── CalmBarHelper/               # Root 特权辅助工具 (Privileged Helper)
+├── appcast.xml                          # Sparkle 更新源（发布到 main 分支）
 └── doc/
     ├── images/                          # 软件核心功能截图与示例图集
     ├── HyMT2部署/                       # macOS MLX 硬件加速与 Docker 跨平台部署指南
@@ -338,7 +344,9 @@ CalmBar/
 ## 🚀 安装与启动方式
 
 ### 1. 下载与安装
-从 [Releases](https://github.com/chao-eng/CalmBar/releases) 下载发布的 `CalmBar.app`（或 Zip 压缩包），拖入 `/Applications`（应用程序）文件夹即可。
+从 [Releases](https://github.com/chao-eng/CalmBar/releases) 下载对应版本的 `CalmBar-x.y.z.dmg`（通用二进制，同时支持 Apple Silicon 与 Intel），双击打开后将 `CalmBar.app` 拖入 `/Applications`（应用程序）文件夹即可。
+
+安装后可通过 **通用设置 → 关于 CalmBar → 检查更新…** 获取新版本；网络受限时可在 **更新设置…** 中配置 HTTP/HTTPS 代理。自动更新使用 Sparkle，无需重新手动下载安装包。
 
 ### 2. 首次运行授权（绕过 Gatekeeper 隔离）
 本项目为个人独立开源软件，未集成 Apple 商业付费证书，macOS 直接双击打开时，系统安全机制（Gatekeeper）可能拦截并提示 **“应用程序已损坏，无法打开”** 或 **“无法验证开发者”**。
