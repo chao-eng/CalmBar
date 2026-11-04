@@ -41,6 +41,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         // 应用持久化的外观偏好（跟随系统/浅色/深色）
         AppSettings.shared.applyAppearance()
 
+        // 启动 Sparkle 自动更新（版本源与公钥由 Info.plist 提供）
+        _ = Updater.shared
+
         // 1. Register and start all default platform features first
         let featureManager = FeatureManager.shared
         featureManager.registerDefaultFeatures()

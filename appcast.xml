@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" xmlns:dc="http://purl.org/dc/elements/1.1/">
+  <channel>
+    <title>CalmBar</title>
+    <link>https://github.com/chao-eng/CalmBar</link>
+    <description>全能 macOS 菜单栏综合增强套件。</description>
+    <language>zh-CN</language>
+    <item>
+      <title>CalmBar 2.5.0</title>
+      <sparkle:version>2</sparkle:version>
+      <sparkle:shortVersionString>2.5.0</sparkle:shortVersionString>
+      <pubDate>Wed, 04 Nov 2026 02:47:26 +0000</pubDate>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/chao-eng/CalmBar/releases/tag/v2.5.0</sparkle:releaseNotesLink>
+      <enclosure
+        url="https://github.com/chao-eng/CalmBar/releases/download/v2.5.0/CalmBar-2.5.0.dmg"
+        sparkle:edSignature="ire3hql8A9QbJFHYoaT2R2IbuWeCJ1/Ebe/l9vUdpmWp5ZiMTxzOcVQYDWNtzdyV2SzZzaSBWg3mB/ygjnpWAA=="
+        length="7263320"
+        type="application/octet-stream" />
+    </item>
+  </channel>
+</rss>

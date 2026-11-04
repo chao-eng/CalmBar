@@ -10,7 +10,10 @@ let package = Package(
         .executable(name: "CalmBar", targets: ["CalmBar"]),
         .executable(name: "CalmBarHelper", targets: ["CalmBarHelper"])
     ],
-    dependencies: [],
+    dependencies: [
+        // 自动更新：ad-hoc 签名无法走 Apple 官方更新通道，使用 Sparkle EdDSA 更新。
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.6.4")
+    ],
     targets: [
         .target(
             name: "CalmBarKit",
@@ -24,7 +27,11 @@ let package = Package(
         ),
         .executableTarget(
             name: "CalmBar",
-            dependencies: ["CalmBarKit", "CommandPaletteKit"],
+            dependencies: [
+                "CalmBarKit",
+                "CommandPaletteKit",
+                .product(name: "Sparkle", package: "Sparkle")
+            ],
             path: "Sources/CalmBar"
         ),
         .executableTarget(
