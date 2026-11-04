@@ -36,6 +36,19 @@ enum PopoverPalette {
     static let accentTeal = adaptive(lightMode: 0x0C7484, darkMode: 0x40C8E0)
     static let accentIndigo = adaptive(lightMode: 0x4543AE, darkMode: 0x5E5CE6)
     static let accentRed = adaptive(lightMode: 0xCE0010, darkMode: 0xFF453A)
+    static let accentBrown = adaptive(lightMode: 0x8F5B3A, darkMode: 0xC08A5C)   // 防休眠咖啡棕（与面板咖啡杯图标同源）
+
+    /// 设置页图标徽章渐变（主色 → 加深 22%），色相与面板图标保持一致
+    static func badgeGradient(_ base: Color) -> [Color] {
+        guard let rgb = NSColor(base).usingColorSpace(.sRGB) else { return [base, base] }
+        let shaded = NSColor(
+            srgbRed: rgb.redComponent * 0.78,
+            green: rgb.greenComponent * 0.78,
+            blue: rgb.blueComponent * 0.78,
+            alpha: 1
+        )
+        return [base, Color(nsColor: shaded)]
+    }
 
     // MARK: 分区主题色（Tab 图标 / 分区内强调色）
 

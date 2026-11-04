@@ -3,6 +3,29 @@ import Combine
 import SwiftUI
 import CalmBarKit
 
+/// 界面外观偏好：跟随系统 / 浅色 / 深色
+public enum AppAppearance: String, CaseIterable, Identifiable {
+    case system
+    case light
+    case dark
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .system: "跟随系统"
+        case .light: "浅色"
+        case .dark: "深色"
+        }
+    }
+
+    /// 调试模式（--m8/--visual 等）已锁定外观时跳过，避免覆盖验收设定
+    static var isDebugAppearanceLocked: Bool {
+        let args = CommandLine.arguments
+        return args.contains("--m8") || args.contains("--m7") || args.contains("--visual")
+    }
+}
+
 @MainActor
 public final class AppSettings: ObservableObject {
     public static let shared = AppSettings()
@@ -185,6 +208,12 @@ public final class AppSettings: ObservableObject {
     }
 
     // MARK: - General Settings
+    @Published public var appAppearance: AppAppearance {
+        didSet {
+            defaults.set(appAppearance.rawValue, forKey: "appAppearance")
+            applyAppearance()
+        }
+    }
     @Published public var launchAtLogin: Bool {
         didSet {
             defaults.set(launchAtLogin, forKey: "launchAtLogin")
@@ -381,6 +410,16 @@ public final class AppSettings: ObservableObject {
         menuBarReadoutItems = items
     }
 
+    /// 将外观偏好应用到整个 App（设置页切换与启动时调用）
+    public func applyAppearance() {
+        guard !AppAppearance.isDebugAppearanceLocked else { return }
+        switch appAppearance {
+        case .system: NSApp.appearance = nil
+        case .light: NSApp.appearance = NSAppearance(named: .aqua)
+        case .dark: NSApp.appearance = NSAppearance(named: .darkAqua)
+        }
+    }
+
     private init() {
         self.thermalEnabled = defaults.object(forKey: "thermalEnabled") as? Bool ?? true
         let presetStr = defaults.string(forKey: "fanPreset") ?? FanPreset.smart.rawValue
@@ -445,6 +484,7 @@ public final class AppSettings: ObservableObject {
         self.clipboardIgnoredApps = defaults.stringArray(forKey: "clipboardIgnoredApps") ?? []
         self.clipboardQuickCopyEnabled = defaults.object(forKey: "clipboardQuickCopyEnabled") as? Bool ?? true
 
+        self.appAppearance = AppAppearance(rawValue: defaults.string(forKey: "appAppearance") ?? "") ?? .system
         self.launchAtLogin = defaults.object(forKey: "launchAtLogin") as? Bool ?? false
         self.globalHotKeysEnabled = defaults.object(forKey: "globalHotKeysEnabled") as? Bool ?? true
 

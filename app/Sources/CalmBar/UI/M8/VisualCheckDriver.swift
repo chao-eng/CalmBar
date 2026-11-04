@@ -70,6 +70,23 @@ final class VisualCheckDriver {
             _ = M1Trace.capture(panel, to: "/tmp/calmbar_visual/dark_\(tab.rawValue).png")
         }
 
+        // 设置窗口（侧边栏图标与面板图标颜色一致性）
+        NSApp.appearance = NSAppearance(named: .aqua)
+        try? await Task.sleep(for: .milliseconds(400))
+        manager.closePopover()
+        manager.openSettingsWindow()
+        try? await Task.sleep(for: .milliseconds(900))
+        if let settingsWindow = NSApp.windows.first(where: { $0.isVisible && $0.frame.height > 400 && $0 != panel }) {
+            _ = M1Trace.capture(settingsWindow, to: "/tmp/calmbar_visual/light_settings.png")
+            NSApp.appearance = NSAppearance(named: .darkAqua)
+            try? await Task.sleep(for: .milliseconds(600))
+            _ = M1Trace.capture(settingsWindow, to: "/tmp/calmbar_visual/dark_settings.png")
+            settingsWindow.orderOut(nil)
+        } else {
+            M1Trace.log("visual settings window not found")
+        }
+        NSApp.appearance = NSAppearance(named: .aqua)
+
         M1Trace.log("visual summary tabs=\(tabs.map(\.rawValue).joined(separator: ",")) done")
 
         restoreSettings()

@@ -15,7 +15,7 @@ public struct GeneralSettingsTab: View {
                     // 统一置顶启动主开关
                     FeatureMasterToggleCard(
                         icon: "power",
-                        iconColors: [Color.blue, Color.cyan],
+                        iconColors: SettingsTab.general.gradientColors,
                         title: "登录时自动启动 CalmBar",
                         activeSubtitle: "已激活 · 开机登录系统后自动在后台常驻启动",
                         inactiveSubtitle: "已停用 · 开机不自启，需要时请手动打开 CalmBar",
@@ -24,6 +24,26 @@ public struct GeneralSettingsTab: View {
 
                     GroupBox(label: Label("外观与菜单栏指示", systemImage: "gearshape")) {
                         VStack(alignment: .leading, spacing: 12) {
+                            HStack {
+                                Text("界面外观")
+                                    .font(.system(size: 12.5, weight: .medium))
+                                Spacer()
+                                Picker("界面外观", selection: $settings.appAppearance) {
+                                    ForEach(AppAppearance.allCases) { mode in
+                                        Text(mode.title).tag(mode)
+                                    }
+                                }
+                                .pickerStyle(.segmented)
+                                .frame(width: 220)
+                                .focusable(false)
+                                .focusEffectDisabled()
+                            }
+                            Text("选择浅色或深色可让面板与设置窗口脱离系统外观独立显示。")
+                                .font(.system(size: 11.5))
+                                .foregroundColor(.secondary)
+
+                            Divider()
+
                             Toggle("在菜单栏图标旁实时显示 SoC 温度", isOn: Binding(
                                 get: { settings.menuBarReadoutItems.contains("temperature") },
                                 set: { settings.setMenuBarReadoutItem("temperature", enabled: $0) }
