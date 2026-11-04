@@ -45,7 +45,7 @@ git diff --stat <上一版提交>..HEAD -- app/Sources
 
 > 经验：v2.5.0 的上一版基线是 `566e5a2`，而不是 `HEAD~1`；只对比 `HEAD~1` 会漏掉菜单栏面板重构和系统监控等已合入功能。
 
-### 2.2 同步 `doc/RELEASE.md`
+### 2.2 同步 `doc/release/RELEASE.md`
 
 必须同时更新两处：
 
@@ -64,7 +64,7 @@ git diff --stat <上一版提交>..HEAD -- app/Sources
 
 ### 2.3 发版说明同步检查
 
-`release.sh` 在正式执行前会校验 `doc/RELEASE.md` 是否已有对应版本章节，缺失会直接中止。先跑 dry-run 确认：
+`release.sh` 在正式执行前会校验 `doc/release/RELEASE.md` 是否已有对应版本章节，缺失会直接中止。先跑 dry-run 确认：
 
 ```bash
 cd app
@@ -123,7 +123,7 @@ cd app
 
 ```bash
 # 2. 提交除 appcast 外的发版改动
-git add app/Resources/Info.plist doc/RELEASE.md app/scripts/release.sh
+git add app/Resources/Info.plist doc/release/RELEASE.md app/scripts/release.sh
 git commit -m "release: vX.Y.Z"
 git push origin main
 
@@ -143,7 +143,7 @@ git push origin main
 
 ### 4.2 GitHub Release 说明
 
-GitHub Release 说明应与 `doc/RELEASE.md` 保持一致，只保留用户关心的内容，并附安装说明。
+GitHub Release 说明应与 `doc/release/RELEASE.md` 保持一致，只保留用户关心的内容，并附安装说明。
 
 更新已有 Release 说明：
 
@@ -211,7 +211,7 @@ EOF
 ## 7. 发版最短路径
 
 ```bash
-# 1. 更新 doc/RELEASE.md 的概览表与版本章节
+# 1. 更新 doc/release/RELEASE.md 的概览表与版本章节
 # 2. 发版
 cd app
 ./scripts/release.sh --dry-run
@@ -223,7 +223,7 @@ xmllint --noout ../appcast.xml
 codesign --verify --deep --strict build/CalmBar.app
 
 # 4. 推送代码（暂不含 appcast）
-git add app/Resources/Info.plist doc/RELEASE.md app/scripts/release.sh
+git add app/Resources/Info.plist doc/release/RELEASE.md app/scripts/release.sh
 git commit -m "release: vX.Y.Z"
 git push origin main
 

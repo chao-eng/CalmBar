@@ -7,7 +7,7 @@
 | **日期** | 2026-11-02 |
 | **归属模块** | 新增 `FeatureID.audioHub`、`FeatureID.systemMonitor`、`FeatureID.screenRecorder` |
 | **涉及设置页** | 新增 `SettingsTab.audio`、`SettingsTab.systemMonitor`、`SettingsTab.recorder` |
-| **执行规范** | 严格遵循 [CalmBar 新功能接入模板](CalmBar%20新功能接入模板.md) 的 10 项准入原则 |
+| **执行规范** | 严格遵循 [CalmBar 新功能接入模板](../design/CalmBar%20新功能接入模板.md) 的 10 项准入原则 |
 | **交互参照** | Vorssaint（GPL-3.0）仅作为行为与场景参照，**不复制任何源代码**；CalmBar 为 Apache-2.0，需独立实现 |
 | **评审方式** | `prd-reviewer` 生成模式 + 四维自审（见 §11） |
 
