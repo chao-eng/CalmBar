@@ -142,6 +142,10 @@ public struct SettingsView: View {
                         OCRSettingsTab()
                     case .cleaner:
                         CleanerSettingsTab()
+                    case .audio:
+                        AudioSettingsTab()
+                    case .recorder:
+                        RecorderSettingsTab()
                     case .permissions:
                         PermissionCenterView()
                     case .gatekeeper:

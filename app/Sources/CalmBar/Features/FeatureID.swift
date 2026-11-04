@@ -13,6 +13,8 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
     case menuBar
     case translation
     case launchManager
+    case audio
+    case screenRecorder
 
     public var id: String { rawValue }
 
@@ -30,6 +32,8 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
         case .menuBar: return "菜单栏收纳"
         case .translation: return "AI 划词翻译"
         case .launchManager: return "启动项与常驻服务"
+        case .audio: return "音频路由与混音"
+        case .screenRecorder: return "屏幕录制"
         }
     }
 }

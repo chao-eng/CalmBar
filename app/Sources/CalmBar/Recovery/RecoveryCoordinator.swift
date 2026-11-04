@@ -47,7 +47,11 @@ public final class RecoveryCoordinator: ObservableObject {
             HotKeyManager.shared.unregister()
             actions.append(.unregisterHotkeys)
 
-            // 8. FeatureManager cleanup all
+            // 8. Stop audio engines and finalize any active recording
+            AudioMixerService.shared.stop()
+            ScreenRecorderService.shared.stop()
+
+            // 9. FeatureManager cleanup all
             FeatureManager.shared.cleanupAll()
             actions.append(.cleanupFeature)
 
@@ -60,6 +64,10 @@ public final class RecoveryCoordinator: ObservableObject {
 
             CaffeineManager.shared.cleanupOnExit()
             actions.append(.releasePowerAssertions)
+
+            // 睡眠前回收音频聚合设备，并把正在进行的录制收尾保存
+            AudioMixerService.shared.stop()
+            ScreenRecorderService.shared.stop()
 
         case .helperDisconnected:
             ThermalMonitor.shared.restoreSystemControl()

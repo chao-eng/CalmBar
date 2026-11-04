@@ -10,16 +10,19 @@ struct GuardianSectionView: View {
     @ObservedObject private var chargeManager = BatteryChargeManager.shared
     @ObservedObject private var menuBar = MenuBarOrganizer.shared
     @ObservedObject private var scroll = ScrollReverserManager.shared
+    @ObservedObject private var audio = AudioMixerService.shared
 
     var viewportHeight: CGFloat
     var stressExtraHeight: CGFloat = 0
     var allHidden: Bool = false
     var onMeasure: ((CGFloat) -> Void)?
+    var onOpenMixer: (() -> Void)?
 
     private var visibleItems: [PopoverVisibilityItem] {
         guard !allHidden else { return [] }
         return PopoverVisibilityGroup.guardian.items.filter { item in
             if item == .battery && !batteryMonitor.hasBattery { return false }
+            if item == .audioOutput && !settings.audioHubEnabled { return false }
             return item.isEnabled(settings)
         }
     }
@@ -52,6 +55,7 @@ struct GuardianSectionView: View {
         switch item {
         case .caffeine: caffeineCard
         case .battery: batteryCard
+        case .audioOutput: audioOutputCard
         case .scrollReverser: scrollReverserCard
         case .noTunes: noTunesCard
         case .menuBar: menuBarCard
@@ -217,6 +221,61 @@ struct GuardianSectionView: View {
                 .accessibilityLabel("充电保护开关")
         }
         .guardianCardStyle()
+    }
+
+    // MARK: 系统输出
+
+    private var audioOutputCard: some View {
+        HStack(spacing: 6) {
+            Image(systemName: audio.systemMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                .font(.system(size: 13))
+                .foregroundStyle(audio.systemMuted ? .secondary : PopoverPalette.audioAccent)
+                .frame(width: 18, height: 18)
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text("系统输出")
+                    .font(.system(size: 11, weight: .medium))
+                    .lineLimit(1)
+                Text(outputSubtitle)
+                    .font(.system(size: 9))
+                    .foregroundColor(.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
+            }
+
+            Spacer(minLength: 2)
+
+            Button(action: { audio.toggleSystemMute() }) {
+                Image(systemName: audio.systemMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                    .font(.system(size: 10))
+                    .foregroundColor(audio.systemMuted ? .secondary : .primary)
+                    .frame(width: 16, height: 16)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .help(audio.systemMuted ? "取消系统静音" : "静音系统输出")
+            .accessibilityLabel(audio.systemMuted ? "取消系统静音" : "静音系统输出")
+
+            if let onOpenMixer {
+                Button(action: onOpenMixer) {
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundColor(.secondary)
+                        .frame(width: 14, height: 16)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .help("打开音频控制窗口")
+                .accessibilityLabel("打开音频控制窗口")
+            }
+        }
+        .guardianCardStyle()
+    }
+
+    private var outputSubtitle: String {
+        if audio.systemMuted { return "已静音 · \(audio.systemOutputName)" }
+        let percent = Int((audio.systemVolume * 100).rounded())
+        return "\(audio.systemOutputName) · \(percent)%"
     }
 
     // MARK: 自然滚动

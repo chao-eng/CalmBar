@@ -166,7 +166,7 @@ final class M1Driver: ObservableObject {
             let barExpected = PopoverLayout.pillSelectedWidth
                 + PopoverLayout.pillIdleWidth * CGFloat(availableTabs.count - 1)
                 + PopoverLayout.pillSpacing * CGFloat(availableTabs.count - 1)
-            M1Trace.log("m7 tabs=\(availableTabs.count) list=\(tabSummary) viewports=\(viewportSummary) barExpected=\(Int(barExpected)) empty=\(m7Empty) monitorDefault=\(AppSettings.shared.popoverShowMonitor) audioDefault=\(AppSettings.shared.popoverShowAudio)")
+            M1Trace.log("m7 tabs=\(availableTabs.count) list=\(tabSummary) viewports=\(viewportSummary) barExpected=\(Int(barExpected)) empty=\(m7Empty) monitorDefault=\(AppSettings.shared.popoverShowMonitor)")
         }
         refreshReadout()
 

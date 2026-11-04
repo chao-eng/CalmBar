@@ -172,7 +172,8 @@ struct PopoverPanelView: View {
                 }
             case .audio:
                 titleAction("更多") {
-                    // 混音窗口随音频模块上线接入
+                    closePanel()
+                    AudioMixerWindowController.shared.show()
                 }
             default:
                 EmptyView()
@@ -204,7 +205,13 @@ struct PopoverPanelView: View {
         case .thermalCards:
             ThermalSectionView(viewportHeight: route.viewportHeight)
         case .guardianCards:
-            GuardianSectionView(viewportHeight: route.viewportHeight)
+            GuardianSectionView(
+                viewportHeight: route.viewportHeight,
+                onOpenMixer: {
+                    closePanel()
+                    AudioMixerWindowController.shared.show()
+                }
+            )
         case .toolTiles:
             ToolGridSectionView(
                 viewportHeight: route.viewportHeight,
@@ -222,7 +229,10 @@ struct PopoverPanelView: View {
                 }
             })
         case .audioMixer:
-            AudioSectionView(isEmpty: false)
+            AudioSectionView {
+                closePanel()
+                AudioMixerWindowController.shared.show()
+            }
         }
     }
 
@@ -246,6 +256,13 @@ struct PopoverPanelView: View {
             closePanel()
             let tab: LaunchManagerTab = LaunchManager.shared.crashLoopingItems.isEmpty ? .userAgents : .crashLooping
             LaunchManagerWindowController.shared.show(initialTab: tab)
+        case .recorder:
+            closePanel()
+            if ScreenRecorderService.shared.isRecording {
+                ScreenRecorderService.shared.stop()
+            } else {
+                RecorderPreparationWindowController.shared.show()
+            }
         }
     }
 
@@ -260,6 +277,10 @@ struct PopoverPanelView: View {
             LaunchManagerWindowController.shared.show()
         case "services":
             LaunchManagerWindowController.shared.show(initialTab: .services)
+        case "recorderFolder":
+            ScreenRecorderService.shared.openRecordingsFolder()
+        case "recorderSettings":
+            openSettingsAction(.recorder)
         default:
             break
         }
