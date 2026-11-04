@@ -2,7 +2,7 @@
 
 > 范围：本文件只约束 `web/` 目录（CalmBar 官方网站重构）。
 > 技术栈：Astro + Vue Islands + Tailwind CSS v4 + MDX + shadcn-vue。
-> 旧静态站 `site/` 已删除（页面内容并入 `web/`，图片原图保留在 `doc/images/`）；Swift 主工程 `app/` 不受本文件约束。
+> 旧静态站 `site/` 已删除（页面内容并入 `web/`，图片已迁移到 `web/public/images/`）；Swift 主工程 `app/` 不受本文件约束。
 > 信息架构参考：`/Users/guojc/Downloads/参考/LightC — Windows C 盘智能清理工具 _ 官方网站.html`（干净的产品官网风、双渠道下载区、FAQ 手风琴、作者与鸣谢区）。
 
 ## 🚫 硬性红线（违反即错）
