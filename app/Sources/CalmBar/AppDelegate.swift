@@ -42,7 +42,10 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         AppSettings.shared.applyAppearance()
 
         // 启动 Sparkle 自动更新（版本源与公钥由 Info.plist 提供）
-        _ = Updater.shared
+        // 调试驱动常以裸二进制运行，Sparkle 无法启动会弹出「无法检查更新」，自动化模式下跳过
+        if Updater.canStartUpdater {
+            _ = Updater.shared
+        }
 
         // 1. Register and start all default platform features first
         let featureManager = FeatureManager.shared
