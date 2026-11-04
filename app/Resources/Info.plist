@@ -19,23 +19,23 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.5.0</string>
+	<string>2.6.0</string>
 	<key>CFBundleVersion</key>
-	<string>2</string>
+	<string>3</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
 	<true/>
-	<key>NSHighResolutionCapable</key>
-	<true/>
 	<key>NSAudioCaptureUsageDescription</key>
 	<string>按应用调节音量与录制系统声音需要采集其他应用的音频</string>
+	<key>NSHighResolutionCapable</key>
+	<true/>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>录制屏幕时采集麦克风声音需要麦克风权限</string>
-	<key>NSScreenCaptureUsageDescription</key>
-	<string>屏幕录制需要采集屏幕画面与系统声音</string>
 	<key>NSPrincipalClass</key>
 	<string>NSApplication</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>屏幕录制需要采集屏幕画面与系统声音</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUFeedURL</key>
