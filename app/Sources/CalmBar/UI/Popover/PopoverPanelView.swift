@@ -243,7 +243,7 @@ struct PopoverPanelView: View {
             OCRManager.shared.startCaptureAndRecognize()
         case .translation:
             closePanel()
-            TranslationManager.shared.translateFromClipboard()
+            TranslationToastWindowController.shared.showEditor(prefillingClipboard: true)
         case .clipboard:
             closePanel()
             ClipboardHistoryWindowController.shared.show()

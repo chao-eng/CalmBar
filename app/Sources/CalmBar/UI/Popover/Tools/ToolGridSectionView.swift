@@ -55,7 +55,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
     var help: String {
         switch self {
         case .ocr: "选区截图识字与二维码解析 (右键打开历史)"
-        case .translation: "翻译当前剪贴板文本 (双击 ⌘C 或 ⌥⌘T 快速触发，右键打开历史)"
+        case .translation: "打开 AI 翻译面板，可编辑原文 (默认预填剪贴板，右键打开历史)"
         case .clipboard: "浏览剪贴板历史"
         case .cleaner: "软件残留 · 开发缓存 · 孤立工作区清理"
         case .gatekeeper: "修复未签名或损坏应用提示"
