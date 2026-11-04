@@ -343,23 +343,40 @@ CalmBar/
 
 ## 🚀 安装与启动方式
 
-### 1. 下载与安装
-从 [Releases](https://github.com/chao-eng/CalmBar/releases) 下载对应版本的 `CalmBar-x.y.z.dmg`（通用二进制，同时支持 Apple Silicon 与 Intel），双击打开后将 `CalmBar.app` 拖入 `/Applications`（应用程序）文件夹即可。
+### 1. 下载与安装（DMG）
 
-安装后可通过 **通用设置 → 关于 CalmBar → 检查更新…** 获取新版本；网络受限时可在 **更新设置…** 中配置 HTTP/HTTPS 代理。自动更新使用 Sparkle，无需重新手动下载安装包。
+从 [Releases](https://github.com/chao-eng/CalmBar/releases) 下载对应版本的 `CalmBar-x.y.z.dmg`（通用二进制，同时支持 Apple Silicon 与 Intel）。
 
-### 2. 首次运行授权（绕过 Gatekeeper 隔离）
-本项目为个人独立开源软件，未集成 Apple 商业付费证书，macOS 直接双击打开时，系统安全机制（Gatekeeper）可能拦截并提示 **“应用程序已损坏，无法打开”** 或 **“无法验证开发者”**。
+> ⚠️ **关于临时签名**
+>
+> DMG 采用临时签名（ad-hoc），未经过 Apple 公证（公证需要付费的 Developer ID）。在 macOS Sequoia 上，弹窗 **「Apple 无法验证“CalmBar-x.y.z.dmg”是否包含恶意软件」** 会在你看到 DMG 内容之前就阻止挂载，而且弹窗已不再提供「仍要打开」按钮。你需要先清除隔离标记，或者走「系统设置」流程。
 
-在终端（Terminal）中执行以下命令移除系统隔离属性即可正常运行：
+**最快捷的方式：一条终端命令加拖拽安装**
+
+1. 从 Releases 页面下载 `CalmBar-x.y.z.dmg`。
+2. 双击之前，先在终端执行下面这行命令（将文件名替换为你实际下载的版本）：
 
 ```bash
-sudo xattr -rd com.apple.quarantine /Applications/CalmBar.app
+xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.5.0.dmg
 ```
 
+3. 双击 DMG，把 `CalmBar` 拖到 **Applications（应用程序）** 文件夹。
+4. 装好后再对应用清除一次隔离标记：
+
+```bash
+xattr -dr com.apple.quarantine /Applications/CalmBar.app
+```
+
+5. 通过 Spotlight / 程序坞正常启动。
+
+`xattr -dr com.apple.quarantine …` 会移除 macOS 给所有浏览器下载文件附加的 `com.apple.quarantine` 扩展属性。没有该属性后，Gatekeeper 就不会再拦截文件。
+
 > 💡 **提示**：
-> * 若应用放置在其他目录，请将路径替换为实际的 `CalmBar.app` 文件路径。
+> * 若下载目录不是 `~/Downloads`，请将路径替换为 DMG 的实际位置；`/Applications` 无写入权限时可在命令前加 `sudo`。
+> * 也可以尝试「系统设置 → 隐私与安全性」中的放行入口；但 Sequoia 对 DMG 挂载的拦截通常仍需先执行上面的清除命令。
 > * CalmBar 内部的 **「应用去隔离」** 功能页面也支持直接拖拽任意 App 一键执行该修复操作。
+
+安装后可通过 **通用设置 → 关于 CalmBar → 检查更新…** 获取新版本；网络受限时可在 **更新设置…** 中配置 HTTP/HTTPS 代理。自动更新使用 Sparkle，无需重新手动下载安装包。
 
 ---
 
