@@ -36,7 +36,7 @@ public struct MenuBarSettingsTab: View {
                             }
                         }
 
-                        Toggle("鼠标指针悬停自动展开", isOn: $settings.hoverToExpand)
+                        Toggle("鼠标悬停在箭头附近自动展开", isOn: $settings.hoverToExpand)
                             .font(.system(size: 12.5, weight: .medium))
                     }
                     .padding(8)

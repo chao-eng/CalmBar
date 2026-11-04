@@ -18,7 +18,11 @@ public final class MenuBarOrganizer: ObservableObject {
 
     private var autoCollapseTimer: Timer?
     private var hoverMonitor: Any?
+    private var hoverLocalMonitor: Any?
     private var hoverDwellTimer: Timer?
+
+    // 悬停感应区以收纳箭头为中心，向左右各放宽的像素数
+    private let hoverTriggerHorizontalPadding: CGFloat = 16.0
     private var cancellables = Set<AnyCancellable>()
     private var isToggling = false
 
@@ -202,34 +206,69 @@ public final class MenuBarOrganizer: ObservableObject {
         }
     }
 
+    /// 收纳箭头的悬停感应区：以箭头按钮自身窗口为基准，左右各放宽一段距离
+    private func hoverTriggerRect() -> NSRect? {
+        guard btnExpandCollapse.isVisible, let window = btnExpandCollapse.button?.window else { return nil }
+        return window.frame.insetBy(dx: -hoverTriggerHorizontalPadding, dy: 0)
+    }
+
+    private func isMouseNearExpandTrigger() -> Bool {
+        guard let rect = hoverTriggerRect() else { return false }
+        return rect.contains(NSEvent.mouseLocation)
+    }
+
+    private func cancelHoverDwell() {
+        hoverDwellTimer?.invalidate()
+        hoverDwellTimer = nil
+    }
+
+    /// 仅在鼠标移动到收纳箭头附近时才计时展开，避免整个菜单栏任意位置都触发
+    private func handleHoverMove() {
+        guard AppSettings.shared.menuBarOrganizerEnabled,
+              isCollapsed,
+              isMouseNearExpandTrigger() else {
+            cancelHoverDwell()
+            return
+        }
+        guard hoverDwellTimer == nil else { return }
+
+        hoverDwellTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: false) { [weak self] _ in
+            Task { @MainActor in
+                guard let self = self else { return }
+                self.hoverDwellTimer = nil
+                if self.isCollapsed && self.isMouseNearExpandTrigger() {
+                    self.expandMenuBar()
+                }
+            }
+        }
+    }
+
     private func setupHoverMonitor(enabled: Bool) {
         if let monitor = hoverMonitor {
             NSEvent.removeMonitor(monitor)
             hoverMonitor = nil
         }
-        hoverDwellTimer?.invalidate()
-        hoverDwellTimer = nil
+        if let monitor = hoverLocalMonitor {
+            NSEvent.removeMonitor(monitor)
+            hoverLocalMonitor = nil
+        }
+        cancelHoverDwell()
 
         guard enabled else { return }
 
+        // 全局监听覆盖其他应用占用的菜单栏区域
         hoverMonitor = NSEvent.addGlobalMonitorForEvents(matching: .mouseMoved) { [weak self] _ in
             Task { @MainActor in
-                guard let self = self else { return }
-                guard self.isCollapsed && self.isMouseInMenuBar() else {
-                    self.hoverDwellTimer?.invalidate()
-                    self.hoverDwellTimer = nil
-                    return
-                }
-                guard self.hoverDwellTimer == nil else { return }
-                self.hoverDwellTimer = Timer.scheduledTimer(withTimeInterval: 0.35, repeats: false) { [weak self] _ in
-                    Task { @MainActor in
-                        guard let self = self else { return }
-                        if self.isCollapsed && self.isMouseInMenuBar() {
-                            self.expandMenuBar()
-                        }
-                    }
-                }
+                self?.handleHoverMove()
             }
+        }
+
+        // 本地监听覆盖光标落在本应用状态栏按钮上的情况（全局监听收不到发给自身的事件）
+        hoverLocalMonitor = NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+            Task { @MainActor in
+                self?.handleHoverMove()
+            }
+            return event
         }
     }
 }
