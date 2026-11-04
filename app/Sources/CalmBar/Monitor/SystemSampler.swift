@@ -105,11 +105,15 @@ struct SystemSampler {
     // MARK: 磁盘
 
     private func readDisk() -> (free: UInt64, total: UInt64) {
-        guard let attributes = try? FileManager.default.attributesOfFileSystem(forPath: "/")
+        // 与「系统设置 > 储存空间」的「可用」口径一致：包含可清除空间（purgeable）
+        let url = URL(fileURLWithPath: "/")
+        let keys: Set<URLResourceKey> = [.volumeAvailableCapacityForImportantUsageKey, .volumeTotalCapacityKey]
+        guard let values = try? url.resourceValues(forKeys: keys),
+              let available = values.volumeAvailableCapacityForImportantUsage,
+              let total = values.volumeTotalCapacity,
+              total > 0
         else { return (0, 0) }
-        let free = (attributes[.systemFreeSize] as? NSNumber)?.uint64Value ?? 0
-        let total = (attributes[.systemSize] as? NSNumber)?.uint64Value ?? 0
-        return (free, total)
+        return (UInt64(max(0, available)), UInt64(total))
     }
 
     // MARK: 网络（getifaddrs，64 位累计值差值）
