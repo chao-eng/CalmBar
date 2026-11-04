@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {
+  AudioLinesIcon,
   BatteryChargingIcon,
   ClipboardListIcon,
   CoffeeIcon,
@@ -15,6 +16,7 @@ import {
   ShieldCheckIcon,
   ThermometerIcon,
   Trash2Icon,
+  VideoIcon,
 } from '@lucide/vue'
 import type { Component } from 'vue'
 import type { FeatureIconKey } from '@/lib/features'
@@ -35,6 +37,8 @@ const ICONS: Record<FeatureIconKey, Component> = {
   music: MusicIcon,
   scan: ScanTextIcon,
   languages: LanguagesIcon,
+  audio: AudioLinesIcon,
+  video: VideoIcon,
   trash: Trash2Icon,
   shield: ShieldCheckIcon,
   lock: LockIcon,

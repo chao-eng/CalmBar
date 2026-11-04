@@ -1,11 +1,11 @@
-CalmBar 是一个个人开源的 macOS 工具项目，使用 **Swift 6 + SwiftUI + AppKit** 开发，源码以 **Apache License 2.0** 协议完全公开，从第一行代码到发布维护都由作者独立完成。
+CalmBar 是个人项目，用 **Swift 6 + SwiftUI + AppKit** 写，源码按 **Apache License 2.0** 公开。写代码、打包、发版和维护，都是一个人在做。
 
 ## 技术上的取舍
 
-- 全部走系统原生框架：SMC 寄存器读写、IOKit 电源断言、CGEventTap 事件拦截、Vision 文字识别，没有 Electron 或 WebView 容器，空闲时后台 CPU 占用约 0.1%。
+- 全部走系统原生框架。SMC 寄存器读写、IOKit 电源断言、CGEventTap 事件拦截、Vision 文字识别，都是系统自带能力，没有 Electron 或 WebView 容器，也不依赖常驻的脚本运行时。
 - 需要特权的能力单独拆出 `CalmBarHelper` 特权助手，处理 `/Applications` 下的操作不必反复输入密码。
 - 启动项管理走 `launchctl` 的现代子命令，`/System/Library` 下的系统核心项强制只读，改动前先存一份快照。
-- 危险操作都留退路：温控在退出与休眠时自动交还 SMC 官方托管；清理统一移入系统废纸篓，误删可以放回。
+- 误操作也有退路。温控在退出与休眠时自动交还 SMC 官方托管；清理统一移入系统废纸篓，误删可以放回。
 
 ## 反馈与协作
 
