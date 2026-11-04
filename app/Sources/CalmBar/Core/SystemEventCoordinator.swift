@@ -104,6 +104,9 @@ public final class SystemEventCoordinator: ObservableObject {
         // Re-evaluate policies after waking
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
             BatteryChargeManager.shared.evaluateChargingPolicy()
+            if AppSettings.shared.audioHubEnabled, AudioMixerService.isSupported {
+                AudioMixerService.shared.start()
+            }
         }
     }
 

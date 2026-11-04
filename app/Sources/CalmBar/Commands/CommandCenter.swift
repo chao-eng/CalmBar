@@ -234,6 +234,8 @@ public final class CommandCenter: ObservableObject {
         case .menuBar: return "menubar.rectangle"
         case .translation: return "character.bubble.fill"
         case .launchManager: return "gearshape.arrow.triangle.2.circlepath"
+        case .audio: return "slider.vertical.3"
+        case .screenRecorder: return "record.circle"
         }
     }
 
@@ -264,6 +266,10 @@ public final class CommandCenter: ObservableObject {
             aliases.append(contentsOf: ["翻译", "划词翻译", "ai翻译", "双击复制", "hy-mt2", "openai", "translation", "translate", "fanyi", "fy", "hc", "hcfy", "trans"])
         case .launchManager:
             aliases.append(contentsOf: ["启动项", "服务", "自启动", "常驻服务", "launch", "daemon", "agent", "ports", "duankou", "qidong", "fuwu"])
+        case .audio:
+            aliases.append(contentsOf: ["音频", "音量", "混音", "输出设备", "静音", "audio", "volume", "mixer", "yl", "yj", "hl"])
+        case .screenRecorder:
+            aliases.append(contentsOf: ["录屏", "录制", "屏幕录制", "录像", "record", "recorder", "recording", "luping", "lp"])
         }
 
         if commandID.contains("crontab") {

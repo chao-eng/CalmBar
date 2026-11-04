@@ -13,6 +13,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     case translation
     case clipboard
     case cleaner
+    case audio
+    case recorder
     case permissions
     case launchManager
     case general
@@ -33,6 +35,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .translation: return "智能翻译"
         case .clipboard: return "剪贴板"
         case .cleaner: return "清理工具"
+        case .audio: return "音频控制"
+        case .recorder: return "屏幕录制"
         case .permissions: return "权限安全"
         case .launchManager: return "自启管理"
         case .general: return "通用设置"
@@ -53,6 +57,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .translation: return "character.bubble.fill"
         case .clipboard: return "doc.on.clipboard.fill"
         case .cleaner: return "trash.fill"
+        case .audio: return "slider.vertical.3"
+        case .recorder: return "record.circle"
         case .permissions: return "shield.lefthalf.filled"
         case .launchManager: return "gearshape.arrow.triangle.2.circlepath"
         case .general: return "gearshape.fill"
@@ -63,9 +69,9 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         switch self {
         case .thermal, .battery, .monitor:
             return .hardware
-        case .menuBar, .scroll, .caffeine, .noTunes:
+        case .menuBar, .scroll, .caffeine, .noTunes, .audio:
             return .desktop
-        case .clipboard, .translation, .ocr, .cleaner:
+        case .clipboard, .translation, .ocr, .cleaner, .recorder:
             return .productivity
         case .permissions, .gatekeeper, .launchManager, .general:
             return .system
@@ -98,6 +104,10 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return "记录剪贴板历史文本与图片，支持搜索、固定与快速粘贴"
         case .cleaner:
             return "深度扫描并清理应用残留、开发构建缓存与垃圾文件"
+        case .audio:
+            return "按应用调节音量、静音与输出设备，支持音量增强"
+        case .recorder:
+            return "录制屏幕画面、系统声音与麦克风，支持暂停与临时文件恢复"
         case .permissions:
             return "集中管理辅助功能与 SMC LaunchDaemon 特权后台服务"
         case .launchManager:
@@ -132,6 +142,10 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return PopoverPalette.badgeGradient(PopoverPalette.accentBlue)         // 面板工具磁贴蓝
         case .cleaner:
             return PopoverPalette.badgeGradient(PopoverPalette.accentOrange)       // 面板工具磁贴橙
+        case .audio:
+            return PopoverPalette.badgeGradient(PopoverPalette.audioAccent)        // 面板声音分区粉
+        case .recorder:
+            return PopoverPalette.badgeGradient(PopoverPalette.accentRed)          // 录制红
         case .permissions:
             return PopoverPalette.badgeGradient(PopoverPalette.accentBlue)
         case .gatekeeper:
@@ -167,6 +181,10 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return ["文字识别", "OCR", "截图", "识别", "提取文字", "二维码", "vision"]
         case .cleaner:
             return ["清理", "卸载", "垃圾", "缓存", "磁盘", "cleaner", "trash"]
+        case .audio:
+            return ["音频", "音量", "静音", "混音", "输出设备", "路由", "增强", "audio", "volume", "mute", "mixer"]
+        case .recorder:
+            return ["录制", "录屏", "屏幕录制", "截屏", "麦克风", "系统声音", "record", "recorder", "screen", "luping"]
         case .permissions:
             return ["权限", "辅助功能", "特权服务", "LaunchDaemon", "permission", "accessibility"]
         case .gatekeeper:
@@ -201,9 +219,9 @@ public enum SettingsCategory: String, CaseIterable, Identifiable {
         case .hardware:
             return [.thermal, .battery, .monitor]
         case .desktop:
-            return [.menuBar, .scroll, .caffeine, .noTunes]
+            return [.menuBar, .scroll, .caffeine, .noTunes, .audio]
         case .productivity:
-            return [.clipboard, .translation, .ocr, .cleaner]
+            return [.clipboard, .translation, .ocr, .cleaner, .recorder]
         case .system:
             return [.permissions, .gatekeeper, .launchManager, .general]
         }

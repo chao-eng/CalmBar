@@ -82,6 +82,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
     case gauges
     case caffeine
     case battery
+    case audioOutput
     case scrollReverser
     case noTunes
     case menuBar
@@ -91,14 +92,15 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
     case cleaner
     case gatekeeper
     case launchManager
+    case recorder
 
     var id: String { rawValue }
 
     var group: PopoverVisibilityGroup {
         switch self {
         case .gauges: .thermal
-        case .caffeine, .battery, .scrollReverser, .noTunes, .menuBar: .guardian
-        case .ocr, .translation, .clipboard, .cleaner, .gatekeeper, .launchManager: .tools
+        case .caffeine, .battery, .audioOutput, .scrollReverser, .noTunes, .menuBar: .guardian
+        case .ocr, .translation, .clipboard, .cleaner, .gatekeeper, .launchManager, .recorder: .tools
         }
     }
 
@@ -108,6 +110,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gauges: "硬件温度与风扇调控"
         case .caffeine: "系统防休眠 (保持清醒)"
         case .battery: "电池充电上限控制"
+        case .audioOutput: "系统输出设备与静音"
         case .scrollReverser: "鼠标自然滚动解耦"
         case .noTunes: "Apple Music 启动拦截"
         case .menuBar: "菜单栏图标收纳"
@@ -117,6 +120,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .cleaner: "卸载与清理快捷入口"
         case .gatekeeper: "软件去隔离与签名授权"
         case .launchManager: "自启与常驻服务管理"
+        case .recorder: "屏幕录制快捷入口"
         }
     }
 
@@ -126,6 +130,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gauges: "gauge.with.needle"
         case .caffeine: "cup.and.saucer.fill"
         case .battery: "battery.100.bolt"
+        case .audioOutput: "speaker.wave.2.fill"
         case .scrollReverser: "computermouse.fill"
         case .noTunes: "music.note"
         case .menuBar: "menubar.rectangle"
@@ -135,6 +140,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .cleaner: "trash"
         case .gatekeeper: "lock.shield.fill"
         case .launchManager: "gearshape.arrow.triangle.2.circlepath"
+        case .recorder: "record.circle"
         }
     }
 
@@ -144,6 +150,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gauges: settings.popoverShowGauges
         case .caffeine: settings.popoverShowCaffeine
         case .battery: settings.popoverShowBattery
+        case .audioOutput: settings.popoverShowAudioOutput
         case .scrollReverser: settings.popoverShowScrollReverser
         case .noTunes: settings.popoverShowNoTunes
         case .menuBar: settings.popoverShowMenuBar
@@ -153,6 +160,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .cleaner: settings.popoverShowCleaner
         case .gatekeeper: settings.popoverShowGatekeeper
         case .launchManager: settings.popoverShowLaunchManager
+        case .recorder: settings.popoverShowRecorder
         }
     }
 
@@ -162,6 +170,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gauges: settings.popoverShowGauges = value
         case .caffeine: settings.popoverShowCaffeine = value
         case .battery: settings.popoverShowBattery = value
+        case .audioOutput: settings.popoverShowAudioOutput = value
         case .scrollReverser: settings.popoverShowScrollReverser = value
         case .noTunes: settings.popoverShowNoTunes = value
         case .menuBar: settings.popoverShowMenuBar = value
@@ -171,6 +180,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .cleaner: settings.popoverShowCleaner = value
         case .gatekeeper: settings.popoverShowGatekeeper = value
         case .launchManager: settings.popoverShowLaunchManager = value
+        case .recorder: settings.popoverShowRecorder = value
         }
     }
 }

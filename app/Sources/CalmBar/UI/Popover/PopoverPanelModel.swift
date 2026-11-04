@@ -42,7 +42,8 @@ final class PopoverPanelModel: ObservableObject {
             case .monitor:
                 return settings.popoverShowMonitor && settings.systemMonitorEnabled
             case .audio:
-                return settings.popoverShowAudio
+                // 音频控制总开关是唯一入口：启用后才出现声音分区
+                return settings.audioHubEnabled
             }
         }
     }
@@ -98,14 +99,21 @@ final class PopoverPanelModel: ObservableObject {
     }
 
     private func observeAvailability() {
-        Publishers.CombineLatest4(
+        Publishers.CombineLatest3(
             settings.$popoverShowMonitor,
-            settings.$popoverShowAudio,
             settings.$systemMonitorEnabled,
             settings.$thermalEnabled
         )
             .receive(on: RunLoop.main)
-            .sink { [weak self] _, _, _, _ in
+            .sink { [weak self] _, _, _ in
+                self?.refreshAvailability()
+            }
+            .store(in: &cancellables)
+
+        // 音频控制总开关切换后立即刷新分区可用性
+        settings.$audioHubEnabled
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
                 self?.refreshAvailability()
             }
             .store(in: &cancellables)

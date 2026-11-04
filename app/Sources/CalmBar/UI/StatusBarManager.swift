@@ -143,6 +143,13 @@ public final class StatusBarManager: ObservableObject {
             }
             .store(in: &cancellables)
 
+        ScreenRecorderService.shared.$state
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.updateStatusItemTitle()
+            }
+            .store(in: &cancellables)
+
         updateMenuBarDemand(AppSettings.shared.menuBarReadoutItems)
     }
 
@@ -162,13 +169,17 @@ public final class StatusBarManager: ObservableObject {
     private func updateStatusItemTitle() {
         guard let button = statusItem?.button else { return }
         let settings = AppSettings.shared
-        let title = MenuBarReadout.title(
+        let baseTitle = MenuBarReadout.title(
             sample: SystemMonitorService.shared.snapshot,
             temperature: Double(ThermalMonitor.shared.primaryTemp),
             thermalEnabled: settings.thermalEnabled,
             items: settings.menuBarReadoutItems,
             monitorEnabled: settings.systemMonitorEnabled
         )
+
+        // 录制进行中：在菜单栏读数前叠加红点，无读数时直接显示「录制中」
+        let recording = ScreenRecorderService.shared.state.isActive
+        let title = recording ? "● \(baseTitle.isEmpty ? "录制中" : baseTitle)" : baseTitle
         button.title = title
         button.imagePosition = title.isEmpty ? .imageOnly : .imageLeading
     }

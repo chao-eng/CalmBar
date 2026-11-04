@@ -11,6 +11,8 @@ public final class HotKeyManager {
     private var hotKeyRefOCR: EventHotKeyRef?
     private var hotKeyRefClipboard: EventHotKeyRef?
     private var hotKeyRefTranslation: EventHotKeyRef?
+    private var hotKeyRefRecorder: EventHotKeyRef?
+    private var hotKeyRefRecorderFolder: EventHotKeyRef?
 
     private init() {
         if AppSettings.shared.globalHotKeysEnabled {
@@ -77,6 +79,19 @@ public final class HotKeyManager {
                                 TranslationManager.shared.translateFromClipboard()
                             }
                         }
+                    } else if hotKeyID.id == 6 {
+                        Task { @MainActor in
+                            guard AppSettings.shared.screenRecorderEnabled else { return }
+                            if ScreenRecorderService.shared.isRecording {
+                                ScreenRecorderService.shared.stop()
+                            } else if !ScreenRecorderService.shared.state.isActive {
+                                RecorderPreparationWindowController.shared.show()
+                            }
+                        }
+                    } else if hotKeyID.id == 7 {
+                        Task { @MainActor in
+                            ScreenRecorderService.shared.openRecordingsFolder()
+                        }
                     }
                 }
                 return noErr
@@ -108,6 +123,14 @@ public final class HotKeyManager {
         // 5. Option + Command + T -> Quick AI Translate Clipboard
         let hotKeyID5 = EventHotKeyID(signature: OSType(0x43424152), id: 5)
         RegisterEventHotKey(UInt32(kVK_ANSI_T), modifiers, hotKeyID5, GetApplicationEventTarget(), 0, &hotKeyRefTranslation)
+
+        // 6. Option + Command + R -> Start / Stop Screen Recording
+        let hotKeyID6 = EventHotKeyID(signature: OSType(0x43424152), id: 6)
+        RegisterEventHotKey(UInt32(kVK_ANSI_R), modifiers, hotKeyID6, GetApplicationEventTarget(), 0, &hotKeyRefRecorder)
+
+        // 7. Option + Command + F -> Open Recordings Folder
+        let hotKeyID7 = EventHotKeyID(signature: OSType(0x43424152), id: 7)
+        RegisterEventHotKey(UInt32(kVK_ANSI_F), modifiers, hotKeyID7, GetApplicationEventTarget(), 0, &hotKeyRefRecorderFolder)
     }
 
     public func unregister() {
@@ -130,6 +153,14 @@ public final class HotKeyManager {
         if let ref = hotKeyRefTranslation {
             UnregisterEventHotKey(ref)
             hotKeyRefTranslation = nil
+        }
+        if let ref = hotKeyRefRecorder {
+            UnregisterEventHotKey(ref)
+            hotKeyRefRecorder = nil
+        }
+        if let ref = hotKeyRefRecorderFolder {
+            UnregisterEventHotKey(ref)
+            hotKeyRefRecorderFolder = nil
         }
         if let handler = eventHandler {
             RemoveEventHandler(handler)

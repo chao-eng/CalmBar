@@ -172,7 +172,10 @@ public final class PermissionManager: ObservableObject {
             return [FeaturePermissionRequirement(type: .fullDiskAccess, level: .advanced, reason: "完整缓存与残留扫描")]
         case .launchManager:
             return [FeaturePermissionRequirement(type: .privilegedHelper, level: .optional, reason: "管理全局 LaunchAgents 与系统级 LaunchDaemons 需要特权助手支持")]
-        case .clipboard, .noTunes, .menuBar, .translation:
+        case .screenRecorder:
+            guard AppSettings.shared.screenRecorderEnabled else { return [] }
+            return [FeaturePermissionRequirement(type: .screenRecording, level: .required, reason: "录制屏幕与系统声音")]
+        case .audio, .clipboard, .noTunes, .menuBar, .translation:
             return []
         }
     }

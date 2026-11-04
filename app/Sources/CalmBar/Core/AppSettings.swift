@@ -326,8 +326,63 @@ public final class AppSettings: ObservableObject {
     @Published public var popoverShowMonitor: Bool {
         didSet { defaults.set(popoverShowMonitor, forKey: "popoverShowMonitor") }
     }
-    @Published public var popoverShowAudio: Bool {
-        didSet { defaults.set(popoverShowAudio, forKey: "popoverShowAudio") }
+    @Published public var popoverShowAudioOutput: Bool {
+        didSet { defaults.set(popoverShowAudioOutput, forKey: "popoverShowAudioOutput") }
+    }
+    @Published public var popoverShowRecorder: Bool {
+        didSet { defaults.set(popoverShowRecorder, forKey: "popoverShowRecorder") }
+    }
+
+    // MARK: - Audio Hub Settings（PRD UC-A01 ~ UC-A04）
+    @Published public var audioHubEnabled: Bool {
+        didSet { defaults.set(audioHubEnabled, forKey: "audioHubEnabled") }
+    }
+    @Published public var audioBoostEnabled: Bool {
+        didSet { defaults.set(audioBoostEnabled, forKey: "audioBoostEnabled") }
+    }
+    @Published public var audioBoostMaxPercent: Int {
+        didSet { defaults.set(audioBoostMaxPercent, forKey: "audioBoostMaxPercent") }
+    }
+    @Published public var audioRoutingEnabled: Bool {
+        didSet { defaults.set(audioRoutingEnabled, forKey: "audioRoutingEnabled") }
+    }
+    @Published public var audioRoutingFallback: AudioRoutingFallback {
+        didSet { defaults.set(audioRoutingFallback.rawValue, forKey: "audioRoutingFallback") }
+    }
+    @Published public var audioRoutingMaxApps: Int {
+        didSet { defaults.set(audioRoutingMaxApps, forKey: "audioRoutingMaxApps") }
+    }
+    @Published public var audioExcludedBundleIDs: [String] {
+        didSet { defaults.set(audioExcludedBundleIDs, forKey: "audioExcludedBundleIDs") }
+    }
+
+    // MARK: - Screen Recorder Settings（PRD UC-R01 ~ UC-R04）
+    @Published public var screenRecorderEnabled: Bool {
+        didSet { defaults.set(screenRecorderEnabled, forKey: "screenRecorderEnabled") }
+    }
+    @Published public var recorderSaveDirectory: String {
+        didSet { defaults.set(recorderSaveDirectory, forKey: "recorderSaveDirectory") }
+    }
+    @Published public var recorderQuality: RecorderQuality {
+        didSet { defaults.set(recorderQuality.rawValue, forKey: "recorderQuality") }
+    }
+    @Published public var recorderFPS: Int {
+        didSet { defaults.set(recorderFPS, forKey: "recorderFPS") }
+    }
+    @Published public var recorderCodec: RecorderCodec {
+        didSet { defaults.set(recorderCodec.rawValue, forKey: "recorderCodec") }
+    }
+    @Published public var recorderCountdown: Int {
+        didSet { defaults.set(recorderCountdown, forKey: "recorderCountdown") }
+    }
+    @Published public var recorderIncludeCursor: Bool {
+        didSet { defaults.set(recorderIncludeCursor, forKey: "recorderIncludeCursor") }
+    }
+    @Published public var recorderCaptureSystemAudio: Bool {
+        didSet { defaults.set(recorderCaptureSystemAudio, forKey: "recorderCaptureSystemAudio") }
+    }
+    @Published public var recorderCaptureMicrophone: Bool {
+        didSet { defaults.set(recorderCaptureMicrophone, forKey: "recorderCaptureMicrophone") }
     }
     // MARK: - Popover Selected Tab（面板上次停留的分区）
     @Published public var popoverSelectedTab: String {
@@ -521,9 +576,35 @@ public final class AppSettings: ObservableObject {
         self.launchManagerScanDevPorts = defaults.object(forKey: "launchManagerScanDevPorts") as? Bool ?? true
         self.launchManagerCrashLoopAlertThreshold = defaults.object(forKey: "launchManagerCrashLoopAlertThreshold") as? Int ?? 3
         self.popoverShowLaunchManager = defaults.object(forKey: "popoverShowLaunchManager") as? Bool ?? true
-        // 监控模块已上线，面板分区默认展示；音频仍为预留
+        // 监控模块已上线，面板分区默认展示；音频需显式启用后才展示
         self.popoverShowMonitor = defaults.object(forKey: "popoverShowMonitor") as? Bool ?? true
-        self.popoverShowAudio = defaults.object(forKey: "popoverShowAudio") as? Bool ?? false
+        self.popoverShowAudioOutput = defaults.object(forKey: "popoverShowAudioOutput") as? Bool ?? true
+        self.popoverShowRecorder = defaults.object(forKey: "popoverShowRecorder") as? Bool ?? true
+
+        self.audioHubEnabled = defaults.object(forKey: "audioHubEnabled") as? Bool ?? false
+        self.audioBoostEnabled = defaults.object(forKey: "audioBoostEnabled") as? Bool ?? true
+        self.audioBoostMaxPercent = defaults.object(forKey: "audioBoostMaxPercent") as? Int ?? 150
+        self.audioRoutingEnabled = defaults.object(forKey: "audioRoutingEnabled") as? Bool ?? true
+        self.audioRoutingFallback = AudioRoutingFallback(
+            rawValue: defaults.string(forKey: "audioRoutingFallback") ?? ""
+        ) ?? .followDefault
+        self.audioRoutingMaxApps = defaults.object(forKey: "audioRoutingMaxApps") as? Int ?? 6
+        self.audioExcludedBundleIDs = defaults.stringArray(forKey: "audioExcludedBundleIDs") ?? []
+
+        self.screenRecorderEnabled = defaults.object(forKey: "screenRecorderEnabled") as? Bool ?? true
+        self.recorderSaveDirectory = defaults.string(forKey: "recorderSaveDirectory")
+            ?? ("~/Movies/CalmBar Recordings" as NSString).expandingTildeInPath
+        self.recorderQuality = RecorderQuality(
+            rawValue: defaults.string(forKey: "recorderQuality") ?? ""
+        ) ?? .p1080
+        self.recorderFPS = defaults.object(forKey: "recorderFPS") as? Int ?? 30
+        self.recorderCodec = RecorderCodec(
+            rawValue: defaults.string(forKey: "recorderCodec") ?? ""
+        ) ?? .h264
+        self.recorderCountdown = defaults.object(forKey: "recorderCountdown") as? Int ?? 3
+        self.recorderIncludeCursor = defaults.object(forKey: "recorderIncludeCursor") as? Bool ?? true
+        self.recorderCaptureSystemAudio = defaults.object(forKey: "recorderCaptureSystemAudio") as? Bool ?? true
+        self.recorderCaptureMicrophone = defaults.object(forKey: "recorderCaptureMicrophone") as? Bool ?? false
         self.popoverSelectedTab = defaults.string(forKey: "popoverSelectedTab") ?? "thermal"
 
         // 系统监控（PRD §7.3）
@@ -550,6 +631,69 @@ public final class AppSettings: ObservableObject {
         self.monitorAlertBatteryThreshold = defaults.object(forKey: "monitorAlertBatteryThreshold") as? Int ?? 20
         self.monitorAlertTemperatureThreshold = defaults.object(forKey: "monitorAlertTemperatureThreshold") as? Double ?? 95
         self.monitorAlertCooldownMinutes = defaults.object(forKey: "monitorAlertCooldownMinutes") as? Int ?? 30
+    }
+}
+
+/// 路由设备断开时的回退策略（PRD BR-13）
+public enum AudioRoutingFallback: String, CaseIterable, Identifiable, Sendable {
+    case followDefault = "followDefault"
+    case pauseApp = "pauseApp"
+    case alertOnly = "alertOnly"
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .followDefault: return "回退系统默认"
+        case .pauseApp: return "暂停该应用"
+        case .alertOnly: return "仅提醒"
+        }
+    }
+}
+
+/// 录制画质档位（以 16:9 基准的短边像素数描述）
+public enum RecorderQuality: String, CaseIterable, Identifiable, Sendable {
+    case p1080 = "p1080"
+    case p1440 = "p1440"
+    case p4k = "p4k"
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .p1080: return "1080p"
+        case .p1440: return "1440p"
+        case .p4k: return "4K"
+        }
+    }
+
+    public var shortEdge: CGFloat {
+        switch self {
+        case .p1080: return 1080
+        case .p1440: return 1440
+        case .p4k: return 2160
+        }
+    }
+}
+
+public enum RecorderCodec: String, CaseIterable, Identifiable, Sendable {
+    case h264 = "h264"
+    case hevc = "hevc"
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .h264: return "H.264"
+        case .hevc: return "HEVC"
+        }
+    }
+
+    public var avCodec: String {
+        switch self {
+        case .h264: return "avc1"
+        case .hevc: return "hvc1"
+        }
     }
 }
 

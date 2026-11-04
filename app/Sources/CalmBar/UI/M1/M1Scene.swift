@@ -251,16 +251,9 @@ struct M1Scene: View {
     private var audioContent: some View {
         Group {
             if driver.useRealAudio {
-                // M7：声音分区骨架（最多 4 行应用音量，不接音频引擎）
-                AudioSectionView(
-                    isEmpty: driver.m7Empty,
-                    onMeasure: { height in
-                        driver.noteAudioHeight(height)
-                    },
-                    onAction: { action in
-                        driver.noteSectionAction(.audio, action)
-                    }
-                )
+                // 声音分区读取真实音频进程
+                AudioSectionView()
+                    .onAppear { driver.noteAudioHeight(0) }
             } else {
                 VStack(spacing: 6) {
                     Image(systemName: route.tab.icon)
