@@ -14,7 +14,7 @@ import { DOWNLOAD_CHANNELS, INSTALL_COMMAND, SITE } from '@/lib/site'
       <p class="section-eyebrow">下载</p>
       <h2 id="download-title" class="section-title mt-2">立即下载 {SITE.name}</h2>
       <p class="section-desc">
-        下载后拖入「应用程序」即可使用。建议先到 GitHub Releases 核对最新版本号。
+        下载 DMG，先去隔离标记，再拖进「应用程序」。装之前，建议先到 GitHub Releases 对一下版本号。
       </p>
     </div>
 
@@ -53,16 +53,16 @@ import { DOWNLOAD_CHANNELS, INSTALL_COMMAND, SITE } from '@/lib/site'
           <p class="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
             <CircleAlertIcon class="mt-0.5 size-4 shrink-0 text-primary" />
             <span>
-              下载 <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">CalmBar.app</code>
-              后拖入 <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications</code>。
-              项目未购买 Apple 商业签名证书，首次打开可能被 Gatekeeper 拦截并提示「应用程序已损坏」或「无法验证开发者」，这不是文件损坏。
+              应用使用临时签名（ad-hoc），没有走 Apple 公证。macOS Sequoia 及之后会在挂载 DMG 前就拦下文件，弹窗里也没有「仍要打开」。
+              先去掉 DMG 的隔离标记，再双击挂载，把窗口里的 CalmBar 拖进
+              <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications</code>，最后对装好的 App 再执行一次。文件本身没坏。
             </span>
           </p>
         </div>
 
         <div>
           <p class="text-sm leading-relaxed text-muted-foreground">
-            在终端执行下面的命令移除隔离标记即可正常启动；应用内的「应用去隔离」工具也支持拖拽一键修复。
+            两条命令按顺序执行，第一条处理下载的 DMG，第二条处理装好的 App。DMG 不在下载目录时换成实际路径；<code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications</code> 没有写入权限就在命令前加 <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">sudo</code>。应用里的「应用去隔离」也接受直接拖拽修复。
           </p>
           <div class="mt-3">
             <CommandBlock client:visible code={INSTALL_COMMAND} label="移除 Gatekeeper 隔离标记" />

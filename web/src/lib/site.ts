@@ -49,13 +49,13 @@ export const SITE = {
   locale: 'zh-CN',
   title: 'CalmBar — macOS 菜单栏系统增强工具 | 让你的 Mac 更冷静、更从容',
   description:
-    'CalmBar 是一个用 Swift 6 原生开发的 macOS 菜单栏工具集：硬件温控与风扇调速、菜单栏收纳、鼠标滚轮解耦、媒体启动拦截、防休眠防离开、80% 电池上限、剪贴板历史、离线 OCR 识字、AI 划词翻译、应用深度卸载与开发者缓存清理、启动项与常驻服务管理。Apache 2.0 开源，除翻译外不发起任何网络请求。',
+    'CalmBar 是一个用 Swift 6 原生开发的 macOS 菜单栏工具集：硬件温控与风扇调速、菜单栏收纳、鼠标滚轮解耦、媒体启动拦截、防休眠防离开、80% 电池上限、剪贴板历史、离线 OCR 识字、AI 划词翻译、按应用音频控制、屏幕录制、应用深度卸载与开发者缓存清理、启动项与常驻服务管理。Apache 2.0 开源，除翻译外不发起任何网络请求。',
   keywords:
-    'CalmBar,macOS 增强,菜单栏管理,Mac 风扇控制,电池 80% 保护,开发者清理,启动项管理,launchd 自启项,macOS OCR,noTunes,Gatekeeper 去隔离,AI 划词翻译',
-  version: 'v2.4.0',
+    'CalmBar,macOS 增强,菜单栏管理,Mac 风扇控制,电池 80% 保护,开发者清理,启动项管理,launchd 自启项,macOS OCR,noTunes,Gatekeeper 去隔离,AI 划词翻译,macOS 音频控制,按应用音量,屏幕录制',
+  version: 'v2.6.0',
   license: 'Apache License 2.0',
   subheadline:
-    '硬件温控 · 菜单栏收纳 · 电池上限 · 离线识字 · AI 划词翻译 · 清理与启动项管理',
+    '硬件温控 · 菜单栏收纳 · 电池上限 · 剪贴板历史 · 离线识字 · AI 划词翻译 · 音频控制 · 屏幕录制 · 清理与启动项管理',
   specs: ['Swift 6 原生', 'M1–M4 与 Intel', '除翻译外零外联'],
   osRequirement: 'macOS 14.0 (Sonoma) 或更高版本',
   archRequirement: 'Apple M1 / M2 / M3 / M4 系列及 Intel Mac',
@@ -63,7 +63,7 @@ export const SITE = {
   releases: 'https://github.com/chao-eng/CalmBar/releases',
   issues: 'https://github.com/chao-eng/CalmBar/issues',
   licenseUrl: 'https://github.com/chao-eng/CalmBar/blob/main/LICENSE',
-  downloadBase: 'https://downloads.bujic.cc/calmbar',
+  downloadURL: 'https://downloads.bujic.cc/calmbar/CalmBar-2.6.0.dmg',
 } as const
 
 export const NAV_ITEMS: NavItem[] = [
@@ -81,13 +81,15 @@ export const SHORTCUTS: Shortcut[] = [
   { keys: ['⌘', 'C', '×2'], name: '划词就地翻译', description: '连按两次复制，在光标旁弹出译文' },
   { keys: ['⌥', '⌘', 'O'], name: '屏幕选区识字', description: '框选屏幕区域离线提取文字' },
   { keys: ['⌥', '⌘', 'V'], name: '剪贴板历史', description: '快速检索并粘贴历史记录' },
+  { keys: ['⌥', '⌘', 'R'], name: '屏幕录制', description: '开始或停止全屏 / 区域 / 窗口录制' },
+  { keys: ['⌥', '⌘', 'F'], name: '打开录制文件夹', description: '在访达中定位已保存的录制文件' },
 ]
 
 export const TRUST_STATS: TrustStat[] = [
-  { value: '0.1%', label: '后台 CPU 占用' },
-  { value: '不到 10MB', label: '本体体积' },
+  { value: '约 10MB', label: '双架构通用安装包' },
   { value: '100%', label: '离线本地运行' },
   { value: '24+', label: '工具链清理覆盖' },
+  { value: '8 组', label: '全局快捷键' },
 ]
 
 export const DOWNLOAD_CHANNELS: DownloadChannel[] = [
@@ -95,20 +97,19 @@ export const DOWNLOAD_CHANNELS: DownloadChannel[] = [
     id: 'cloudflare',
     tag: '国内直连',
     title: 'Cloudflare 直链下载',
-    description: '按芯片架构直接下载安装包，与仓库版本同步更新。',
+    description: '一个 DMG，Apple 芯片和 Intel 都能装，版本跟仓库同步。',
     note: '无需登录，下载更稳定',
     variant: 'default',
     icon: 'download',
     options: [
-      { label: 'Apple 芯片 (M 系列)', href: `${SITE.downloadBase}/CalmBar-${SITE.version}-arm.zip` },
-      { label: 'Intel 芯片', href: `${SITE.downloadBase}/CalmBar-${SITE.version}-intel.zip` },
+      { label: '下载通用 DMG 安装包', href: SITE.downloadURL },
     ],
   },
   {
     id: 'github',
     tag: '官方开源仓库',
     title: 'GitHub Releases 与源码',
-    description: '获取最新 Release、核对版本号，或查看全部源码。',
+    description: '想核对版本号，或者翻源码，从这里进。',
     note: '支持 Star 与 Issue 反馈',
     variant: 'outline',
     icon: 'github',
@@ -169,8 +170,8 @@ export const REWARD_CODES: RewardCode[] = [
   },
 ]
 
-export const INSTALL_COMMAND =
-  'sudo xattr -rd com.apple.quarantine /Applications/CalmBar.app'
+export const INSTALL_COMMAND = `xattr -dr com.apple.quarantine ~/Downloads/CalmBar-${SITE.version.replace(/^v/, '')}.dmg
+xattr -dr com.apple.quarantine /Applications/CalmBar.app`
 
 export const SAFETY_BOUNDARIES = [
   '温控在退出、重启、休眠或崩溃时自动交还 SMC 官方托管',
