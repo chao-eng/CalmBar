@@ -131,7 +131,7 @@ export const AUTHOR: AuthorProfile = {
   avatar: '/images/author-avatar.webp',
   repoLabel: 'github.com/chao-eng/CalmBar',
   intro:
-    'CalmBar 是一个个人开源项目，从第一行代码到发布维护都由作者独立完成，功能取舍只服务于一件事：让 Mac 用起来更冷静、更干净。',
+    'CalmBar 是一个个人开源项目，功能取舍只服务于一件事：让 Mac 用起来更冷静、更干净。',
   links: [
     { label: 'GitHub 仓库', href: SITE.repo },
     { label: '提交 Issue', href: SITE.issues },
