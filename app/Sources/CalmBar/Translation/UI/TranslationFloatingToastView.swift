@@ -9,6 +9,10 @@ public final class TranslationToastWindowController: ObservableObject {
 
     @Published public var currentItem: TranslationItem?
     @Published public var isPinned: Bool = false
+    /// 是否处于手动输入原文的编辑模式（从菜单栏工具入口进入时使用）
+    @Published public var isComposing: Bool = false
+    /// 编辑模式下的原文草稿
+    @Published public var draftText: String = ""
 
     private var window: NSPanel?
     private var hostingController: NSHostingController<TranslationFloatingToastRootView>?
@@ -17,15 +21,37 @@ public final class TranslationToastWindowController: ObservableObject {
 
     public func show(item: TranslationItem) {
         self.currentItem = item
+        self.isComposing = false
 
-        if let existing = window, existing.isVisible {
-            positionNearMouse(panel: existing)
+        // 已有窗口时保持原位置与尺寸，避免从输入面板切换到结果时位置跳动
+        if let existing = window {
             existing.makeKeyAndOrderFront(nil)
             return
         }
 
+        presentWindow(size: NSSize(width: 460, height: 300))
+    }
+
+    /// 手动输入模式：打开面板并允许直接编辑原文，默认预填剪贴板内容但不自动翻译
+    public func showEditor(prefillingClipboard: Bool = true) {
+        if prefillingClipboard,
+           let text = NSPasteboard.general.string(forType: .string),
+           !text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            draftText = text
+        }
+        isComposing = true
+
+        if let existing = window, existing.isVisible {
+            existing.makeKeyAndOrderFront(nil)
+            return
+        }
+
+        presentWindow(size: NSSize(width: 460, height: 340))
+    }
+
+    private func presentWindow(size: NSSize) {
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 460, height: 300),
+            contentRect: NSRect(origin: .zero, size: size),
             styleMask: [.nonactivatingPanel, .titled, .closable, .fullSizeContentView, .resizable],
             backing: .buffered,
             defer: false
@@ -68,6 +94,8 @@ public final class TranslationToastWindowController: ObservableObject {
         window = nil
         hostingController = nil
         isPinned = false
+        isComposing = false
+        draftText = ""
     }
 
     public func togglePin() {
@@ -107,7 +135,15 @@ public struct TranslationFloatingToastRootView: View {
     @ObservedObject var controller: TranslationToastWindowController
 
     public var body: some View {
-        if let item = controller.currentItem {
+        if controller.isComposing {
+            TranslationComposeView(
+                controller: controller,
+                onClose: {
+                    controller.close()
+                }
+            )
+            .environment(\.colorScheme, .dark)
+        } else if let item = controller.currentItem {
             TranslationFloatingToastView(
                 item: item,
                 isPinned: controller.isPinned,
