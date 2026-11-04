@@ -77,7 +77,7 @@ struct PopoverTabRoute: Identifiable, Sendable {
         PopoverTabRoute(tab: .thermal, title: "温控", subtitle: "温度与风扇状态", kind: .thermalCards, viewportHeight: 220),
         PopoverTabRoute(tab: .guardian, title: "守护", subtitle: "常驻守护开关", kind: .guardianCards, viewportHeight: 272),
         PopoverTabRoute(tab: .tools, title: "工具", subtitle: "快捷工具入口", kind: .toolTiles, viewportHeight: 200),
-        PopoverTabRoute(tab: .monitor, title: "监控", subtitle: "系统负载与告警", kind: .monitorCards, viewportHeight: 316),
+        PopoverTabRoute(tab: .monitor, title: "监控", subtitle: "系统负载与告警", kind: .monitorCards, viewportHeight: 326),
         PopoverTabRoute(tab: .audio, title: "声音", subtitle: "按应用调节音量与输出设备", kind: .audioMixer, viewportHeight: 200)
     ]
 
