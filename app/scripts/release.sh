@@ -18,6 +18,7 @@ cd "$(dirname "$0")/.."
 REPO="${REPO:-chao-eng/CalmBar}"
 INFO="Resources/Info.plist"
 APPCAST="../appcast.xml"
+RELEASE_DOC="../doc/RELEASE.md"
 SPARKLE_BIN=".build/artifacts/sparkle/Sparkle/bin"
 
 DRY_RUN=0
@@ -56,8 +57,14 @@ say() { printf '→ %s\n' "$*"; }
 say "版本：${CUR_SHORT} (${CUR_BUILD}) → ${NEW_SHORT} (${NEW_BUILD})"
 
 if [[ $DRY_RUN -eq 1 ]]; then
+    if grep -q "^## .*v${NEW_SHORT}" "$RELEASE_DOC"; then
+        NOTES_STATUS="已包含"
+    else
+        NOTES_STATUS="缺失，正式发版前必须先补充"
+    fi
     cat <<EOF
 将执行：
+  0. 前置检查 ${RELEASE_DOC} 的 v${NEW_SHORT} 版本说明（当前：${NOTES_STATUS}）
   1. 更新 ${INFO} 的 CFBundleShortVersionString=${NEW_SHORT} / CFBundleVersion=${NEW_BUILD}
   2. ./build_app.sh && ./scripts/make-dmg.sh  →  ${DMG}
   3. 用 EdDSA 私钥签名 ${DMG}
@@ -66,6 +73,12 @@ if [[ $DRY_RUN -eq 1 ]]; then
 （--dry-run：未修改任何文件）
 EOF
     exit 0
+fi
+
+# 发版说明必须与版本号同步，避免 RELEASE.md 漏更。
+if ! grep -q "^## .*v${NEW_SHORT}" "$RELEASE_DOC"; then
+    echo "✗ ${RELEASE_DOC} 缺少 v${NEW_SHORT} 版本说明，请先补充后再发版。" >&2
+    exit 1
 fi
 
 # 任一步失败都回滚版本号，避免留下「版本号改了但没发出去」的半成品状态。
@@ -144,5 +157,5 @@ echo
 echo "接下来："
 echo "  1. 创建 release 并上传 DMG（签名只对这份 DMG 的字节有效，不要重新打包）："
 echo "     gh release create v${NEW_SHORT} \"${DMG}\" --title \"CalmBar ${NEW_SHORT}\" --notes \"发版说明\""
-echo "  2. 提交版本号与 appcast，并推送到 main（检查更新从 main 分支的 appcast.xml 拉取）："
-echo "     git add app/${INFO} appcast.xml && git commit -m \"release: v${NEW_SHORT}\" && git push"
+echo "  2. 提交版本号、appcast 与发版说明，并推送到 main（检查更新从 main 分支的 appcast.xml 拉取）："
+echo "     git add app/Resources/Info.plist appcast.xml doc/RELEASE.md && git commit -m \"release: v${NEW_SHORT}\" && git push"
