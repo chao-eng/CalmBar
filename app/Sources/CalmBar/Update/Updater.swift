@@ -30,6 +30,20 @@ final class Updater: NSObject, ObservableObject {
     private var sparkleCanCheck = true
     private var cancellable: AnyCancellable?
 
+    /// 自动化/调试驱动模式（--visual、--demo、--spike、--m1~m8）
+    static var isAutomationRun: Bool {
+        let args = CommandLine.arguments
+        return args.contains("--visual") || args.contains("--demo") || args.contains("--spike")
+            || args.contains { $0.hasPrefix("--m") }
+    }
+
+    /// 自动化驱动或裸二进制（无更新源）时不启动 Sparkle：
+    /// 前者会弹「无法检查更新」干扰截图，后者缺少完整 app bundle，启动必然失败
+    static var canStartUpdater: Bool {
+        !isAutomationRun
+            && Bundle.main.object(forInfoDictionaryKey: "SUFeedURL") as? String != nil
+    }
+
     /// 面板与设置页展示用的版本号，例：2.4.0 (1)。
     static var currentVersionText: String {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0.0.0"
@@ -43,6 +57,12 @@ final class Updater: NSObject, ObservableObject {
         proxyHost = defaults.string(forKey: UpdateProxyConfig.hostKey) ?? UpdateProxyConfig.defaultHost
         proxyPortText = defaults.string(forKey: UpdateProxyConfig.portKey) ?? String(UpdateProxyConfig.defaultPort)
         super.init()
+
+        // 自动化驱动下不启动转发服务与 Sparkle 控制器，避免弹窗干扰截图
+        guard Self.canStartUpdater else {
+            canCheck = false
+            return
+        }
 
         // 本地转发服务常驻（只接受回环连接 + 随机 token）。
         UpdateRelayServer.shared.start()
@@ -64,7 +84,7 @@ final class Updater: NSObject, ObservableObject {
 
     /// 手动「检查更新…」入口：先探测网络，不可达时提示用户。
     func checkForUpdates() {
-        guard !isChecking else { return }
+        guard Self.canStartUpdater, !isChecking else { return }
         isChecking = true
         refreshCanCheck()
         Task { @MainActor in
