@@ -6,6 +6,19 @@
     <description>全能 macOS 菜单栏综合增强套件。</description>
     <language>zh-CN</language>
     <item>
+      <title>CalmBar 2.6.0</title>
+      <sparkle:version>3</sparkle:version>
+      <sparkle:shortVersionString>2.6.0</sparkle:shortVersionString>
+      <pubDate>Wed, 04 Nov 2026 06:02:36 +0000</pubDate>
+      <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+      <sparkle:releaseNotesLink>https://github.com/chao-eng/CalmBar/releases/tag/v2.6.0</sparkle:releaseNotesLink>
+      <enclosure
+        url="https://github.com/chao-eng/CalmBar/releases/download/v2.6.0/CalmBar-2.6.0.dmg"
+        sparkle:edSignature="GWoKWrVOZ59TN5NilMU4z4ojBbTZfKyxzJhs8hdY4mbBc5Aw+48gvtqz6ZdtXPX8LT97XDp4pUpx2wgetDJXAA=="
+        length="9010391"
+        type="application/octet-stream" />
+    </item>
+    <item>
       <title>CalmBar 2.5.0</title>
       <sparkle:version>2</sparkle:version>
       <sparkle:shortVersionString>2.5.0</sparkle:shortVersionString>
