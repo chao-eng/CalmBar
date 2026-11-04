@@ -107,38 +107,39 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         }
     }
 
+    /// 图标渐变色：与菜单栏面板各功能图标颜色保持一致（由 PopoverPalette 统一派生）
     public var gradientColors: [Color] {
         switch self {
         case .thermal:
-            return [Color.red, Color.orange]
+            return PopoverPalette.badgeGradient(PopoverPalette.thermalAccent)      // 面板温控分区橙
         case .battery:
-            return [Color(red: 0.18, green: 0.8, blue: 0.44), Color(red: 0.12, green: 0.65, blue: 0.35)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentBlue)         // 面板守护分区电池图标蓝
         case .monitor:
-            return [Color(red: 0.39, green: 0.82, blue: 1.0), Color(red: 0.04, green: 0.52, blue: 1.0)]
+            return PopoverPalette.badgeGradient(PopoverPalette.monitorAccent)      // 面板监控分区绿
         case .menuBar:
-            return [Color(red: 0.2, green: 0.6, blue: 1.0), Color(red: 0.1, green: 0.45, blue: 0.9)]
+            return PopoverPalette.badgeGradient(PopoverPalette.guardianAccent)     // 守护蓝
         case .scroll:
-            return [Color(red: 0.35, green: 0.4, blue: 0.95), Color(red: 0.25, green: 0.3, blue: 0.8)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentIndigo)       // 靛蓝
         case .caffeine:
-            return [Color(red: 0.85, green: 0.55, blue: 0.25), Color(red: 0.7, green: 0.4, blue: 0.15)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentBrown)        // 面板咖啡杯棕
         case .noTunes:
-            return [Color(red: 0.95, green: 0.25, blue: 0.5), Color(red: 0.8, green: 0.15, blue: 0.4)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentPink)         // 面板 Music 图标粉
         case .clipboard:
-            return [Color(red: 0.6, green: 0.35, blue: 0.9), Color(red: 0.45, green: 0.2, blue: 0.8)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentTeal)         // 面板工具磁贴青
         case .translation:
-            return [Color(red: 0.15, green: 0.7, blue: 0.75), Color(red: 0.1, green: 0.55, blue: 0.65)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentPurple)       // 面板工具磁贴紫
         case .ocr:
-            return [Color(red: 0.95, green: 0.5, blue: 0.1), Color(red: 0.85, green: 0.38, blue: 0.05)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentBlue)         // 面板工具磁贴蓝
         case .cleaner:
-            return [Color(red: 0.9, green: 0.3, blue: 0.3), Color(red: 0.75, green: 0.2, blue: 0.2)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentOrange)       // 面板工具磁贴橙
         case .permissions:
-            return [Color(red: 0.25, green: 0.55, blue: 0.95), Color(red: 0.15, green: 0.4, blue: 0.85)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentBlue)
         case .gatekeeper:
-            return [Color(red: 0.2, green: 0.74, blue: 0.46), Color(red: 0.12, green: 0.56, blue: 0.32)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentRed)          // 面板工具磁贴红
         case .launchManager:
-            return [Color.orange, Color(red: 0.9, green: 0.45, blue: 0.1)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentIndigo)       // 面板工具磁贴靛
         case .general:
-            return [Color(red: 0.6, green: 0.38, blue: 0.95), Color(red: 0.46, green: 0.24, blue: 0.82)]
+            return PopoverPalette.badgeGradient(PopoverPalette.accentPurple)
         }
     }
 

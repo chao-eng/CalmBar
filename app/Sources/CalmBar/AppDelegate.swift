@@ -38,6 +38,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         NSApp.setActivationPolicy(.accessory)
 
+        // 应用持久化的外观偏好（跟随系统/浅色/深色）
+        AppSettings.shared.applyAppearance()
+
         // 1. Register and start all default platform features first
         let featureManager = FeatureManager.shared
         featureManager.registerDefaultFeatures()
