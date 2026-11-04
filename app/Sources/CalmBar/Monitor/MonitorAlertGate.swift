@@ -159,11 +159,11 @@ struct MonitorAlertGate {
                 "内存压力\(sample.memoryPressure.titleZH)，建议关闭占用较高的应用，或重启长期运行的程序。"
             )
         case .disk:
-            let freeGB = Double(sample.diskFree) / 1_073_741_824
+            let freeGB = Double(sample.diskFree) / 1_000_000_000
             guard freeGB < rule.threshold else { return nil }
             return (
                 freeGB,
-                "当前磁盘剩余 \(String(format: "%.1f", freeGB))GB，低于阈值 \(Int(rule.threshold))GB。建议打开清理工具释放空间。"
+                "当前磁盘可用 \(String(format: "%.1f", freeGB))GB，低于阈值 \(Int(rule.threshold))GB。建议打开清理工具释放空间。"
             )
         case .battery:
             guard !isExternalPowerConnected, let level = sample.batteryLevel else { return nil }

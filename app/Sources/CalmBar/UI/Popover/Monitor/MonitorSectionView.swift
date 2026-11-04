@@ -136,7 +136,7 @@ struct MonitorSectionView: View {
             diskUnit = "%"
             diskRatio = sample.diskUsage
             diskBadge = Self.diskBadge(sample.diskUsage)
-            diskFootnote = "剩余 \(Self.gigabytes(sample.diskFree)) GB"
+            diskFootnote = "可用 \(Self.gigabytes(sample.diskFree)) GB"
         }
 
         return [
@@ -428,7 +428,8 @@ struct MonitorSectionView: View {
     }
 
     private static func gigabytes(_ bytes: UInt64) -> String {
-        String(format: "%.1f", Double(bytes) / 1_073_741_824)
+        // 十进制 GB，与系统设置 / 访达的容量显示单位一致
+        String(format: "%.1f", Double(bytes) / 1_000_000_000)
     }
 
     private static func rateParts(_ bytesPerSecond: Double) -> (String, String) {
