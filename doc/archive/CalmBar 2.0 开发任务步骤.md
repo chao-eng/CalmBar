@@ -65,7 +65,7 @@ bash build_app.sh
 
 ```text
 README.md
-doc/CalmBar 2.0 优化方案.md
+doc/archive/CalmBar 2.0 优化方案.md
 app/Package.swift
 app/Sources/CalmBar/AppDelegate.swift
 app/Sources/CalmBar/Core/AppSettings.swift
@@ -128,8 +128,8 @@ Task 11: 新增功能模板与文档收尾
 
 ```text
 README.md
-doc/CalmBar 2.0 优化方案.md
-doc/CalmBar 2.0 开发任务步骤.md
+doc/archive/CalmBar 2.0 优化方案.md
+doc/archive/CalmBar 2.0 开发任务步骤.md
 ```
 
 执行步骤：
@@ -791,7 +791,7 @@ feat: centralize safety recovery handling
 新增文件：
 
 ```text
-doc/CalmBar 新功能接入模板.md
+doc/design/CalmBar 新功能接入模板.md
 ```
 
 模板必须包含：
@@ -872,8 +872,8 @@ docs: add feature integration template
 
 请先阅读：
 - README.md
-- doc/CalmBar 2.0 优化方案.md
-- doc/CalmBar 2.0 开发任务步骤.md
+- doc/archive/CalmBar 2.0 优化方案.md
+- doc/archive/CalmBar 2.0 开发任务步骤.md
 - app/Sources/CalmBar/AppDelegate.swift
 - app/Sources/CalmBar/Core/PermissionManager.swift
 - app/Sources/CalmBar/Core/AppSettings.swift

@@ -32,7 +32,7 @@
 在当前目录下直接运行一键安装脚本：
 
 ```bash
-cd doc/HyMT2部署
+cd doc/guide/HyMT2部署
 chmod +x install.sh
 ./install.sh
 ```

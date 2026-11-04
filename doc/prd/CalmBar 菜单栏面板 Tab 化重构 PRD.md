@@ -8,7 +8,7 @@
 | **归属模块** | `PopoverContentView` 结构性重构（不新增 FeatureID） |
 | **涉及设置页** | `GeneralSettingsTab` 面板显示项重新分组；新增偏好键 `popoverSelectedTab` |
 | **上游文档** | [CalmBar 音频控制·系统监控·屏幕录制 PRD](CalmBar%20音频控制·系统监控·屏幕录制%20PRD.md)（本 PRD 收敛其面板布局口径，见 §8.6） |
-| **执行规范** | [CalmBar 新功能接入模板](CalmBar%20新功能接入模板.md) 第 6 条「Dashboard 准入」 |
+| **执行规范** | [CalmBar 新功能接入模板](../design/CalmBar%20新功能接入模板.md) 第 6 条「Dashboard 准入」 |
 | **评审方式** | `prd-reviewer` 生成模式 + 四维自审（见 §11） |
 
 ---

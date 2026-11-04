@@ -53,8 +53,8 @@
 
 翻译服务可以本地跑，也可以放在 NAS 或 Docker 里。
 
-- [macOS MLX 硬件加速部署（M1~M4）](doc/HyMT2部署/MacOs%20MLX加速部署.md)
-- [Linux / Docker / NAS / Windows 跨平台部署](doc/HyMT2部署/其他系统部署.md)
+- [macOS MLX 硬件加速部署（M1~M4）](doc/guide/HyMT2部署/MacOs%20MLX加速部署.md)
+- [Linux / Docker / NAS / Windows 跨平台部署](doc/guide/HyMT2部署/其他系统部署.md)
 
 ---
 
@@ -75,7 +75,7 @@ CalmBar/
 │       ├── CommandPaletteKit/     # 命令面板渲染组件
 │       └── CalmBarHelper/         # Root 特权辅助工具
 ├── appcast.xml                    # Sparkle 更新源
-└── doc/                           # 部署指南与设计文档
+└── doc/                           # PRD、设计规范、部署指南与发版文档
 ```
 
 ---
