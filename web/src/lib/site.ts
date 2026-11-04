@@ -170,8 +170,7 @@ export const REWARD_CODES: RewardCode[] = [
   },
 ]
 
-export const INSTALL_COMMAND = `xattr -dr com.apple.quarantine ~/Downloads/CalmBar-${SITE.version.replace(/^v/, '')}.dmg
-xattr -dr com.apple.quarantine /Applications/CalmBar.app`
+export const INSTALL_COMMAND = `xattr -dr com.apple.quarantine ~/Downloads/CalmBar-${SITE.version.replace(/^v/, '')}.dmg`
 
 export const SAFETY_BOUNDARIES = [
   '温控在退出、重启、休眠或崩溃时自动交还 SMC 官方托管',
