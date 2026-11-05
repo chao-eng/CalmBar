@@ -1,5 +1,5 @@
 #!/bin/bash
-# 构建 CalmBar.app：编译（默认 arm64 + x86_64 通用二进制）→ 组装 Bundle → ad-hoc 签名。
+# 构建 CalmBar.app：编译（默认 arm64 + x86_64 通用二进制）→ 组装 Bundle → 固定自签名证书签名。
 #
 # 用法：
 #   ./build_app.sh          # 编译并组装通用 (Universal) App（供 DMG 打包）
@@ -27,6 +27,16 @@ if [[ ! -f "$INFO_PLIST" ]]; then
 fi
 
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "$INFO_PLIST")
+
+# 代码签名身份：优先使用固定自签名证书，保证重打包后钥匙串 ACL 与 TCC 授权仍然有效；
+# 证书缺失时回退 ad-hoc（每次重打包 cdhash 变化，钥匙串会重新要求授权）。
+SIGN_IDENTITY="CalmBar Dev Signing"
+CODE_SIGN_IDENTITY="-"
+if security find-identity -p codesigning 2>/dev/null | grep -q "\"${SIGN_IDENTITY}\""; then
+    CODE_SIGN_IDENTITY="$SIGN_IDENTITY"
+else
+    echo "⚠️  未找到签名证书「${SIGN_IDENTITY}」，回退 ad-hoc 签名；重打包后钥匙串会再次要求授权" >&2
+fi
 
 build_arch() {
     local ARCH="$1"        # arm64 / x86_64
@@ -73,8 +83,8 @@ build_arch() {
         cp -R "$item" "$RESOURCES/"
     done
 
-    echo "==> Signing app bundle ($ARCH)..."
-    codesign --force --deep --sign - "$APP_BUNDLE"
+    echo "==> Signing app bundle ($ARCH) with ${CODE_SIGN_IDENTITY}..."
+    codesign --force --deep --sign "$CODE_SIGN_IDENTITY" "$APP_BUNDLE"
 }
 
 mkdir -p "$BUILD_ROOT"
@@ -110,8 +120,8 @@ case "$TARGET_ARCH" in
         chmod +x "$BUILD_ROOT/$APP_NAME.app/Contents/MacOS/$APP_NAME" \
                  "$BUILD_ROOT/$APP_NAME.app/Contents/MacOS/$HELPER_NAME"
 
-        echo "==> Re-signing universal bundle..."
-        codesign --force --deep --sign - "$BUILD_ROOT/$APP_NAME.app"
+        echo "==> Re-signing universal bundle with ${CODE_SIGN_IDENTITY}..."
+        codesign --force --deep --sign "$CODE_SIGN_IDENTITY" "$BUILD_ROOT/$APP_NAME.app"
         ;;
     *)
         echo "未知参数：$TARGET_ARCH（可用：all / arm / intel）" >&2
