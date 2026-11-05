@@ -25,6 +25,15 @@ if [[ ! -d "${APP_PATH}" ]]; then
 fi
 
 VERSION=$(/usr/libexec/PlistBuddy -c "Print CFBundleShortVersionString" "${APP_PATH}/Contents/Info.plist" 2>/dev/null || echo "0.0.0")
+
+# 代码签名身份：与 build_app.sh 保持一致，优先固定自签名证书，缺失时回退 ad-hoc
+SIGN_IDENTITY="CalmBar Dev Signing"
+CODE_SIGN_IDENTITY="-"
+if security find-identity -p codesigning 2>/dev/null | grep -q "\"${SIGN_IDENTITY}\""; then
+    CODE_SIGN_IDENTITY="$SIGN_IDENTITY"
+else
+    echo "⚠️  未找到签名证书「${SIGN_IDENTITY}」，回退 ad-hoc 签名；重打包后钥匙串会再次要求授权" >&2
+fi
 if [[ -n "${SUFFIX}" ]]; then
     DMG_PATH="${DMG_DIR}/${APP_NAME}-${VERSION}-${SUFFIX}.dmg"
 else
@@ -40,7 +49,7 @@ cp -R "${APP_PATH}" "${STAGE}/${APP_NAME}.app"
 ln -s /Applications "${STAGE}/Applications"
 
 # 拷贝后再签一次，保证 DMG 内的 App 签名完整
-codesign --force --deep --sign - "${STAGE}/${APP_NAME}.app" 2>/dev/null || true
+codesign --force --deep --sign "${CODE_SIGN_IDENTITY}" "${STAGE}/${APP_NAME}.app"
 
 rm -f "${DMG_PATH}"
 echo "Building ${DMG_PATH}…"
@@ -52,8 +61,8 @@ hdiutil create \
     -fs HFS+ \
     "${DMG_PATH}" >/dev/null
 
-# DMG 本身也做 ad-hoc 签名，避免创建后被篡改
-codesign --force --sign - "${DMG_PATH}" 2>/dev/null || true
+# DMG 本身也做签名，避免创建后被篡改
+codesign --force --sign "${CODE_SIGN_IDENTITY}" "${DMG_PATH}"
 
 SIZE=$(du -h "${DMG_PATH}" | cut -f1)
 echo "Wrote ${DMG_PATH} (${SIZE})"
