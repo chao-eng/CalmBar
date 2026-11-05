@@ -146,6 +146,8 @@ public struct SettingsView: View {
                         AudioSettingsTab()
                     case .recorder:
                         RecorderSettingsTab()
+                    case .aiGateway:
+                        AIGatewaySettingsTab()
                     case .permissions:
                         PermissionCenterView()
                     case .gatekeeper:

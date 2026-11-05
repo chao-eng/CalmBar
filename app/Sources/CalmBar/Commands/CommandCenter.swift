@@ -236,6 +236,7 @@ public final class CommandCenter: ObservableObject {
         case .launchManager: return "gearshape.arrow.triangle.2.circlepath"
         case .audio: return "slider.vertical.3"
         case .screenRecorder: return "record.circle"
+        case .aiGateway: return "arrow.triangle.branch"
         }
     }
 
@@ -270,6 +271,8 @@ public final class CommandCenter: ObservableObject {
             aliases.append(contentsOf: ["音频", "音量", "混音", "输出设备", "静音", "audio", "volume", "mixer", "yl", "yj", "hl"])
         case .screenRecorder:
             aliases.append(contentsOf: ["录屏", "录制", "屏幕录制", "录像", "record", "recorder", "recording", "luping", "lp"])
+        case .aiGateway:
+            aliases.append(contentsOf: ["网关", "ai网关", "api网关", "模型路由", "gateway", "openai", "proxy", "路由", "wg", "mkll"])
         }
 
         if commandID.contains("crontab") {

@@ -15,6 +15,7 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
     case launchManager
     case audio
     case screenRecorder
+    case aiGateway
 
     public var id: String { rawValue }
 
@@ -34,6 +35,7 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
         case .launchManager: return "启动项与常驻服务"
         case .audio: return "音频路由与混音"
         case .screenRecorder: return "屏幕录制"
+        case .aiGateway: return "AI 网关"
         }
     }
 }

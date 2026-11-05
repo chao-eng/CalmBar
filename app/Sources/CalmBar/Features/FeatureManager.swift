@@ -24,6 +24,7 @@ public final class FeatureManager: ObservableObject {
         register(LaunchManagerFeature())
         register(AudioFeature())
         register(ScreenRecorderFeature())
+        register(AIGatewayFeature())
     }
 
     public func register(_ feature: any CalmFeature) {

@@ -57,6 +57,15 @@ enum PopoverPalette {
     static let toolsAccent: Color = accentPurple        // 工具：工具紫
     static let monitorAccent: Color = accentGreen       // 监控：健康绿
     static let audioAccent: Color = accentPink          // 声音：声波粉
+    static let gatewayAccent: Color = accentTeal        // 网关：链路青
+
+    /// 网关速率折线系列色（蓝 / 绿 / 金 / 紫，同令牌体系自适应）
+    static let gatewaySeriesColors: [Color] = [
+        accentBlue,
+        accentGreen,
+        adaptive(lightMode: 0x9A6A00, darkMode: 0xFFD60A),
+        accentPurple
+    ]
 
     // MARK: 监控指标色
 

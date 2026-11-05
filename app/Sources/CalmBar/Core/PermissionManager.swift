@@ -175,7 +175,7 @@ public final class PermissionManager: ObservableObject {
         case .screenRecorder:
             guard AppSettings.shared.screenRecorderEnabled else { return [] }
             return [FeaturePermissionRequirement(type: .screenRecording, level: .required, reason: "录制屏幕与系统声音")]
-        case .audio, .clipboard, .noTunes, .menuBar, .translation:
+        case .audio, .clipboard, .noTunes, .menuBar, .translation, .aiGateway:
             return []
         }
     }

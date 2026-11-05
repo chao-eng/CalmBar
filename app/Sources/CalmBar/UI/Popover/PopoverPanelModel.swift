@@ -44,6 +44,9 @@ final class PopoverPanelModel: ObservableObject {
             case .audio:
                 // 音频控制总开关是唯一入口：启用后才出现声音分区
                 return settings.audioHubEnabled
+            case .gateway:
+                // 只在网关启用时展示分区，关闭后从面板移除
+                return settings.aiGatewayEnabled
             }
         }
     }
@@ -60,7 +63,7 @@ final class PopoverPanelModel: ObservableObject {
         return true
     }
 
-    /// ⌘1–⌘5 的固定顺序映射，未启用分区返回 false（BR-10）
+    /// ⌘1–⌘6 的固定顺序映射，未启用分区返回 false（BR-10）
     @discardableResult
     func selectByShortcutIndex(_ index: Int) -> Bool {
         guard PopoverTab.allCases.indices.contains(index) else { return false }
@@ -112,6 +115,14 @@ final class PopoverPanelModel: ObservableObject {
 
         // 音频控制总开关切换后立即刷新分区可用性
         settings.$audioHubEnabled
+            .receive(on: RunLoop.main)
+            .sink { [weak self] _ in
+                self?.refreshAvailability()
+            }
+            .store(in: &cancellables)
+
+        // AI 网关开关切换后立即刷新分区可用性
+        settings.$aiGatewayEnabled
             .receive(on: RunLoop.main)
             .sink { [weak self] _ in
                 self?.refreshAvailability()
