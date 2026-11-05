@@ -120,7 +120,7 @@ struct MonitorSectionView: View {
             memoryUnit = "%"
             memoryRatio = sample.memoryUsage
             memoryBadge = Self.memoryBadge(sample.memoryPressure)
-            memoryFootnote = "已用 \(Self.gigabytes(sample.memoryUsed)) / \(Self.gigabytes(sample.memoryTotal)) GB"
+            memoryFootnote = "已用 \(Self.gibibytes(sample.memoryUsed)) / \(Self.gibibytes(sample.memoryTotal)) GB"
         }
 
         let networkParts = sample.map { Self.rateParts($0.networkIn) } ?? ("—", "")
@@ -430,6 +430,11 @@ struct MonitorSectionView: View {
     private static func gigabytes(_ bytes: UInt64) -> String {
         // 十进制 GB，与系统设置 / 访达的容量显示单位一致
         String(format: "%.1f", Double(bytes) / 1_000_000_000)
+    }
+
+    private static func gibibytes(_ bytes: UInt64) -> String {
+        // 二进制 GiB，与活动监视器的内存口径一致：16 GiB 显示为 16.0 GB
+        String(format: "%.1f", Double(bytes) / 1_073_741_824)
     }
 
     private static func rateParts(_ bytesPerSecond: Double) -> (String, String) {
