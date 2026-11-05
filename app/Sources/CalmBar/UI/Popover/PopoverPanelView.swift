@@ -175,6 +175,10 @@ struct PopoverPanelView: View {
                     closePanel()
                     AudioMixerWindowController.shared.show()
                 }
+            case .gateway:
+                titleAction("设置") {
+                    openSettingsAction(.aiGateway)
+                }
             default:
                 EmptyView()
             }
@@ -233,6 +237,17 @@ struct PopoverPanelView: View {
                 closePanel()
                 AudioMixerWindowController.shared.show()
             }
+        case .gatewayCards:
+            GatewaySectionView(
+                viewportHeight: route.viewportHeight,
+                onOpenSettings: {
+                    openSettingsAction(.aiGateway)
+                },
+                onOpenHistory: {
+                    closePanel()
+                    GatewayHistoryWindowController.shared.show()
+                }
+            )
         }
     }
 

@@ -265,7 +265,7 @@ public final class StatusBarManager: ObservableObject {
         popoverModel?.select(tab) ?? false
     }
 
-    /// 键盘映射：⌘1–⌘5 固定顺序，←/→ 环内移动；未启用分区不响应（BR-10）
+    /// 键盘映射：⌘1–⌘6 固定顺序，←/→ 环内移动；未启用分区不响应（BR-10）
     func handlePopoverKey(_ event: NSEvent) -> Bool {
         guard let model = popoverModel else { return false }
 

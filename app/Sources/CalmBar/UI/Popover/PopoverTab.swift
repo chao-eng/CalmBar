@@ -8,6 +8,7 @@ enum PopoverTab: String, CaseIterable, Identifiable, Sendable {
     case tools
     case monitor
     case audio
+    case gateway
 
     var id: String { rawValue }
 
@@ -18,6 +19,7 @@ enum PopoverTab: String, CaseIterable, Identifiable, Sendable {
         case .tools: "工具"
         case .monitor: "监控"
         case .audio: "声音"
+        case .gateway: "网关"
         }
     }
 
@@ -28,6 +30,7 @@ enum PopoverTab: String, CaseIterable, Identifiable, Sendable {
         case .tools: "square.grid.2x2"
         case .monitor: "waveform.path.ecg"
         case .audio: "speaker.wave.2.fill"
+        case .gateway: "arrow.triangle.branch"
         }
     }
 
@@ -35,7 +38,7 @@ enum PopoverTab: String, CaseIterable, Identifiable, Sendable {
     var isPhaseOne: Bool {
         switch self {
         case .thermal, .guardian, .tools: true
-        case .monitor, .audio: false
+        case .monitor, .audio, .gateway: false
         }
     }
 
@@ -47,6 +50,7 @@ enum PopoverTab: String, CaseIterable, Identifiable, Sendable {
         case .tools: PopoverPalette.toolsAccent
         case .monitor: PopoverPalette.monitorAccent
         case .audio: PopoverPalette.audioAccent
+        case .gateway: PopoverPalette.gatewayAccent
         }
     }
 
@@ -61,6 +65,7 @@ enum PopoverContentKind: Sendable {
     case toolTiles
     case monitorCards
     case audioMixer
+    case gatewayCards
 }
 
 struct PopoverTabRoute: Identifiable, Sendable {
@@ -78,7 +83,8 @@ struct PopoverTabRoute: Identifiable, Sendable {
         PopoverTabRoute(tab: .guardian, title: "守护", subtitle: "常驻守护开关", kind: .guardianCards, viewportHeight: 272),
         PopoverTabRoute(tab: .tools, title: "工具", subtitle: "快捷工具入口", kind: .toolTiles, viewportHeight: 200),
         PopoverTabRoute(tab: .monitor, title: "监控", subtitle: "系统负载与告警", kind: .monitorCards, viewportHeight: 326),
-        PopoverTabRoute(tab: .audio, title: "声音", subtitle: "按应用调节音量与输出设备", kind: .audioMixer, viewportHeight: 200)
+        PopoverTabRoute(tab: .audio, title: "声音", subtitle: "按应用调节音量与输出设备", kind: .audioMixer, viewportHeight: 200),
+        PopoverTabRoute(tab: .gateway, title: "网关", subtitle: "AI 网关状态与速率趋势", kind: .gatewayCards, viewportHeight: 320)
     ]
 
     static func route(for tab: PopoverTab) -> PopoverTabRoute {
@@ -97,8 +103,9 @@ enum PopoverLayout {
     static let tabBarPadding: CGFloat = 3
     static let tabBarInnerWidth: CGFloat = contentWidth - tabBarPadding * 2 // 286
     static let pillHeight: CGFloat = 24
-    static let pillSelectedWidth: CGFloat = 84
-    static let pillIdleWidth: CGFloat = 40
+    /// 6 个分区总宽 268pt：选中 68 + 未选 34×5 + 间距 6×5 = 268
+    static let pillSelectedWidth: CGFloat = 68
+    static let pillIdleWidth: CGFloat = 34
     static let pillSpacing: CGFloat = 6
     static let titleHeight: CGFloat = 32
     static let footerHeight: CGFloat = 18

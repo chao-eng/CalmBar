@@ -445,6 +445,31 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(monitorAlertCooldownMinutes, forKey: "monitorAlertCooldownMinutes") }
     }
 
+    // MARK: - AI Gateway Settings（MiniGateway PRD）
+    @Published public var aiGatewayEnabled: Bool {
+        didSet { defaults.set(aiGatewayEnabled, forKey: "aiGatewayEnabled") }
+    }
+    @Published public var aiGatewayPort: Int {
+        didSet { defaults.set(aiGatewayPort, forKey: "aiGatewayPort") }
+    }
+    @Published public var aiGatewayChannels: [AIGatewayChannel] {
+        didSet {
+            if let data = try? JSONEncoder().encode(aiGatewayChannels) {
+                defaults.set(data, forKey: "aiGatewayChannels")
+            }
+        }
+    }
+    @Published public var aiGatewayModels: [AIGatewayModelRoute] {
+        didSet {
+            if let data = try? JSONEncoder().encode(aiGatewayModels) {
+                defaults.set(data, forKey: "aiGatewayModels")
+            }
+        }
+    }
+    @Published public var aiGatewayGranularity: GatewayGranularity {
+        didSet { defaults.set(aiGatewayGranularity.rawValue, forKey: "aiGatewayGranularity") }
+    }
+
     /// BR-24：菜单栏读数最多 3 项
     public static let menuBarReadoutLimit = 3
     public static let menuBarReadoutOrder = ["temperature", "cpu", "memory", "network", "disk"]
@@ -631,6 +656,17 @@ public final class AppSettings: ObservableObject {
         self.monitorAlertBatteryThreshold = defaults.object(forKey: "monitorAlertBatteryThreshold") as? Int ?? 20
         self.monitorAlertTemperatureThreshold = defaults.object(forKey: "monitorAlertTemperatureThreshold") as? Double ?? 95
         self.monitorAlertCooldownMinutes = defaults.object(forKey: "monitorAlertCooldownMinutes") as? Int ?? 30
+
+        // AI Gateway（MiniGateway PRD）
+        self.aiGatewayEnabled = defaults.object(forKey: "aiGatewayEnabled") as? Bool ?? false
+        self.aiGatewayPort = defaults.object(forKey: "aiGatewayPort") as? Int ?? 8317
+        self.aiGatewayChannels = defaults.data(forKey: "aiGatewayChannels")
+            .flatMap { try? JSONDecoder().decode([AIGatewayChannel].self, from: $0) } ?? []
+        self.aiGatewayModels = defaults.data(forKey: "aiGatewayModels")
+            .flatMap { try? JSONDecoder().decode([AIGatewayModelRoute].self, from: $0) } ?? []
+        self.aiGatewayGranularity = GatewayGranularity(
+            rawValue: defaults.string(forKey: "aiGatewayGranularity") ?? ""
+        ) ?? .minute
     }
 }
 

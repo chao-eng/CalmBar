@@ -15,6 +15,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
     case cleaner
     case audio
     case recorder
+    case aiGateway
     case permissions
     case launchManager
     case general
@@ -37,6 +38,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .cleaner: return "清理工具"
         case .audio: return "音频控制"
         case .recorder: return "屏幕录制"
+        case .aiGateway: return "AI 网关"
         case .permissions: return "权限安全"
         case .launchManager: return "自启管理"
         case .general: return "通用设置"
@@ -59,6 +61,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .cleaner: return "trash.fill"
         case .audio: return "slider.vertical.3"
         case .recorder: return "record.circle"
+        case .aiGateway: return "arrow.triangle.branch"
         case .permissions: return "shield.lefthalf.filled"
         case .launchManager: return "gearshape.arrow.triangle.2.circlepath"
         case .general: return "gearshape.fill"
@@ -71,7 +74,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return .hardware
         case .menuBar, .scroll, .caffeine, .noTunes, .audio:
             return .desktop
-        case .clipboard, .translation, .ocr, .cleaner, .recorder:
+        case .clipboard, .translation, .ocr, .cleaner, .recorder, .aiGateway:
             return .productivity
         case .permissions, .gatekeeper, .launchManager, .general:
             return .system
@@ -108,6 +111,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return "按应用调节音量、静音与输出设备，支持音量增强"
         case .recorder:
             return "录制屏幕画面、系统声音与麦克风，支持暂停与临时文件恢复"
+        case .aiGateway:
+            return "本地 OpenAI 兼容 API 网关：渠道路由、故障切换与 Token / 速率统计"
         case .permissions:
             return "集中管理辅助功能与 SMC LaunchDaemon 特权后台服务"
         case .launchManager:
@@ -146,6 +151,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return PopoverPalette.badgeGradient(PopoverPalette.audioAccent)        // 面板声音分区粉
         case .recorder:
             return PopoverPalette.badgeGradient(PopoverPalette.accentRed)          // 录制红
+        case .aiGateway:
+            return PopoverPalette.badgeGradient(PopoverPalette.gatewayAccent)      // 面板网关分区青
         case .permissions:
             return PopoverPalette.badgeGradient(PopoverPalette.accentBlue)
         case .gatekeeper:
@@ -185,6 +192,8 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
             return ["音频", "音量", "静音", "混音", "输出设备", "路由", "增强", "audio", "volume", "mute", "mixer"]
         case .recorder:
             return ["录制", "录屏", "屏幕录制", "截屏", "麦克风", "系统声音", "record", "recorder", "screen", "luping"]
+        case .aiGateway:
+            return ["网关", "AI", "代理", "渠道", "路由", "Token", "TPS", "gateway", "API", "OpenAI"]
         case .permissions:
             return ["权限", "辅助功能", "特权服务", "LaunchDaemon", "permission", "accessibility"]
         case .gatekeeper:
@@ -221,7 +230,7 @@ public enum SettingsCategory: String, CaseIterable, Identifiable {
         case .desktop:
             return [.menuBar, .scroll, .caffeine, .noTunes, .audio]
         case .productivity:
-            return [.clipboard, .translation, .ocr, .cleaner, .recorder]
+            return [.clipboard, .translation, .ocr, .cleaner, .recorder, .aiGateway]
         case .system:
             return [.permissions, .gatekeeper, .launchManager, .general]
         }

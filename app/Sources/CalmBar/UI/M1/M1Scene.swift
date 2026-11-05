@@ -124,6 +124,8 @@ struct M1Scene: View {
             monitorContent
         case .audioMixer:
             audioContent
+        case .gatewayCards:
+            EmptyView()
         }
     }
 
