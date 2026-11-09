@@ -116,3 +116,15 @@ xattr -dr com.apple.quarantine /Applications/CalmBar.app
 - [Scroll Reverser](https://pilotmoon.com/scrollreverser/)（Pilotmoon）
 - [Hidden Bar](https://github.com/dwarvesf/hidden)（Dwarves Foundation）
 - [AirPulse](https://github.com/chaoeng)（SMC 风扇控制）
+
+---
+
+## Star History
+
+<a href="https://www.star-history.com/?repos=chao-eng%2Fcalmbar&type=date&legend=bottom-right">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=chao-eng/calmbar&type=date&theme=dark&legend=bottom-right" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=chao-eng/calmbar&type=date&legend=bottom-right" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=chao-eng/calmbar&type=date&legend=bottom-right" />
+ </picture>
+</a>
