@@ -49,7 +49,7 @@ public struct MenuBarSettingsTab: View {
                         HStack(alignment: .top, spacing: 8) {
                             Text("1.")
                                 .font(.system(size: 11.5, weight: .bold))
-                            Text("按住键盘 **Command (⌘)** 键，用鼠标将不常用的菜单栏图标拖动到 **`<` 折叠图标的左侧**。")
+                            Text("按住键盘 **Command (⌘)** 键，在展开状态下用鼠标将不常用的菜单栏图标拖动到 **`/` 分隔符的左侧**。收纳边界是 `/`，不是 `<`；`/` 与 `<` 之间的图标不会被收纳。")
                                 .font(.system(size: 11.5))
                                 .lineSpacing(2)
                         }
