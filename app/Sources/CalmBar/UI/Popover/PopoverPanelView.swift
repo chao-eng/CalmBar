@@ -278,6 +278,9 @@ struct PopoverPanelView: View {
             } else {
                 RecorderPreparationWindowController.shared.show()
             }
+        case .lanShare:
+            closePanel()
+            LANShareWindowController.shared.show()
         }
     }
 

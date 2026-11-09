@@ -9,6 +9,7 @@ public enum PermissionType: String, CaseIterable, Identifiable, Sendable {
     case privilegedHelper = "privilegedHelper"
     case screenRecording = "screenRecording"
     case fullDiskAccess = "fullDiskAccess"
+    case localNetwork = "localNetwork"
 
     public var id: String { rawValue }
 
@@ -22,6 +23,8 @@ public enum PermissionType: String, CaseIterable, Identifiable, Sendable {
             return "屏幕录制权限 (Screen Capture)"
         case .fullDiskAccess:
             return "完全磁盘访问权限 (Full Disk Access)"
+        case .localNetwork:
+            return "本地网络权限 (Local Network)"
         }
     }
 
@@ -31,6 +34,7 @@ public enum PermissionType: String, CaseIterable, Identifiable, Sendable {
         case .privilegedHelper: return "lock.shield"
         case .screenRecording: return "viewfinder"
         case .fullDiskAccess: return "internaldrive"
+        case .localNetwork: return "network"
         }
     }
 
@@ -44,13 +48,15 @@ public enum PermissionType: String, CaseIterable, Identifiable, Sendable {
             return "用于屏幕选区截屏并调用 Apple Vision 深度学习引擎进行离线文字与二维码识别。"
         case .fullDiskAccess:
             return "用于应用卸载时精准扫描深层缓存与残留、清理开发者环境多余缓存。"
+        case .localNetwork:
+            return "用于在局域网内向同一 Wi-Fi 下的设备提供文件与文本互传服务。"
         }
     }
 
     public var isRequiredForCore: Bool {
         switch self {
         case .accessibility, .privilegedHelper: return true
-        case .screenRecording, .fullDiskAccess: return false
+        case .screenRecording, .fullDiskAccess, .localNetwork: return false
         }
     }
 }
@@ -69,6 +75,8 @@ public final class PermissionManager: ObservableObject {
     @Published public private(set) var helperInstalled: Bool = false
     @Published public private(set) var screenRecordingGranted: Bool = false
     @Published public private(set) var fullDiskAccessGranted: Bool = false
+    /// macOS 未提供本地网络授权的公开查询 API，暂按已授权处理，由系统弹窗兜底。
+    @Published public private(set) var localNetworkGranted: Bool = true
 
     private var refreshTimer: Timer?
 
@@ -107,6 +115,7 @@ public final class PermissionManager: ObservableObject {
         case .privilegedHelper: return helperInstalled
         case .screenRecording: return screenRecordingGranted
         case .fullDiskAccess: return fullDiskAccessGranted
+        case .localNetwork: return localNetworkGranted
         }
     }
 
@@ -170,6 +179,8 @@ public final class PermissionManager: ObservableObject {
             return [FeaturePermissionRequirement(type: .screenRecording, level: .required, reason: "屏幕选区截屏")]
         case .cleaner:
             return [FeaturePermissionRequirement(type: .fullDiskAccess, level: .advanced, reason: "完整缓存与残留扫描")]
+        case .lanShare:
+            return [FeaturePermissionRequirement(type: .localNetwork, level: .optional, reason: "局域网设备访问")]
         case .launchManager:
             return [FeaturePermissionRequirement(type: .privilegedHelper, level: .optional, reason: "管理全局 LaunchAgents 与系统级 LaunchDaemons 需要特权助手支持")]
         case .screenRecorder:
@@ -226,6 +237,9 @@ public final class PermissionManager: ObservableObject {
 
         case .fullDiskAccess:
             openSystemSettings(pane: "Privacy_AllFiles")
+
+        case .localNetwork:
+            openSystemSettings(pane: "Privacy_LocalNetwork")
         }
     }
 

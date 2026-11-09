@@ -1,0 +1,6 @@
+{"passed":true,"cases":52,
+ "fragmentationMismatches":0,
+ "fuzzIterations":100000,"fuzzMismatches":0,
+ "multipartPassed":true,
+ "baselineFootprint":11175680,"afterFootprint":14010368,"elapsedSeconds":17.77,
+ "report":"/tmp/calmbar_lanshare/corpus_report.md"}

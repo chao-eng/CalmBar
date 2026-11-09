@@ -19,9 +19,9 @@
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>2.6.3</string>
+	<string>2.7.0</string>
 	<key>CFBundleVersion</key>
-	<string>6</string>
+	<string>7</string>
 	<key>LSMinimumSystemVersion</key>
 	<string>14.0</string>
 	<key>LSUIElement</key>
@@ -30,6 +30,8 @@
 	<string>按应用调节音量与录制系统声音需要采集其他应用的音频</string>
 	<key>NSHighResolutionCapable</key>
 	<true/>
+	<key>NSLocalNetworkUsageDescription</key>
+	<string>局域网互传需要在同一 Wi-Fi 下与其他设备交换文件与文本</string>
 	<key>NSMicrophoneUsageDescription</key>
 	<string>录制屏幕时采集麦克风声音需要麦克风权限</string>
 	<key>NSPrincipalClass</key>

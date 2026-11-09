@@ -32,11 +32,12 @@ struct BatterySafetyTests {
     @MainActor
     func testPermissionTypes() {
         let types = PermissionType.allCases
-        #expect(types.count == 4)
+        #expect(types.count == 5)
         #expect(types.contains(.accessibility))
         #expect(types.contains(.privilegedHelper))
         #expect(types.contains(.screenRecording))
         #expect(types.contains(.fullDiskAccess))
+        #expect(types.contains(.localNetwork))
 
         for t in types {
             #expect(!t.title.isEmpty)

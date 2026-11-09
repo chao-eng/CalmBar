@@ -470,6 +470,14 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(aiGatewayGranularity.rawValue, forKey: "aiGatewayGranularity") }
     }
 
+    // MARK: - LAN Share Settings（局域网互传 PRD）
+    @Published public var lanShareEnabled: Bool {
+        didSet { defaults.set(lanShareEnabled, forKey: "lanShareEnabled") }
+    }
+    @Published public var popoverShowLANShare: Bool {
+        didSet { defaults.set(popoverShowLANShare, forKey: "popoverShowLANShare") }
+    }
+
     /// BR-24：菜单栏读数最多 3 项
     public static let menuBarReadoutLimit = 3
     public static let menuBarReadoutOrder = ["temperature", "cpu", "memory", "network", "disk"]
@@ -667,6 +675,10 @@ public final class AppSettings: ObservableObject {
         self.aiGatewayGranularity = GatewayGranularity(
             rawValue: defaults.string(forKey: "aiGatewayGranularity") ?? ""
         ) ?? .minute
+
+        // LAN Share（局域网互传 PRD）
+        self.lanShareEnabled = defaults.object(forKey: "lanShareEnabled") as? Bool ?? false
+        self.popoverShowLANShare = defaults.object(forKey: "popoverShowLANShare") as? Bool ?? true
     }
 }
 

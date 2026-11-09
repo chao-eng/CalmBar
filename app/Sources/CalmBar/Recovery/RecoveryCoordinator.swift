@@ -51,7 +51,11 @@ public final class RecoveryCoordinator: ObservableObject {
             AudioMixerService.shared.stop()
             ScreenRecorderService.shared.stop()
 
-            // 9. FeatureManager cleanup all
+            // 9. Stop LAN share listener
+            LANShareService.shared.stop()
+            actions.append(.stopLANShareService)
+
+            // 10. FeatureManager cleanup all
             FeatureManager.shared.cleanupAll()
             actions.append(.cleanupFeature)
 

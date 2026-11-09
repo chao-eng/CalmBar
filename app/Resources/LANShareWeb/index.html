@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>CalmBar 局域网互传</title>
+<link rel="stylesheet" href="/app.css">
+</head>
+<body>
+<div class="page">
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark" aria-hidden="true"></span>
+      <span id="serverName">CalmBar 互传</span>
+    </div>
+    <button id="logoutButton" class="ghost" type="button" hidden>断开连接</button>
+  </header>
+
+  <main>
+    <!-- 认证 -->
+    <section id="authView" class="card auth" hidden>
+      <h1 id="authTitle">连接到这台 Mac</h1>
+      <p id="authHint" class="muted">请输入分享者提供的 6 位口令</p>
+
+      <form id="passcodeForm" class="stack" hidden>
+        <input id="passcodeInput" class="input passcode" type="text" inputmode="numeric"
+               autocomplete="one-time-code" maxlength="6" placeholder="6 位数字" aria-label="口令">
+        <button id="passcodeSubmit" class="primary" type="submit">连接</button>
+      </form>
+
+      <p id="authError" class="error" hidden></p>
+    </section>
+
+    <!-- 主界面 -->
+    <section id="mainView" hidden>
+      <div class="card status-card">
+        <div>
+          <p class="eyebrow">已连接</p>
+          <p id="statusText" class="status-text">同一 Wi-Fi 下的设备可访问</p>
+        </div>
+        <button id="refreshButton" class="ghost" type="button">刷新</button>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>发送文件</h2>
+          <span id="uploadHint" class="muted small"></span>
+        </div>
+        <label id="dropZone" class="drop-zone" for="fileInput">
+          <span class="drop-title">点击选择文件，或拖拽到这里</span>
+          <span class="muted small">单个文件上限 20GB</span>
+          <input id="fileInput" type="file" multiple hidden>
+        </label>
+        <div id="uploadList" class="upload-list"></div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>发送文本</h2>
+        </div>
+        <textarea id="textInput" class="input textarea" rows="4"
+                  placeholder="粘贴或输入要发送的文本" aria-label="文本内容"></textarea>
+        <input id="introInput" class="input" type="text" maxlength="120"
+               placeholder="备注（可选）" aria-label="备注">
+        <div class="card-actions">
+          <button id="textSubmit" class="primary" type="button">发送文本</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head">
+          <h2>分享的内容</h2>
+          <span id="itemCount" class="muted small"></span>
+        </div>
+        <nav id="breadcrumb" class="breadcrumb" hidden></nav>
+        <ul id="itemList" class="item-list"></ul>
+        <p id="emptyHint" class="empty" hidden>暂无可下载的内容</p>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+</div>
+<script src="/app.js"></script>
+</body>
+</html>

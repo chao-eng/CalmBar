@@ -11,6 +11,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
     case gatekeeper
     case launchManager
     case recorder
+    case lanShare
 
     var id: String { rawValue }
 
@@ -23,6 +24,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: "lock.shield"
         case .launchManager: "gearshape.arrow.triangle.2.circlepath"
         case .recorder: "record.circle"
+        case .lanShare: "wifi"
         }
     }
 
@@ -36,6 +38,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: PopoverPalette.accentRed
         case .launchManager: PopoverPalette.accentIndigo
         case .recorder: PopoverPalette.accentRed
+        case .lanShare: PopoverPalette.accentTeal
         }
     }
 
@@ -49,6 +52,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: "应用去隔离"
         case .launchManager: LaunchManager.shared.crashLoopingItems.isEmpty ? "自启管理" : "自启异常"
         case .recorder: ScreenRecorderService.shared.isRecording ? "停止录制" : "屏幕录制"
+        case .lanShare: LANShareService.shared.isRunning ? "互传·开" : "局域网互传"
         }
     }
 
@@ -61,6 +65,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: "修复未签名或损坏应用提示"
         case .launchManager: "管理后台自启项、常驻守护服务与监听端口"
         case .recorder: "录制屏幕与系统声音 (⌥⌘R 快速开始/停止，右键打开录制目录)"
+        case .lanShare: "在同一 Wi-Fi 下与手机、平板互传文件与文本"
         }
     }
 }
@@ -68,6 +73,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
 struct ToolGridSectionView: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var recorder = ScreenRecorderService.shared
+    @ObservedObject private var lanShare = LANShareService.shared
 
     var viewportHeight: CGFloat
     var allHidden: Bool = false

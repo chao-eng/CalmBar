@@ -148,6 +148,8 @@ public struct SettingsView: View {
                         RecorderSettingsTab()
                     case .aiGateway:
                         AIGatewaySettingsTab()
+                    case .lanShare:
+                        LANShareSettingsTab()
                     case .permissions:
                         PermissionCenterView()
                     case .gatekeeper:

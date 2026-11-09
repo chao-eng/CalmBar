@@ -116,7 +116,7 @@ struct FeatureManagerTests {
         let manager = FeatureManager()
         manager.registerDefaultFeatures()
 
-        #expect(manager.allFeatures().count == 15)
+        #expect(manager.allFeatures().count == 16)
         #expect(manager.feature(id: .thermal) != nil)
         #expect(manager.feature(id: .battery) != nil)
         #expect(manager.feature(id: .caffeine) != nil)

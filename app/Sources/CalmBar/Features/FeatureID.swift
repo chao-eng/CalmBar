@@ -16,6 +16,7 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
     case audio
     case screenRecorder
     case aiGateway
+    case lanShare
 
     public var id: String { rawValue }
 
@@ -36,6 +37,7 @@ public enum FeatureID: String, CaseIterable, Identifiable, Sendable {
         case .audio: return "音频路由与混音"
         case .screenRecorder: return "屏幕录制"
         case .aiGateway: return "AI 网关"
+        case .lanShare: return "局域网互传"
         }
     }
 }

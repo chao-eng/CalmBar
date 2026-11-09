@@ -93,6 +93,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
     case gatekeeper
     case launchManager
     case recorder
+    case lanShare
 
     var id: String { rawValue }
 
@@ -100,7 +101,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         switch self {
         case .gauges: .thermal
         case .caffeine, .battery, .audioOutput, .scrollReverser, .noTunes, .menuBar: .guardian
-        case .ocr, .translation, .clipboard, .cleaner, .gatekeeper, .launchManager, .recorder: .tools
+        case .ocr, .translation, .clipboard, .cleaner, .gatekeeper, .launchManager, .recorder, .lanShare: .tools
         }
     }
 
@@ -121,6 +122,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: "软件去隔离与签名授权"
         case .launchManager: "自启与常驻服务管理"
         case .recorder: "屏幕录制快捷入口"
+        case .lanShare: "局域网互传快捷入口"
         }
     }
 
@@ -141,6 +143,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: "lock.shield.fill"
         case .launchManager: "gearshape.arrow.triangle.2.circlepath"
         case .recorder: "record.circle"
+        case .lanShare: "wifi"
         }
     }
 
@@ -161,6 +164,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: settings.popoverShowGatekeeper
         case .launchManager: settings.popoverShowLaunchManager
         case .recorder: settings.popoverShowRecorder
+        case .lanShare: settings.popoverShowLANShare
         }
     }
 
@@ -181,6 +185,7 @@ enum PopoverVisibilityItem: String, CaseIterable, Identifiable, Sendable {
         case .gatekeeper: settings.popoverShowGatekeeper = value
         case .launchManager: settings.popoverShowLaunchManager = value
         case .recorder: settings.popoverShowRecorder = value
+        case .lanShare: settings.popoverShowLANShare = value
         }
     }
 }

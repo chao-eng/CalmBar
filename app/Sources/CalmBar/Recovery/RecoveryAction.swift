@@ -9,6 +9,7 @@ public enum RecoveryAction: String, CaseIterable, Sendable {
     case stopNoTunesMonitoring = "stopNoTunesMonitoring"
     case unregisterHotkeys = "unregisterHotkeys"
     case resetHelperConnection = "resetHelperConnection"
+    case stopLANShareService = "stopLANShareService"
     case cleanupFeature = "cleanupFeature"
 
     public var displayName: String {
@@ -21,6 +22,7 @@ public enum RecoveryAction: String, CaseIterable, Sendable {
         case .stopNoTunesMonitoring: return "停止音乐启动拦截"
         case .unregisterHotkeys: return "注销全局快捷键"
         case .resetHelperConnection: return "重置特权助手通信状态"
+        case .stopLANShareService: return "关闭局域网互传监听"
         case .cleanupFeature: return "清理功能模块状态"
         }
     }
