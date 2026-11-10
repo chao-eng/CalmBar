@@ -23,11 +23,11 @@
 </p>
 
 <p align="center">
-  <img src="doc/images/menubar_tabs.gif" width="320" alt="菜单栏面板切换温控、守护、工具、监控、声音分区">
+  <img src="doc/images/menubar_tabs.gif" width="320" alt="菜单栏面板切换温控、工具、监控、声音分区">
 </p>
 
 <p align="center">
-  <sub>菜单栏面板：温控、守护、工具、监控、声音</sub>
+  <sub>菜单栏面板：温控、工具、监控、声音</sub>
 </p>
 
 ## 功能一览
