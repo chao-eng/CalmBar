@@ -52,7 +52,7 @@ export const SITE = {
     'CalmBar 是一个用 Swift 6 原生开发的 macOS 菜单栏工具集：硬件温控与风扇调速、菜单栏收纳、鼠标滚轮解耦、媒体启动拦截、防休眠防离开、80% 电池上限、剪贴板历史、离线 OCR 识字、AI 划词翻译、按应用音频控制、屏幕录制、应用深度卸载与开发者缓存清理、启动项与常驻服务管理。Apache 2.0 开源，除翻译外不发起任何网络请求。',
   keywords:
     'CalmBar,macOS 增强,菜单栏管理,Mac 风扇控制,电池 80% 保护,开发者清理,启动项管理,launchd 自启项,macOS OCR,noTunes,Gatekeeper 去隔离,AI 划词翻译,macOS 音频控制,按应用音量,屏幕录制',
-  version: 'v2.7.0',
+  version: 'v2.7.1',
   license: 'Apache License 2.0',
   subheadline:
     '硬件温控 · 菜单栏收纳 · 电池上限 · 剪贴板历史 · 离线识字 · AI 划词翻译 · 音频控制 · 屏幕录制 · 清理与启动项管理',
@@ -63,7 +63,7 @@ export const SITE = {
   releases: 'https://github.com/chao-eng/CalmBar/releases',
   issues: 'https://github.com/chao-eng/CalmBar/issues',
   licenseUrl: 'https://github.com/chao-eng/CalmBar/blob/main/LICENSE',
-  downloadURL: 'https://downloads.bujic.cc/calmbar/CalmBar-2.7.0.dmg',
+  downloadURL: 'https://downloads.bujic.cc/calmbar/CalmBar-2.7.1.dmg',
 } as const
 
 export const NAV_ITEMS: NavItem[] = [

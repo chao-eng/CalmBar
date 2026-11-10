@@ -5,6 +5,7 @@
 #   ./scripts/release.sh             # 修订号 +1：2.4.0 → 2.4.1（build 号同时 +1）
 #   ./scripts/release.sh minor       # 次版本 +1：2.4.0 → 2.5.0
 #   ./scripts/release.sh major       # 主版本 +1：2.4.0 → 3.0.0
+#   ./scripts/release.sh 2.7.1       # 指定版本号（Info.plist 已手动更新时用，不再自增）
 #   ./scripts/release.sh --dry-run   # 只打印将要执行的内容，不修改任何文件
 #
 # 环境变量：
@@ -23,11 +24,13 @@ SPARKLE_BIN=".build/artifacts/sparkle/Sparkle/bin"
 
 DRY_RUN=0
 LEVEL="patch"
+EXPLICIT_VERSION=""
 for arg in "$@"; do
     case "$arg" in
         --dry-run)        DRY_RUN=1 ;;
         patch|minor|major) LEVEL="$arg" ;;
-        *) echo "未知参数：$arg（可用：patch / minor / major / --dry-run）" >&2; exit 2 ;;
+        [0-9]*.[0-9]*.[0-9]*) EXPLICIT_VERSION="$arg" ;;
+        *) echo "未知参数：$arg（可用：patch / minor / major / x.y.z / --dry-run）" >&2; exit 2 ;;
     esac
 done
 
@@ -41,12 +44,16 @@ CUR_BUILD=$(/usr/libexec/PlistBuddy -c "Print CFBundleVersion" "$INFO")
 MIN_SYS=$(/usr/libexec/PlistBuddy -c "Print LSMinimumSystemVersion" "$INFO")
 
 IFS=. read -r MAJOR MINOR PATCH <<< "$CUR_SHORT"
-case "$LEVEL" in
-    patch) PATCH=$((PATCH + 1)) ;;
-    minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
-    major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
-esac
-NEW_SHORT="${MAJOR}.${MINOR}.${PATCH}"
+if [[ -n "$EXPLICIT_VERSION" ]]; then
+    NEW_SHORT="$EXPLICIT_VERSION"
+else
+    case "$LEVEL" in
+        patch) PATCH=$((PATCH + 1)) ;;
+        minor) MINOR=$((MINOR + 1)); PATCH=0 ;;
+        major) MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0 ;;
+    esac
+    NEW_SHORT="${MAJOR}.${MINOR}.${PATCH}"
+fi
 NEW_BUILD=$((CUR_BUILD + 1))
 DMG="build/CalmBar-${NEW_SHORT}.dmg"
 DMG_NAME=$(basename "$DMG")

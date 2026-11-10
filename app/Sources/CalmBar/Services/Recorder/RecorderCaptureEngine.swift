@@ -46,8 +46,15 @@ enum RecorderSampleTiming {
         return retimed(sample, to: mapped)
     }
 
+    /// 改写时间轴。音频 buffer 含多个采样点时 `CMSampleBufferGetDuration` 返回的是总时长，
+    /// 而单条 timing 记录表示的是「每个采样点」的时长，必须先换算再写回。
     static func retimed(_ sample: CMSampleBuffer, to time: CMTime) -> CMSampleBuffer? {
-        let duration = CMSampleBufferGetDuration(sample)
+        let sampleCount = CMSampleBufferGetNumSamples(sample)
+        var duration = CMSampleBufferGetDuration(sample)
+        if sampleCount > 1, duration.isNumeric, duration.value > 0 {
+            duration = CMTime(value: duration.value / Int64(sampleCount),
+                              timescale: duration.timescale)
+        }
         var timing = CMSampleTimingInfo(duration: duration, presentationTimeStamp: time,
                                         decodeTimeStamp: .invalid)
         var result: CMSampleBuffer?
@@ -76,8 +83,6 @@ final class RecorderSessionWriter: @unchecked Sendable {
     private let videoInput: AVAssetWriterInput
     private let systemAudioInput: AVAssetWriterInput?
     private let microphoneInput: AVAssetWriterInput?
-    private var systemAudioConverter: AVAudioConverter?
-    private var microphoneConverter: AVAudioConverter?
 
     private var origin: CMTime?
     private var pausedTotal: CMTime = .zero
@@ -201,15 +206,13 @@ final class RecorderSessionWriter: @unchecked Sendable {
             lastVideoTime = time
 
         case .systemAudio:
-            guard let systemAudioInput, systemAudioInput.isReadyForMoreMediaData else { return }
-            guard let pcm = Self.interleavedAudio(sample, converter: &systemAudioConverter),
-                  let retimed = RecorderSampleTiming.retimed(pcm, to: mappedTime) else { return }
+            guard let systemAudioInput, systemAudioInput.isReadyForMoreMediaData,
+                  let retimed = RecorderSampleTiming.retimed(sample, to: mappedTime) else { return }
             if !systemAudioInput.append(retimed) { failed = true }
 
         case .microphone:
-            guard let microphoneInput, microphoneInput.isReadyForMoreMediaData else { return }
-            guard let pcm = Self.interleavedAudio(sample, converter: &microphoneConverter),
-                  let retimed = RecorderSampleTiming.retimed(pcm, to: mappedTime) else { return }
+            guard let microphoneInput, microphoneInput.isReadyForMoreMediaData,
+                  let retimed = RecorderSampleTiming.retimed(sample, to: mappedTime) else { return }
             if !microphoneInput.append(retimed) { failed = true }
         }
     }
@@ -271,78 +274,6 @@ final class RecorderSessionWriter: @unchecked Sendable {
             writer.cancelWriting()
         }
         try? FileManager.default.removeItem(at: partialURL)
-    }
-
-    // MARK: 音频格式归一
-
-    /// 把设备/系统音频统一成 Float32 交错 PCM，再交给 AAC 编码器。
-    private static func interleavedAudio(_ sample: CMSampleBuffer,
-                                         converter: inout AVAudioConverter?) -> CMSampleBuffer? {
-        let sampleCount = CMSampleBufferGetNumSamples(sample)
-        guard CMSampleBufferDataIsReady(sample),
-              let description = CMSampleBufferGetFormatDescription(sample),
-              var asbd = CMAudioFormatDescriptionGetStreamBasicDescription(description)?.pointee,
-              asbd.mFormatID == kAudioFormatLinearPCM,
-              asbd.mSampleRate.isFinite, asbd.mSampleRate > 0,
-              asbd.mChannelsPerFrame > 0,
-              let count = AVAudioFrameCount(exactly: sampleCount), count > 0,
-              let frameCount = Int32(exactly: sampleCount) else { return nil }
-
-        let planar = asbd.mFormatFlags & kAudioFormatFlagIsNonInterleaved != 0
-        let sourceLayout = CMAudioFormatDescriptionGetChannelLayout(description, sizeOut: nil)
-            .map { AVAudioChannelLayout(layout: $0) }
-            ?? AVAudioChannelLayout(layoutTag: asbd.mChannelsPerFrame == 1
-                ? kAudioChannelLayoutTag_Mono
-                : asbd.mChannelsPerFrame == 2 ? kAudioChannelLayoutTag_Stereo
-                : kAudioChannelLayoutTag_DiscreteInOrder | asbd.mChannelsPerFrame)
-        guard let sourceLayout,
-              let sourceFormat = AVAudioFormat(streamDescription: &asbd, channelLayout: sourceLayout)
-        else { return nil }
-        if sourceFormat.commonFormat == .pcmFormatFloat32, !planar { return sample }
-
-        if converter?.inputFormat != sourceFormat {
-            let outputFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32,
-                                             sampleRate: asbd.mSampleRate,
-                                             interleaved: true,
-                                             channelLayout: sourceLayout)
-            converter = AVAudioConverter(from: sourceFormat, to: outputFormat)
-        }
-        guard let converter,
-              let input = AVAudioPCMBuffer(pcmFormat: sourceFormat, frameCapacity: count),
-              let output = AVAudioPCMBuffer(pcmFormat: converter.outputFormat, frameCapacity: count)
-        else { return nil }
-        input.frameLength = count
-        guard CMSampleBufferCopyPCMDataIntoAudioBufferList(sample, at: 0, frameCount: frameCount,
-                                                           into: input.mutableAudioBufferList) == noErr
-        else { return nil }
-        do { try converter.convert(to: output, from: input) } catch { return nil }
-        guard output.frameLength == count else { return nil }
-
-        var timingCount = 0
-        guard CMSampleBufferGetSampleTimingInfoArray(sample, entryCount: 0, arrayToFill: nil,
-                                                     entriesNeededOut: &timingCount) == noErr,
-              timingCount > 0 else { return nil }
-        var timing = Array(repeating: CMSampleTimingInfo(), count: timingCount)
-        guard CMSampleBufferGetSampleTimingInfoArray(sample, entryCount: timingCount,
-                                                     arrayToFill: &timing,
-                                                     entriesNeededOut: nil) == noErr else { return nil }
-        var result: CMSampleBuffer?
-        guard CMSampleBufferCreate(allocator: kCFAllocatorDefault, dataBuffer: nil, dataReady: false,
-                                   makeDataReadyCallback: nil, refcon: nil,
-                                   formatDescription: output.format.formatDescription,
-                                   sampleCount: Int(output.frameLength),
-                                   sampleTimingEntryCount: timingCount,
-                                   sampleTimingArray: &timing,
-                                   sampleSizeEntryCount: 0, sampleSizeArray: nil,
-                                   sampleBufferOut: &result) == noErr,
-              let result,
-              CMSampleBufferSetDataBufferFromAudioBufferList(result,
-                                                             blockBufferAllocator: kCFAllocatorDefault,
-                                                             blockBufferMemoryAllocator: kCFAllocatorDefault,
-                                                             flags: 0,
-                                                             bufferList: output.audioBufferList) == noErr,
-              CMSampleBufferSetDataReady(result) == noErr else { return nil }
-        return result
     }
 }
 
