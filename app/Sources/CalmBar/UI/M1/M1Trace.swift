@@ -33,12 +33,30 @@ enum M1Trace {
     @MainActor
     @discardableResult
     static func capture(_ window: NSWindow, to path: String) -> Bool {
-        guard let view = window.contentView,
-              let rep = view.bitmapImageRepForCachingDisplay(in: view.bounds) else {
+        guard let view = window.contentView else {
             log("capture failed: no bitmap path=\(path)")
             return false
         }
-        view.cacheDisplay(in: view.bounds, to: rep)
+        // 按屏幕缩放倍率渲染，Retina 下输出 2x 位图，避免文字发虚
+        let scale = max(window.backingScaleFactor, 2)
+        let bounds = view.bounds
+        guard let rep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(bounds.width * scale),
+            pixelsHigh: Int(bounds.height * scale),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else {
+            log("capture failed: no bitmap path=\(path)")
+            return false
+        }
+        rep.size = bounds.size
+        view.cacheDisplay(in: bounds, to: rep)
         guard let data = rep.representation(using: .png, properties: [:]) else {
             log("capture failed: png encode path=\(path)")
             return false
