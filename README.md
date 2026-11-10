@@ -7,7 +7,7 @@
 <hr>
 
 <p align="center">
-  <sub>常驻菜单栏的 macOS 工具集，把散热、充电、剪贴板、录屏这些日常操作收进一个面板。</sub><br>
+  <sub>常驻菜单栏的 macOS 工具集，把散热、充电、剪贴板、录屏、局域网互传这些日常操作收进一个面板。</sub><br>
   <sub>Swift 6 + SwiftUI 构建，调用 SMC、IOKit、Vision 等系统原生框架，不装内核扩展。</sub><br>
   <sub>支持 macOS 14.0 及以上，按应用调音量需要 14.4。</sub>
 </p>
@@ -18,7 +18,7 @@
   <a href="https://apple.com/macos"><img src="https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg" alt="Platform"></a>
   <a href="https://apple.com"><img src="https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg" alt="Architecture"></a>
   <a href="https://swift.org"><img src="https://img.shields.io/badge/language-Swift%206-orange.svg" alt="Language"></a>
-  <a href="https://github.com/chao-eng/CalmBar/releases"><img src="https://img.shields.io/badge/release-v2.5.0-brightgreen.svg" alt="Version"></a>
+  <a href="https://github.com/chao-eng/CalmBar/releases"><img src="https://img.shields.io/badge/release-v2.7.1-brightgreen.svg" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"></a>
 </p>
 
@@ -45,11 +45,21 @@
 | 屏幕识字 | 用 Apple Vision 框选识别中英日韩文字与二维码、条形码，结果自动复制并保留历史 | 面板「截屏识字」，或 `⌥⌘O` |
 | AI 翻译 | 双击 `⌘+C` 或按 `⌥⌘T` 就地悬浮翻译；面板「AI 翻译」可手动编辑原文（默认预填剪贴板，不自动翻译）。支持中、英、藏、维、粤、蒙等 38 种语言，兼容 OpenAI 协议和混元 HY-MT2 | 面板「AI 翻译」 |
 | 剪贴板历史 | 记录文本、图片、链接、文件与颜色值，图片自动做 OCR 索引，过滤密码管理器内容，支持固定、分类和键盘快速复制 | 面板「剪贴板」，或 `⌥⌘V` |
+| 局域网互传 | 在本机起一个网页，同一 Wi-Fi 下的手机、平板、另一台 Mac 用浏览器打开链接就能互传文件、文件夹和文本，不需要装客户端；默认要 6 位口令，只放行所选网段的设备 | 面板「工具 · 互传」，或偏好设置「局域网互传」 |
 | 应用与缓存清理 | 卸载应用时一并扫出 Library 下的残留；清理 Xcode、Node、Python、Rust、Go、Java、Flutter 等开发缓存和 IDE 孤立工作区 | 面板「清理中心」 |
 | 应用去隔离 | 把提示「已损坏」的应用拖进去，自动执行去隔离，必要时做 Ad-hoc 重签名，处理系统目录时无需反复输密码 | 偏好设置「应用授权」 |
 | 启动项与常驻服务 | 统一管理用户自启项、全局代理项、系统守护服务、Crontab；提供崩溃告警、监听端口查看、快照备份与回滚 | 面板「自启管理」，或命令面板搜 `qidong` |
 | 权限安全看板 | 汇总辅助功能、特权助手、屏幕录制、完全磁盘访问四类权限，说明用途并显示当前状态 | 偏好设置「权限安全」 |
 | 命令面板 | Spotlight 风格浮窗，输入中文、英文或拼音首字母就能找到全部命令，回车执行 | `⌥⌘K`，或面板右上角 `⌘` 图标 |
+
+### 局域网互传
+
+面板「工具」里的「互传」打开开关后，本机启动一个只监听本地网络的网页服务，同时生成带令牌的分享链接和 6 位访问口令。同一 Wi-Fi 下的手机、平板或另一台 Mac 扫码或用浏览器打开链接、输入口令，就能上传、下载文件、文件夹与文本，不需要安装任何客户端。
+
+- 默认关闭，只有手动打开开关时才开始监听；端口默认 47820，被占用时自动往后尝试
+- 只放行所选网段的设备，访客网络与跨网段请求会被拒绝，全程不经过外部服务器
+- 分享链接中的令牌只在本机服务运行期间有效，重启服务后需要重新获取
+- 接收的文件保存到可自定义的目录；关掉「允许上传」后，对方只能查看与下载
 
 翻译服务可以本地跑，也可以放在 NAS 或 Docker 里。
 
@@ -87,7 +97,7 @@ CalmBar/
 应用使用临时签名（ad-hoc），没有走 Apple 公证。macOS Sequoia 及之后版本会在挂载 DMG 前就拦下文件，且弹窗里没有「仍要打开」。先去掉隔离标记再双击：
 
 ```bash
-xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.6.1.dmg
+xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.7.1.dmg
 ```
 
 把 CalmBar 拖进「应用程序」，再对安装后的 App 执行一次：

@@ -17,6 +17,7 @@ import {
   ThermometerIcon,
   Trash2Icon,
   VideoIcon,
+  WifiIcon,
 } from '@lucide/vue'
 import type { Component } from 'vue'
 import type { FeatureIconKey } from '@/lib/features'
@@ -33,6 +34,7 @@ const ICONS: Record<FeatureIconKey, Component> = {
   menu: PanelTopIcon,
   mouse: MouseIcon,
   clipboard: ClipboardListIcon,
+  wifi: WifiIcon,
   coffee: CoffeeIcon,
   music: MusicIcon,
   scan: ScanTextIcon,

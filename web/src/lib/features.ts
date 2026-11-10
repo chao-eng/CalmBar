@@ -5,6 +5,7 @@ export type FeatureIconKey =
   | 'menu'
   | 'mouse'
   | 'clipboard'
+  | 'wifi'
   | 'coffee'
   | 'music'
   | 'scan'
@@ -51,7 +52,7 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
   {
     id: 'efficiency',
     label: '效率与输入',
-    summary: '每天要碰的键盘、菜单栏、鼠标和剪贴板，都放进同一个面板。',
+    summary: '每天要碰的键盘、菜单栏、鼠标和剪贴板，还有要传给另一台设备的文件，都放进同一个面板。',
     items: [
       {
         icon: 'command',
@@ -72,6 +73,11 @@ export const FEATURE_GROUPS: FeatureGroup[] = [
         icon: 'clipboard',
         title: '剪贴板历史记录',
         description: '文本、图片、链接、文件全格式捕获，图片自动建立 OCR 索引。',
+      },
+      {
+        icon: 'wifi',
+        title: '局域网互传',
+        description: '本机起一个网页，同 Wi-Fi 的手机与电脑用浏览器互传文件、文件夹和文本，默认要 6 位口令。',
       },
     ],
   },

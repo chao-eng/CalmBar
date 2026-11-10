@@ -49,13 +49,13 @@ export const SITE = {
   locale: 'zh-CN',
   title: 'CalmBar — macOS 菜单栏系统增强工具 | 让你的 Mac 更冷静、更从容',
   description:
-    'CalmBar 是一个用 Swift 6 原生开发的 macOS 菜单栏工具集：硬件温控与风扇调速、菜单栏收纳、鼠标滚轮解耦、媒体启动拦截、防休眠防离开、80% 电池上限、剪贴板历史、离线 OCR 识字、AI 划词翻译、按应用音频控制、屏幕录制、应用深度卸载与开发者缓存清理、启动项与常驻服务管理。Apache 2.0 开源，除翻译外不发起任何网络请求。',
+    'CalmBar 是一个用 Swift 6 原生开发的 macOS 菜单栏工具集：硬件温控与风扇调速、菜单栏收纳、鼠标滚轮解耦、媒体启动拦截、防休眠防离开、80% 电池上限、剪贴板历史、离线 OCR 识字、AI 划词翻译、按应用音频控制、屏幕录制、局域网文件互传、应用深度卸载与开发者缓存清理、启动项与常驻服务管理。Apache 2.0 开源，除翻译外不发起任何外网请求。',
   keywords:
-    'CalmBar,macOS 增强,菜单栏管理,Mac 风扇控制,电池 80% 保护,开发者清理,启动项管理,launchd 自启项,macOS OCR,noTunes,Gatekeeper 去隔离,AI 划词翻译,macOS 音频控制,按应用音量,屏幕录制',
+    'CalmBar,macOS 增强,菜单栏管理,Mac 风扇控制,电池 80% 保护,开发者清理,启动项管理,launchd 自启项,macOS OCR,noTunes,Gatekeeper 去隔离,AI 划词翻译,macOS 音频控制,按应用音量,屏幕录制,局域网互传,手机传文件到 Mac,网页传文件',
   version: 'v2.7.1',
   license: 'Apache License 2.0',
   subheadline:
-    '硬件温控 · 菜单栏收纳 · 电池上限 · 剪贴板历史 · 离线识字 · AI 划词翻译 · 音频控制 · 屏幕录制 · 清理与启动项管理',
+    '硬件温控 · 菜单栏收纳 · 电池上限 · 剪贴板历史 · 离线识字 · AI 划词翻译 · 音频控制 · 屏幕录制 · 局域网互传 · 清理与启动项管理',
   specs: ['Swift 6 原生', 'M1–M4 与 Intel', '除翻译外零外联'],
   osRequirement: 'macOS 14.0 (Sonoma) 或更高版本',
   archRequirement: 'Apple M1 / M2 / M3 / M4 系列及 Intel Mac',
@@ -178,5 +178,6 @@ export const SAFETY_BOUNDARIES = [
   '只接管官方已开放的 SMC 寄存器，不修改固件',
   '清理统一移入系统废纸篓，且必须逐项勾选，不自动全选',
   '识别全部在本地 Vision 完成，图片与文字不出本机',
+  '局域网互传默认关闭，只在所选网段内监听，不经过任何外部服务器',
   '仅翻译时向你自己填写的端点发送文本，其余零外联',
 ]
