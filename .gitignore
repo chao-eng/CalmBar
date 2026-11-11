@@ -39,3 +39,8 @@ app/scratch/
 
 reference/
 .workbuddy
+
+# Local-only (not tracked)
+film/
+opencode.json
+opencode.json.*.backup
