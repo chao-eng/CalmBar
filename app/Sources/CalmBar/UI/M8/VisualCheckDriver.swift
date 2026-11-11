@@ -100,10 +100,31 @@ final class VisualCheckDriver {
         NSApp.appearance = NSAppearance(named: .aqua)
         try? await Task.sleep(for: .milliseconds(400))
         manager.closePopover()
+
+        // AI 网关：注入与用户截图同构的示例数据（长别名 + 多渠道），验证窄窗口不横向溢出
+        // 仅在显式加 --visual-demo-data 时注入，避免常规视觉回归污染真实配置
+        let injectDemoData = CommandLine.arguments.contains("--visual-demo-data")
+        let savedChannels = settings.aiGatewayChannels
+        let savedModels = settings.aiGatewayModels
+        if injectDemoData {
+            let demoChannelA = AIGatewayChannel(name: "百炼", baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1", models: ["qwen-max", "qwen-plus"])
+            let demoChannelB = AIGatewayChannel(name: "火山", baseURL: "https://ark.cn-beijing.volces.com/api/v3", models: ["doubao-seed-2-1-pro-20251101"])
+            let demoChannelC = AIGatewayChannel(name: "magpie", baseURL: "https://api.magpie.example.com/v1", models: ["deepseek-v4"])
+            settings.aiGatewayChannels = [demoChannelA, demoChannelB, demoChannelC]
+            settings.aiGatewayModels = [
+                AIGatewayModelRoute(alias: "glm-5", channelIDs: [demoChannelA.id]),
+                AIGatewayModelRoute(alias: "doubao-seed-2-1-pro-20251101", channelIDs: [demoChannelB.id]),
+                AIGatewayModelRoute(alias: "trae-cn/DeepSeek-V4.1-Flash-1017", channelIDs: [demoChannelC.id]),
+                AIGatewayModelRoute(alias: "gemini/gemini-3.8-flash", channelIDs: [demoChannelC.id])
+            ]
+        }
+
         let settingsPages: [(SettingsTab, String)] = [
             (.thermal, "settings"),
             (.audio, "settings_audio"),
-            (.recorder, "settings_recorder")
+            (.recorder, "settings_recorder"),
+            (.lanShare, "settings_lanshare"),
+            (.aiGateway, "settings_aigateway")
         ]
         for (tab, name) in settingsPages {
             NSApp.appearance = NSAppearance(named: .aqua)
@@ -113,6 +134,23 @@ final class VisualCheckDriver {
                 M1Trace.log("visual settings window not found")
                 break
             }
+            // AI 网关：额外按窗口最小宽度 700 复现窄窗口挤压问题
+            if tab == .aiGateway {
+                var frame = settingsWindow.frame
+                frame.size.width = 700
+                frame.size.height = 560
+                settingsWindow.setFrame(frame, display: true)
+                try? await Task.sleep(for: .milliseconds(700))
+                _ = M1Trace.capture(settingsWindow, to: "/tmp/calmbar_visual/light_\(name)_narrow.png")
+                // 加高窗口，让渠道列表进入可视区，验证渠道行的窄窗口表现
+                frame.size.height = 1040
+                settingsWindow.setFrame(frame, display: true)
+                try? await Task.sleep(for: .milliseconds(600))
+                _ = M1Trace.capture(settingsWindow, to: "/tmp/calmbar_visual/light_\(name)_narrow_tall.png")
+                frame.size.height = 560
+                settingsWindow.setFrame(frame, display: true)
+                try? await Task.sleep(for: .milliseconds(400))
+            }
             _ = M1Trace.capture(settingsWindow, to: "/tmp/calmbar_visual/light_\(name).png")
             NSApp.appearance = NSAppearance(named: .darkAqua)
             try? await Task.sleep(for: .milliseconds(600))
@@ -121,6 +159,12 @@ final class VisualCheckDriver {
             try? await Task.sleep(for: .milliseconds(300))
         }
         NSApp.appearance = NSAppearance(named: .aqua)
+
+        // 还原示例数据，避免污染真实配置
+        if injectDemoData {
+            settings.aiGatewayChannels = savedChannels
+            settings.aiGatewayModels = savedModels
+        }
 
         M1Trace.log("visual summary tabs=\(tabs.map(\.rawValue).joined(separator: ",")) done")
 
