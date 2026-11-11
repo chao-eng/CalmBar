@@ -330,10 +330,10 @@ public struct LANShareSettingsTab: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(
             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                .fill(Color(nsColor: .controlBackgroundColor))
+                .fill(PopoverPalette.surfaceCard)
                 .overlay(
                     RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(Color(nsColor: .separatorColor).opacity(0.5), lineWidth: 0.5)
+                        .stroke(PopoverPalette.separatorHairline, lineWidth: 0.5)
                 )
         )
     }
