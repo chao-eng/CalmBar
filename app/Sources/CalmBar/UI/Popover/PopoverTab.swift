@@ -84,7 +84,7 @@ struct PopoverTabRoute: Identifiable, Sendable {
         PopoverTabRoute(tab: .tools, title: "工具", subtitle: "快捷工具入口", kind: .toolTiles, viewportHeight: 200),
         PopoverTabRoute(tab: .monitor, title: "监控", subtitle: "系统负载与告警", kind: .monitorCards, viewportHeight: 326),
         PopoverTabRoute(tab: .audio, title: "声音", subtitle: "按应用调节音量与输出设备", kind: .audioMixer, viewportHeight: 200),
-        PopoverTabRoute(tab: .gateway, title: "网关", subtitle: "AI 网关状态与速率趋势", kind: .gatewayCards, viewportHeight: 320)
+        PopoverTabRoute(tab: .gateway, title: "网关", subtitle: "AI 网关状态与速率趋势", kind: .gatewayCards, viewportHeight: 360)
     ]
 
     static func route(for tab: PopoverTab) -> PopoverTabRoute {

@@ -361,13 +361,100 @@ final class AIGatewayTests: XCTestCase {
         try await database.insert(sample(at: current.addingTimeInterval(30), tps: 99, requestID: "r4", status: .failed))
 
         let result = try await database.series(granularity: .minute, now: now)
+        XCTAssertEqual(result.metric, .speed)
         XCTAssertEqual(result.buckets.count, 10)
         XCTAssertEqual(result.series.count, 1)
-        XCTAssertEqual(result.series.first?.requestCount, 3)
+        XCTAssertEqual(result.series.first?.requestCount, 3, "失败请求不参与速度口径，成功请求共 3 条")
         XCTAssertEqual(result.points.count, 2, "只保留有请求的桶，空桶不落点")
         let key = try XCTUnwrap(result.series.first?.key)
-        XCTAssertEqual(try XCTUnwrap(result.averageTPS(for: key, at: current)), 15, accuracy: 0.001)
-        XCTAssertEqual(try XCTUnwrap(result.averageTPS(for: key, at: previous)), 40, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(result.value(for: key, at: current)), 15, accuracy: 0.001)
+        XCTAssertEqual(try XCTUnwrap(result.value(for: key, at: previous)), 40, accuracy: 0.001)
+    }
+
+    func testDatabaseSeriesSupportsTokenAndRequestMetrics() async throws {
+        let path = NSTemporaryDirectory() + "aigateway-test-\(UUID().uuidString).db"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let database = GatewayDatabase(path: path)
+
+        let now = Date(timeIntervalSince1970: 1_700_000_500)
+        let current = GatewayGranularity.minute.currentBucketStart(now: now)
+
+        // 两条成功 + 一条失败：Token 与请求都应计入失败；本地拒绝则完全排除
+        try await database.insert(sample(at: current.addingTimeInterval(5), tps: 10, requestID: "t1", tokens: 100))
+        try await database.insert(sample(at: current.addingTimeInterval(20), tps: 20, requestID: "t2", tokens: 300))
+        try await database.insert(sample(at: current.addingTimeInterval(30), tps: 0, requestID: "t3", status: .failed, tokens: 50))
+        try await database.insert(sample(at: current.addingTimeInterval(40), tps: 0, requestID: "t4", status: .rejected, tokens: 999))
+
+        let tokenResult = try await database.series(granularity: .minute, metric: .tokens, now: now)
+        XCTAssertEqual(tokenResult.metric, .tokens)
+        let tokenKey = try XCTUnwrap(tokenResult.series.first?.key)
+        XCTAssertEqual(tokenResult.series.first?.requestCount, 3, "rejected 不计入系列请求数")
+        XCTAssertEqual(try XCTUnwrap(tokenResult.value(for: tokenKey, at: current)), 450, accuracy: 0.001, "Token 口径为桶内累计")
+
+        let requestResult = try await database.series(granularity: .minute, metric: .requests, now: now)
+        XCTAssertEqual(requestResult.metric, .requests)
+        let requestKey = try XCTUnwrap(requestResult.series.first?.key)
+        XCTAssertEqual(try XCTUnwrap(requestResult.value(for: requestKey, at: current)), 3, accuracy: 0.001, "请求口径为次数累计")
+
+        let speedResult = try await database.series(granularity: .minute, metric: .speed, now: now)
+        let speedKey = try XCTUnwrap(speedResult.series.first?.key)
+        XCTAssertEqual(speedResult.series.first?.requestCount, 2, "速度口径只统计成功请求")
+        XCTAssertEqual(try XCTUnwrap(speedResult.value(for: speedKey, at: current)), 15, accuracy: 0.001)
+    }
+
+    func testChannelSummariesRanksByRequestCountAndSkipsEmptyChannel() async throws {
+        let path = NSTemporaryDirectory() + "aigateway-test-\(UUID().uuidString).db"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let database = GatewayDatabase(path: path)
+
+        let now = Date(timeIntervalSince1970: 1_700_000_500)
+        let current = GatewayGranularity.minute.currentBucketStart(now: now)
+
+        // 渠道 A 两条（一成功一失败），渠道 B 一条成功，空渠道名的失败记录应被过滤
+        try await database.insert(sample(at: current.addingTimeInterval(1), tps: 20, requestID: "a1", model: "chat", tokens: 100, channel: "渠道 A"))
+        try await database.insert(sample(at: current.addingTimeInterval(2), tps: 0, requestID: "a2", status: .failed, model: "chat", tokens: 40, channel: "渠道 A"))
+        try await database.insert(sample(at: current.addingTimeInterval(3), tps: 40, requestID: "b1", model: "embed", tokens: 300, channel: "渠道 B", ttft: 500))
+        try await database.insert(sample(at: current.addingTimeInterval(4), tps: 0, requestID: "c1", status: .failed, model: "chat", tokens: 10, channel: ""))
+        try await database.insert(sample(at: current.addingTimeInterval(5), tps: 0, requestID: "d1", status: .rejected, model: "chat", tokens: 10, channel: "渠道 C"))
+
+        let ranking = try await database.channelSummaries(granularity: .minute, now: now, limit: 3)
+        XCTAssertEqual(ranking.count, 2, "空渠道名与 rejected 记录不进入排行")
+        XCTAssertEqual(ranking.first?.channelName, "渠道 A")
+        XCTAssertEqual(ranking.first?.requestCount, 2)
+        XCTAssertEqual(ranking.first?.successCount, 1)
+        XCTAssertEqual(ranking.first?.totalTokens, 140)
+        XCTAssertEqual(ranking.first?.averageTPS ?? 0, 20, accuracy: 0.001, "均值只统计成功请求")
+        XCTAssertEqual(ranking.first?.successRate ?? 0, 0.5, accuracy: 0.001)
+        XCTAssertEqual(ranking.last?.channelName, "渠道 B")
+        XCTAssertEqual(ranking.last?.averageTTFT ?? 0, 500, accuracy: 0.001)
+
+        let limited = try await database.channelSummaries(granularity: .minute, now: now, limit: 1)
+        XCTAssertEqual(limited.count, 1)
+        XCTAssertEqual(limited.first?.channelName, "渠道 A")
+    }
+
+    func testWindowSummaryAggregatesTotalsWithinWindow() async throws {
+        let path = NSTemporaryDirectory() + "aigateway-test-\(UUID().uuidString).db"
+        defer { try? FileManager.default.removeItem(atPath: path) }
+        let database = GatewayDatabase(path: path)
+
+        let now = Date(timeIntervalSince1970: 1_700_000_500)
+        let current = GatewayGranularity.minute.currentBucketStart(now: now)
+
+        try await database.insert(sample(at: current.addingTimeInterval(1), tps: 10, requestID: "s1", tokens: 100, input: 60, output: 40))
+        try await database.insert(sample(at: current.addingTimeInterval(2), tps: 30, requestID: "s2", tokens: 200, input: 150, output: 50))
+        try await database.insert(sample(at: current.addingTimeInterval(3), tps: 0, requestID: "s3", status: .failed, tokens: 20, input: 20, output: 0))
+        // 窗口外的旧记录不应计入
+        try await database.insert(sample(at: current.addingTimeInterval(-600), tps: 99, requestID: "old", tokens: 999))
+
+        let summary = try await database.summary(granularity: .minute, now: now)
+        XCTAssertEqual(summary.requestCount, 3)
+        XCTAssertEqual(summary.successCount, 2)
+        XCTAssertEqual(summary.failureCount, 1)
+        XCTAssertEqual(summary.totalTokens, 320)
+        XCTAssertEqual(summary.inputTokens, 230)
+        XCTAssertEqual(summary.outputTokens, 90)
+        XCTAssertEqual(summary.averageTPS ?? 0, 20, accuracy: 0.001)
     }
 
     func testDatabaseFilterAndDelete() async throws {
@@ -399,7 +486,12 @@ final class AIGatewayTests: XCTestCase {
         tps: Double,
         requestID: String,
         status: GatewayRequestStatus = .success,
-        model: String = "chat"
+        model: String = "chat",
+        tokens: Int? = nil,
+        input: Int? = nil,
+        output: Int? = nil,
+        channel: String = "渠道 A",
+        ttft: Int? = nil
     ) -> GatewayRequestRecord {
         GatewayRequestRecord(
             createdAt: date,
@@ -410,8 +502,12 @@ final class AIGatewayTests: XCTestCase {
             requestedModel: model,
             upstreamModel: "gpt-4o-mini",
             channelID: "channel-a",
-            channelName: "渠道 A",
+            channelName: channel,
             status: status,
+            inputTokens: input,
+            outputTokens: output,
+            totalTokens: tokens,
+            ttftMs: ttft,
             durationMs: 1200,
             outputTPS: tps,
             speedSource: .estimated

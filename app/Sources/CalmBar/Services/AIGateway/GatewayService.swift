@@ -240,12 +240,20 @@ public final class GatewayService: ObservableObject {
         )
     }
 
-    public func series(granularity: GatewayGranularity) async -> GatewaySeriesResult {
+    public func series(granularity: GatewayGranularity, metric: GatewayMetric = .speed) async -> GatewaySeriesResult {
         do {
-            return try await GatewayDatabase.shared.series(granularity: granularity)
+            return try await GatewayDatabase.shared.series(granularity: granularity, metric: metric)
         } catch {
             return .empty
         }
+    }
+
+    public func summary(granularity: GatewayGranularity) async -> GatewayWindowSummary {
+        (try? await GatewayDatabase.shared.summary(granularity: granularity)) ?? .empty
+    }
+
+    public func channelSummaries(granularity: GatewayGranularity, limit: Int = 3) async -> [GatewayChannelSummary] {
+        (try? await GatewayDatabase.shared.channelSummaries(granularity: granularity, limit: limit)) ?? []
     }
 
     public func recentRequests(limit: Int, offset: Int) async -> [GatewayRequestRecord] {

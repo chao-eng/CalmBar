@@ -198,6 +198,32 @@ public enum GatewayGranularity: String, CaseIterable, Identifiable, Sendable {
     }
 }
 
+/// 图表指标口径：速度取平均 TPS，Token 取总量，请求取次数
+public enum GatewayMetric: String, CaseIterable, Identifiable, Sendable {
+    case speed
+    case tokens
+    case requests
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .speed: return "速度"
+        case .tokens: return "Token"
+        case .requests: return "请求"
+        }
+    }
+
+    /// 图表坐标轴与卡片单位文案
+    public var unitTitle: String {
+        switch self {
+        case .speed: return "tok/s"
+        case .tokens: return "token"
+        case .requests: return "次"
+        }
+    }
+}
+
 public struct GatewaySeriesDescriptor: Sendable, Equatable, Identifiable {
     public let key: String
     public let channelName: String
@@ -210,7 +236,8 @@ public struct GatewaySeriesDescriptor: Sendable, Equatable, Identifiable {
 public struct GatewaySeriesPoint: Sendable, Equatable, Identifiable {
     public let bucketStart: Date
     public let seriesKey: String
-    public let averageTPS: Double
+    /// 指标值：速度口径为平均 TPS，Token 口径为总量，请求口径为次数
+    public let value: Double
     public let requestCount: Int
 
     public var id: String { "\(seriesKey)@\(bucketStart.timeIntervalSince1970)" }
@@ -220,15 +247,70 @@ public struct GatewaySeriesResult: Sendable, Equatable {
     public let buckets: [Date]
     public let series: [GatewaySeriesDescriptor]
     public let points: [GatewaySeriesPoint]
+    public let metric: GatewayMetric
 
     public static let empty = GatewaySeriesResult(
         buckets: GatewayGranularity.minute.windowBuckets(),
         series: [],
-        points: []
+        points: [],
+        metric: .speed
     )
 
-    public func averageTPS(for seriesKey: String, at bucket: Date) -> Double? {
-        points.first { $0.seriesKey == seriesKey && $0.bucketStart == bucket }?.averageTPS
+    public init(
+        buckets: [Date],
+        series: [GatewaySeriesDescriptor],
+        points: [GatewaySeriesPoint],
+        metric: GatewayMetric = .speed
+    ) {
+        self.buckets = buckets
+        self.series = series
+        self.points = points
+        self.metric = metric
+    }
+
+    public func value(for seriesKey: String, at bucket: Date) -> Double? {
+        points.first { $0.seriesKey == seriesKey && $0.bucketStart == bucket }?.value
+    }
+}
+
+/// 单个「渠道 · 模型」在统计窗口内的汇总，用于面板渠道排行
+public struct GatewayChannelSummary: Sendable, Equatable, Identifiable {
+    public let key: String
+    public let channelName: String
+    public let model: String
+    public let requestCount: Int
+    public let successCount: Int
+    public let totalTokens: Int
+    /// 成功请求的平均输出速率，无有效样本时为 nil
+    public let averageTPS: Double?
+    /// 成功请求的首字延迟均值（毫秒）
+    public let averageTTFT: Double?
+
+    public var id: String { key }
+
+    public init(
+        key: String,
+        channelName: String,
+        model: String,
+        requestCount: Int,
+        successCount: Int,
+        totalTokens: Int,
+        averageTPS: Double?,
+        averageTTFT: Double?
+    ) {
+        self.key = key
+        self.channelName = channelName
+        self.model = model
+        self.requestCount = requestCount
+        self.successCount = successCount
+        self.totalTokens = totalTokens
+        self.averageTPS = averageTPS
+        self.averageTTFT = averageTTFT
+    }
+
+    public var successRate: Double {
+        guard requestCount > 0 else { return 0 }
+        return Double(successCount) / Double(requestCount)
     }
 }
 
@@ -237,6 +319,37 @@ public struct GatewayWindowSummary: Sendable, Equatable {
     public let successCount: Int
     public let failureCount: Int
     public let totalTokens: Int
+    /// 窗口内输入 Token 合计
+    public let inputTokens: Int
+    /// 窗口内输出 Token 合计
+    public let outputTokens: Int
+    /// 成功请求的平均输出速率，无有效样本时为 nil
+    public let averageTPS: Double?
+
+    public init(
+        requestCount: Int,
+        successCount: Int,
+        failureCount: Int,
+        totalTokens: Int,
+        inputTokens: Int = 0,
+        outputTokens: Int = 0,
+        averageTPS: Double? = nil
+    ) {
+        self.requestCount = requestCount
+        self.successCount = successCount
+        self.failureCount = failureCount
+        self.totalTokens = totalTokens
+        self.inputTokens = inputTokens
+        self.outputTokens = outputTokens
+        self.averageTPS = averageTPS
+    }
+
+    public static let empty = GatewayWindowSummary(
+        requestCount: 0,
+        successCount: 0,
+        failureCount: 0,
+        totalTokens: 0
+    )
 }
 
 // MARK: - SQLite 封装
@@ -518,14 +631,21 @@ public actor GatewayDatabase {
         }
     }
 
-    public func summary(since: Date) throws -> GatewayWindowSummary {
+    public func summary(since: Date, until: Date? = nil) throws -> GatewayWindowSummary {
         guard let db else { throw GatewayDatabaseError.openFailed("数据库未就绪") }
+        // 本地拒绝（rejected）不计入任何口径，与图表和渠道排行保持一致
+        // total_tokens 可能缺失（失败请求通常只有输入计数），此时回退为 input + output
         let sql = """
         SELECT COUNT(*),
                SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END),
-               SUM(CASE WHEN status IN ('failed', 'rejected') THEN 1 ELSE 0 END),
-               SUM(COALESCE(total_tokens, 0))
-        FROM requests WHERE created_at >= ?;
+               SUM(CASE WHEN status = 'failed' THEN 1 ELSE 0 END),
+               SUM(COALESCE(total_tokens, COALESCE(input_tokens, 0) + COALESCE(output_tokens, 0))),
+               SUM(COALESCE(input_tokens, 0)),
+               SUM(COALESCE(output_tokens, 0)),
+               AVG(CASE WHEN status = 'success' AND output_tps IS NOT NULL THEN output_tps END)
+        FROM requests
+        WHERE created_at >= ? AND (? IS NULL OR created_at < ?)
+          AND status != 'rejected';
         """
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK, let stmt else {
@@ -533,19 +653,44 @@ public actor GatewayDatabase {
         }
         defer { sqlite3_finalize(stmt) }
         sqlite3_bind_int64(stmt, 1, Int64(since.timeIntervalSince1970 * 1000))
-        guard sqlite3_step(stmt) == SQLITE_ROW else {
-            return GatewayWindowSummary(requestCount: 0, successCount: 0, failureCount: 0, totalTokens: 0)
+        if let until {
+            sqlite3_bind_int64(stmt, 2, Int64(until.timeIntervalSince1970 * 1000))
+            sqlite3_bind_int64(stmt, 3, Int64(until.timeIntervalSince1970 * 1000))
+        } else {
+            sqlite3_bind_null(stmt, 2)
+            sqlite3_bind_null(stmt, 3)
         }
+        guard sqlite3_step(stmt) == SQLITE_ROW else { return .empty }
+        let tps = sqlite3_column_type(stmt, 6) == SQLITE_NULL ? nil : sqlite3_column_double(stmt, 6)
         return GatewayWindowSummary(
             requestCount: Int(sqlite3_column_int64(stmt, 0)),
             successCount: Int(sqlite3_column_int64(stmt, 1)),
             failureCount: Int(sqlite3_column_int64(stmt, 2)),
-            totalTokens: Int(sqlite3_column_int64(stmt, 3))
+            totalTokens: Int(sqlite3_column_int64(stmt, 3)),
+            inputTokens: Int(sqlite3_column_int64(stmt, 4)),
+            outputTokens: Int(sqlite3_column_int64(stmt, 5)),
+            averageTPS: tps
         )
     }
 
-    /// 按粒度聚合最近 N 个桶的平均 Output TPS，只保留请求量最高的 4 条系列
-    public func series(granularity: GatewayGranularity, now: Date = Date(), seriesLimit: Int = 4) throws -> GatewaySeriesResult {
+    /// 与图表同一时间窗口的汇总，供面板指标条使用
+    public func summary(granularity: GatewayGranularity, now: Date = Date()) throws -> GatewayWindowSummary {
+        let buckets = granularity.windowBuckets(now: now)
+        guard let windowStart = buckets.first else { return .empty }
+        let windowEnd = (buckets.last ?? now).addingTimeInterval(TimeInterval(granularity.bucketSeconds))
+        return try summary(since: windowStart, until: windowEnd)
+    }
+
+    /// 按粒度聚合最近 N 个桶的指标值，只保留请求量最高的若干系列
+    /// - 速度：仅统计成功请求的平均 Output TPS
+    /// - Token：统计成功与失败请求的 Token 总量（本地拒绝不计入）
+    /// - 请求：统计请求次数（本地拒绝不计入）
+    public func series(
+        granularity: GatewayGranularity,
+        metric: GatewayMetric = .speed,
+        now: Date = Date(),
+        seriesLimit: Int = 4
+    ) throws -> GatewaySeriesResult {
         guard let db else { throw GatewayDatabaseError.openFailed("数据库未就绪") }
 
         let buckets = granularity.windowBuckets(now: now)
@@ -553,9 +698,10 @@ public actor GatewayDatabase {
         let bucketSeconds = granularity.bucketSeconds
 
         let sql = """
-        SELECT created_at, channel_name, requested_model, output_tps
+        SELECT created_at, channel_name, requested_model, status, output_tps,
+               COALESCE(total_tokens, COALESCE(input_tokens, 0) + COALESCE(output_tokens, 0)) AS tokens
         FROM requests
-        WHERE created_at >= ? AND created_at < ? AND status = 'success' AND output_tps IS NOT NULL;
+        WHERE created_at >= ? AND created_at < ? AND status != 'rejected';
         """
         var stmt: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK, let stmt else {
@@ -573,20 +719,33 @@ public actor GatewayDatabase {
             let key: String
             let channel: String
             let model: String
-            let tps: Double
+            /// 该样本对当前口径的贡献值
+            let value: Double
         }
 
         var samples: [Sample] = []
         var counts: [String: Int] = [:]
         var names: [String: (channel: String, model: String)] = [:]
 
-
         while sqlite3_step(stmt) == SQLITE_ROW {
             let milliseconds = sqlite3_column_int64(stmt, 0)
-            guard let channel = columnText(stmt, 1) else { continue }
-            guard let model = columnText(stmt, 2) else { continue }
-            let tps = sqlite3_column_double(stmt, 3)
-            guard tps.isFinite, tps > 0 else { continue }
+            guard let channel = columnText(stmt, 1), !channel.isEmpty else { continue }
+            guard let model = columnText(stmt, 2), !model.isEmpty else { continue }
+            let status = columnText(stmt, 3) ?? GatewayRequestStatus.success.rawValue
+
+            let contribution: Double
+            switch metric {
+            case .speed:
+                guard status == GatewayRequestStatus.success.rawValue else { continue }
+                let tps = sqlite3_column_double(stmt, 4)
+                guard tps.isFinite, tps > 0 else { continue }
+                contribution = tps
+            case .tokens:
+                // 失败请求也可能已有部分 Token 消耗，照常计入
+                contribution = Double(sqlite3_column_int64(stmt, 5))
+            case .requests:
+                contribution = 1
+            }
 
             let createdAt = Date(timeIntervalSince1970: TimeInterval(milliseconds) / 1000)
             let seconds = Int(createdAt.timeIntervalSince1970)
@@ -594,7 +753,7 @@ public actor GatewayDatabase {
             let key = "\(channel)|\(model)"
             counts[key, default: 0] += 1
             names[key] = (channel, model)
-            samples.append(Sample(bucket: bucketStart, key: key, channel: channel, model: model, tps: tps))
+            samples.append(Sample(bucket: bucketStart, key: key, channel: channel, model: model, value: contribution))
         }
 
         let topKeys = counts.sorted { lhs, rhs in
@@ -603,14 +762,14 @@ public actor GatewayDatabase {
         }.prefix(seriesLimit).map(\.key)
 
         guard !topKeys.isEmpty else {
-            return GatewaySeriesResult(buckets: buckets, series: [], points: [])
+            return GatewaySeriesResult(buckets: buckets, series: [], points: [], metric: metric)
         }
 
         var sums: [String: (sum: Double, count: Int)] = [:]
         for sample in samples where topKeys.contains(sample.key) {
             let composite = "\(sample.key)#\(Int(sample.bucket.timeIntervalSince1970))"
             var entry = sums[composite] ?? (0, 0)
-            entry.sum += sample.tps
+            entry.sum += sample.value
             entry.count += 1
             sums[composite] = entry
         }
@@ -620,10 +779,12 @@ public actor GatewayDatabase {
             for bucket in buckets {
                 let composite = "\(key)#\(Int(bucket.timeIntervalSince1970))"
                 guard let entry = sums[composite], entry.count > 0 else { continue }
+                // 速度取桶内均值，Token 与请求取桶内累计
+                let value = metric == .speed ? entry.sum / Double(entry.count) : entry.sum
                 points.append(GatewaySeriesPoint(
                     bucketStart: bucket,
                     seriesKey: key,
-                    averageTPS: entry.sum / Double(entry.count),
+                    value: value,
                     requestCount: entry.count
                 ))
             }
@@ -639,7 +800,63 @@ public actor GatewayDatabase {
             )
         }
 
-        return GatewaySeriesResult(buckets: buckets, series: series, points: points)
+        return GatewaySeriesResult(buckets: buckets, series: series, points: points, metric: metric)
+    }
+
+    /// 统计窗口内的渠道排行：按请求数降序，返回前 limit 个「渠道 · 模型」组合
+    public func channelSummaries(
+        granularity: GatewayGranularity,
+        now: Date = Date(),
+        limit: Int = 3
+    ) throws -> [GatewayChannelSummary] {
+        guard let db else { throw GatewayDatabaseError.openFailed("数据库未就绪") }
+
+        let buckets = granularity.windowBuckets(now: now)
+        guard let windowStart = buckets.first else { return [] }
+        let windowEnd = (buckets.last ?? now).addingTimeInterval(TimeInterval(granularity.bucketSeconds))
+
+        let sql = """
+        SELECT channel_name,
+               requested_model,
+               COUNT(*) AS total,
+               SUM(CASE WHEN status = 'success' THEN 1 ELSE 0 END) AS success,
+               SUM(COALESCE(total_tokens, COALESCE(input_tokens, 0) + COALESCE(output_tokens, 0))) AS tokens,
+               AVG(CASE WHEN status = 'success' AND output_tps IS NOT NULL THEN output_tps END) AS tps,
+               AVG(CASE WHEN status = 'success' AND ttft_ms IS NOT NULL THEN ttft_ms END) AS ttft
+        FROM requests
+        WHERE created_at >= ? AND created_at < ?
+          AND status != 'rejected'
+          AND channel_name IS NOT NULL AND channel_name != ''
+        GROUP BY channel_name, requested_model
+        ORDER BY total DESC, channel_name ASC, requested_model ASC
+        LIMIT ?;
+        """
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &stmt, nil) == SQLITE_OK, let stmt else {
+            throw GatewayDatabaseError.statementFailed(String(cString: sqlite3_errmsg(db)))
+        }
+        defer { sqlite3_finalize(stmt) }
+        sqlite3_bind_int64(stmt, 1, Int64(windowStart.timeIntervalSince1970 * 1000))
+        sqlite3_bind_int64(stmt, 2, Int64(windowEnd.timeIntervalSince1970 * 1000))
+        sqlite3_bind_int64(stmt, 3, Int64(limit))
+
+        var result: [GatewayChannelSummary] = []
+        while sqlite3_step(stmt) == SQLITE_ROW {
+            guard let channel = columnText(stmt, 0), let model = columnText(stmt, 1) else { continue }
+            let tps = sqlite3_column_type(stmt, 5) == SQLITE_NULL ? nil : sqlite3_column_double(stmt, 5)
+            let ttft = sqlite3_column_type(stmt, 6) == SQLITE_NULL ? nil : sqlite3_column_double(stmt, 6)
+            result.append(GatewayChannelSummary(
+                key: "\(channel)|\(model)",
+                channelName: channel,
+                model: model,
+                requestCount: Int(sqlite3_column_int64(stmt, 2)),
+                successCount: Int(sqlite3_column_int64(stmt, 3)),
+                totalTokens: Int(sqlite3_column_int64(stmt, 4)),
+                averageTPS: tps,
+                averageTTFT: ttft
+            ))
+        }
+        return result
     }
 
     // MARK: 工具
