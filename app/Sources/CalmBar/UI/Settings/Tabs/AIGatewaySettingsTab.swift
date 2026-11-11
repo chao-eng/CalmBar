@@ -142,8 +142,11 @@ public struct AIGatewaySettingsTab: View {
                         Text("修改后需应用，网关会按新端口重启")
                             .font(.system(size: 11))
                             .foregroundStyle(.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    } else {
+                        Spacer(minLength: 0)
                     }
-                    Spacer()
                 }
 
                 HStack(spacing: 10) {
@@ -152,11 +155,13 @@ public struct AIGatewaySettingsTab: View {
                         .frame(width: 80, alignment: .leading)
                     SecureField("留空表示不校验客户端凭据", text: $serverKeyDraft)
                         .textFieldStyle(.roundedBorder)
-                        .frame(minWidth: 220, maxWidth: 320)
+                        .frame(minWidth: 140, maxWidth: 320)
+                        .layoutPriority(1)
                     Button("保存密钥") {
                         GatewayKeychain.setServerKey(serverKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines))
                         service.restart()
                     }
+                    .fixedSize()
                     Button(generatedServerKey ? "已生成并复制" : "随机生成") {
                         let key = Self.randomServerKey()
                         serverKeyDraft = key
@@ -169,9 +174,10 @@ public struct AIGatewaySettingsTab: View {
                             generatedServerKey = false
                         }
                     }
+                    .fixedSize()
                     .disabled(generatedServerKey)
                     .help("生成 24 位随机访问密钥，保存并复制到剪贴板")
-                    Spacer()
+                    Spacer(minLength: 0)
                 }
 
                 HStack(spacing: 10) {
@@ -181,6 +187,9 @@ public struct AIGatewaySettingsTab: View {
                     Text(GatewayService.endpoint)
                         .font(.system(size: 11.5, design: .monospaced))
                         .textSelection(.enabled)
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Button(copiedEndpoint ? "已复制" : "复制") {
                         copyToPasteboard(GatewayService.endpoint)
                         copiedEndpoint = true
@@ -189,12 +198,13 @@ public struct AIGatewaySettingsTab: View {
                             copiedEndpoint = false
                         }
                     }
+                    .fixedSize()
                     .disabled(copiedEndpoint)
                     Button("查看请求历史") {
                         GatewayHistoryWindowController.shared.show()
                     }
+                    .fixedSize()
                     .help("打开独立的请求历史窗口，查看每条请求的耗时与 Token 明细")
-                    Spacer()
                 }
 
                 if service.status.isRunning {
@@ -209,10 +219,13 @@ public struct AIGatewaySettingsTab: View {
                             service.restart()
                         }
                         .controlSize(.small)
+                        .fixedSize()
+                        Spacer(minLength: 0)
                     }
                 }
             }
             .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -247,6 +260,7 @@ public struct AIGatewaySettingsTab: View {
                 .controlSize(.small)
             }
             .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -254,15 +268,16 @@ public struct AIGatewaySettingsTab: View {
         HStack(spacing: 8) {
             Text(model.alias)
                 .font(.system(size: 12.5, weight: .medium))
-                .frame(width: 160, alignment: .leading)
                 .lineLimit(1)
+                .truncationMode(.middle)
+                .frame(width: 200, alignment: .leading)
 
             Text(channelChain(model.channelIDs))
                 .font(.system(size: 11))
                 .foregroundStyle(.secondary)
                 .lineLimit(1)
-
-            Spacer()
+                .truncationMode(.tail)
+                .frame(maxWidth: .infinity, alignment: .leading)
 
             Button("编辑") {
                 editingModel = ModelDraft(
@@ -272,11 +287,13 @@ public struct AIGatewaySettingsTab: View {
                 )
             }
             .controlSize(.small)
+            .fixedSize()
 
             Button("删除") {
                 settings.aiGatewayModels.removeAll { $0.alias == model.alias }
             }
             .controlSize(.small)
+            .fixedSize()
         }
         .frame(minHeight: 24)
     }
@@ -324,6 +341,7 @@ public struct AIGatewaySettingsTab: View {
                 .controlSize(.small)
             }
             .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
@@ -385,15 +403,20 @@ public struct AIGatewaySettingsTab: View {
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.middle)
                 Text("· \(modelsSummary(channel.models))")
                     .font(.system(size: 10.5))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
+                    .truncationMode(.tail)
+                    .layoutPriority(1)
                     .help(channel.models.joined(separator: "\n"))
-                Spacer()
+                Spacer(minLength: 4)
                 Text(maskedKey(channel.id))
                     .font(.system(size: 10.5, design: .monospaced))
                     .foregroundStyle(.secondary)
+                    .lineLimit(1)
+                    .fixedSize()
             }
 
             if let state = testStates[channel.id] {
@@ -489,8 +512,10 @@ public struct AIGatewaySettingsTab: View {
                 Text("任何兼容 OpenAI Chat Completions / Responses 的客户端，把 Base URL 指向本地端点即可，模型填上方配置的别名。")
                     .font(.system(size: 11))
                     .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
             }
             .padding(8)
+            .frame(maxWidth: .infinity, alignment: .leading)
         }
     }
 
