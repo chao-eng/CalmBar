@@ -18,7 +18,7 @@
   <a href="https://apple.com/macos"><img src="https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg" alt="Platform"></a>
   <a href="https://apple.com"><img src="https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg" alt="Architecture"></a>
   <a href="https://swift.org"><img src="https://img.shields.io/badge/language-Swift%206-orange.svg" alt="Language"></a>
-  <a href="https://github.com/chao-eng/CalmBar/releases"><img src="https://img.shields.io/badge/release-v2.7.2-brightgreen.svg" alt="Version"></a>
+  <a href="https://github.com/chao-eng/CalmBar/releases"><img src="https://img.shields.io/badge/release-v2.7.3-brightgreen.svg" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"></a>
 </p>
 
@@ -97,7 +97,7 @@ CalmBar/
 应用使用临时签名（ad-hoc），没有走 Apple 公证。macOS Sequoia 及之后版本会在挂载 DMG 前就拦下文件，且弹窗里没有「仍要打开」。先去掉 DMG 的隔离标记再双击：
 
 ```bash
-xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.7.2.dmg
+xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.7.3.dmg
 ```
 
 然后把 CalmBar 拖进「应用程序」，直接从 Spotlight 或程序坞启动即可。DMG 已去隔离，安装后的 App 不需要再执行一次 `xattr`。DMG 不在下载目录时替换成实际路径。
