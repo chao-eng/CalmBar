@@ -18,7 +18,7 @@
   <a href="https://apple.com/macos"><img src="https://img.shields.io/badge/platform-macOS%2014.0%2B-blue.svg" alt="Platform"></a>
   <a href="https://apple.com"><img src="https://img.shields.io/badge/arch-Apple%20Silicon%20%7C%20Intel-success.svg" alt="Architecture"></a>
   <a href="https://swift.org"><img src="https://img.shields.io/badge/language-Swift%206-orange.svg" alt="Language"></a>
-  <a href="https://github.com/chao-eng/CalmBar/releases"><img src="https://img.shields.io/badge/release-v2.7.1-brightgreen.svg" alt="Version"></a>
+  <a href="https://github.com/chao-eng/CalmBar/releases"><img src="https://img.shields.io/badge/release-v2.7.2-brightgreen.svg" alt="Version"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%202.0-green.svg" alt="License"></a>
 </p>
 
@@ -97,7 +97,7 @@ CalmBar/
 应用使用临时签名（ad-hoc），没有走 Apple 公证。macOS Sequoia 及之后版本会在挂载 DMG 前就拦下文件，且弹窗里没有「仍要打开」。先去掉隔离标记再双击：
 
 ```bash
-xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.7.1.dmg
+xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.7.2.dmg
 ```
 
 把 CalmBar 拖进「应用程序」，再对安装后的 App 执行一次：
