@@ -22,7 +22,11 @@ public struct ThermalSettingsTab: View {
                     title: thermal.isFanless ? "硬件温度监控" : "硬件温控与风扇调控引擎",
                     activeSubtitle: thermal.isFanless
                         ? "已激活 · 正在持续监听温度传感器（无风扇被动散热机型）"
-                        : "已激活 · 正在持续监听 CPU 传感器并调节转速曲线 (\(settings.fanPreset.titleZH))",
+                        : (thermal.isControlReleased
+                            ? (thermal.isControlHandoffConfirmed
+                                ? "已交还系统 · 风扇由 macOS 自动控制，温度回落后自动重新接管"
+                                : "风扇控制已暂停 · 恢复系统自动控制失败，请检查特权助手")
+                            : "已激活 · 正在持续监听 CPU 传感器并调节转速曲线 (\(settings.fanPreset.titleZH))"),
                     inactiveSubtitle: thermal.isFanless
                         ? "已停用 · 已停止温度传感器监听"
                         : "已停用 · 已停止温度传感器监听，完全交由 macOS 系统散热",
@@ -196,6 +200,29 @@ public struct ThermalSettingsTab: View {
     private var fanControlSection: some View {
         GroupBox(label: Label("温控调控模式与曲线参数", systemImage: "fanblades")) {
             VStack(alignment: .leading, spacing: 12) {
+                if let reason = thermal.controlReleaseReason {
+                    HStack(alignment: .top, spacing: 6) {
+                        Image(systemName: "exclamationmark.triangle.fill")
+                            .foregroundStyle(.orange)
+                            .font(.system(size: 11))
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(thermal.isControlHandoffConfirmed ? "已由系统接管风扇控制" : "风扇写入已暂停")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(reason)
+                                .font(.system(size: 11))
+                                .foregroundColor(.secondary)
+                        }
+                        Spacer()
+                        Button("重新接管") {
+                            thermal.clearControlRelease()
+                            thermal.applyCurrentMode()
+                        }
+                    }
+                    .padding(8)
+                    .background(Color.orange.opacity(0.08))
+                    .cornerRadius(8)
+                }
+
                 Picker("调控模式", selection: $settings.fanPreset) {
                     ForEach(FanPreset.allCases) { preset in
                         Text(preset.titleZH).tag(preset)
@@ -236,7 +263,7 @@ public struct ThermalSettingsTab: View {
                         .lineSpacing(2)
                 } else if settings.fanPreset == .manual {
                     Divider()
-                    if thermal.fanSnapshots.count > 1 {
+                    if thermal.fanCapability.fanCount > 1 {
                         Toggle("双风扇转速联动", isOn: $settings.dualFanLinked)
                             .font(.system(size: 12.5, weight: .medium))
 

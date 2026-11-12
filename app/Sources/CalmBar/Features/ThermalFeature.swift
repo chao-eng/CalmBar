@@ -33,7 +33,9 @@ public final class ThermalFeature: CalmFeature {
                 title: "恢复风扇自动控制",
                 subtitle: "将散热策略重置为系统默认",
                 action: { [weak self] in
-                    self?.monitor.restoreSystemControl()
+                    guard let monitor = self?.monitor else { return }
+                    monitor.clearControlRelease()
+                    monitor.restoreSystemControl()
                     AppSettings.shared.fanPreset = .auto
                 }
             ),
@@ -43,9 +45,17 @@ public final class ThermalFeature: CalmFeature {
                 subtitle: "紧急降温：将风扇转速设为 100%",
                 isDangerous: true,
                 requiredPermission: .privilegedHelper,
-                action: {
-                    AppSettings.shared.fanPreset = .manual
-                    AppSettings.shared.customFanFraction = 1.0
+                precondition: {
+                    guard ThermalMonitor.shared.supportsFanControl else {
+                        return "当前机型为被动散热，无风扇可控制"
+                    }
+                    guard getuid() == 0 || HelperClient.shared.isHelperAvailable else {
+                        return "特权助手未运行，无法控制风扇；请先在温控页激活或更新"
+                    }
+                    return nil
+                },
+                action: { [weak self] in
+                    self?.monitor.forceFullSpeed()
                 }
             )
         ]
@@ -59,7 +69,7 @@ public final class ThermalFeature: CalmFeature {
             subtitle: "\(Int(monitor.primaryTemp))°C",
             iconName: "flame.fill",
             state: state,
-            isHighlighted: monitor.currentSafetyAction != .none
+            isHighlighted: monitor.currentSafetyAction != .none || monitor.isControlReleased
         )
     }
 

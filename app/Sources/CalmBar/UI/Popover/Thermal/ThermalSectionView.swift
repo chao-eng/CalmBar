@@ -19,6 +19,10 @@ struct ThermalSectionView: View {
     var onMeasure: ((CGFloat) -> Void)?
 
     private var activeFanFraction: Double {
+        // 控制权已交还系统时显示真实转速，避免滑杆仍停在用户目标值造成误导
+        if thermal.isControlReleased {
+            return dashboard.fanSnapshots.first?.percentage ?? 0
+        }
         switch settings.fanPreset {
         case .auto:
             return dashboard.fanSnapshots.first?.percentage ?? 0.25
@@ -30,22 +34,49 @@ struct ThermalSectionView: View {
                 minFraction: 0.0,
                 maxFraction: 1.0
             )
-            return Double(smart)
+            return max(Double(smart), thermal.safetyFloorFraction)
         case .manual:
-            return settings.customFanFraction
+            return max(settings.customFanFraction, thermal.safetyFloorFraction)
         }
+    }
+
+    private var hasMultipleFans: Bool {
+        thermal.fanCapability.fanCount > 1
     }
 
     private var sliderBinding: Binding<Double> {
         Binding(
             get: { activeFanFraction },
             set: { newValue in
+                // 先写入目标值，再切换模式：模式切换会触发一次应用，
+                // 避免先切模式时用旧值写入一帧
+                if !settings.dualFanLinked, hasMultipleFans {
+                    settings.fan0CustomFraction = newValue
+                    settings.fan1CustomFraction = newValue
+                } else {
+                    settings.customFanFraction = newValue
+                }
                 if settings.fanPreset != .manual {
                     settings.fanPreset = .manual
                 }
-                settings.customFanFraction = newValue
             }
         )
+    }
+
+    private func perFanBinding(_ keyPath: ReferenceWritableKeyPath<AppSettings, Double>) -> Binding<Double> {
+        Binding(
+            get: { settings[keyPath: keyPath] },
+            set: { newValue in
+                settings[keyPath: keyPath] = newValue
+                if settings.fanPreset != .manual {
+                    settings.fanPreset = .manual
+                }
+            }
+        )
+    }
+
+    private var showsIndependentFanControls: Bool {
+        settings.fanPreset == .manual && !settings.dualFanLinked && hasMultipleFans
     }
 
     private var isFanless: Bool { thermal.isFanless }
@@ -210,37 +241,67 @@ struct ThermalSectionView: View {
             .focusable(false)
             .focusEffectDisabled()
 
-            HStack {
-                Text("左右风扇联动")
-                    .font(.system(size: 13, weight: .medium))
-                Spacer()
-                Toggle("", isOn: $settings.dualFanLinked)
-                    .toggleStyle(.switch)
-                    .labelsHidden()
+            if let reason = thermal.controlReleaseReason {
+                HStack(spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 10))
+                        .foregroundStyle(PopoverPalette.statusWarning)
+                    VStack(alignment: .leading, spacing: 1) {
+                        Text(thermal.isControlHandoffConfirmed ? "已由系统接管" : "风扇写入已暂停")
+                            .font(.system(size: 11, weight: .semibold))
+                        Text(reason)
+                            .font(.system(size: 9.5))
+                            .foregroundColor(.secondary)
+                            .lineLimit(2)
+                    }
+                    Spacer()
+                    Button("重新接管") {
+                        thermal.clearControlRelease()
+                        thermal.applyCurrentMode()
+                    }
+                    .buttonStyle(.bordered)
                     .controlSize(.mini)
-                    .tint(PopoverPalette.thermalAccent)
-                    .accessibilityLabel("左右风扇联动")
+                }
+                .padding(8)
+                .background(PopoverPalette.surfaceWell)
+                .cornerRadius(8)
             }
-            .padding(.top, 2)
 
-            HStack(spacing: 10) {
-                Image(systemName: "fan")
-                    .font(.system(size: 14))
-                    .foregroundColor((settings.fanPreset == .auto || !settings.thermalEnabled) ? .secondary : .primary)
+            if hasMultipleFans {
+                HStack {
+                    Text("左右风扇联动")
+                        .font(.system(size: 13, weight: .medium))
+                    Spacer()
+                    Toggle("", isOn: $settings.dualFanLinked)
+                        .toggleStyle(.switch)
+                        .labelsHidden()
+                        .controlSize(.mini)
+                        .tint(PopoverPalette.thermalAccent)
+                        .accessibilityLabel("左右风扇联动")
+                }
+                .padding(.top, 2)
+            }
 
-                Slider(value: sliderBinding, in: 0.0...1.0)
-                    .tint(PopoverPalette.thermalAccent)
-                    .accessibilityLabel("风扇转速")
-                    .accessibilityValue("\(Int(activeFanFraction * 100))%")
+            if !showsIndependentFanControls {
+                HStack(spacing: 10) {
+                    Image(systemName: "fan")
+                        .font(.system(size: 14))
+                        .foregroundColor((settings.fanPreset == .auto || !settings.thermalEnabled) ? .secondary : .primary)
 
-                Text("\(Int(activeFanFraction * 100))%")
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .frame(width: 38, alignment: .trailing)
+                    Slider(value: sliderBinding, in: 0.0...1.0)
+                        .tint(PopoverPalette.thermalAccent)
+                        .accessibilityLabel("风扇转速")
+                        .accessibilityValue("\(Int(activeFanFraction * 100))%")
+
+                    Text("\(Int(activeFanFraction * 100))%")
+                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .frame(width: 38, alignment: .trailing)
+                }
             }
 
             HStack(spacing: 12) {
-                let hasMultipleFans = thermal.fanSnapshots.count > 1
-                let fan0Title = hasMultipleFans ? "风扇 1" : "风扇"
+                let hasMultipleFanSnapshots = thermal.fanSnapshots.count > 1
+                let fan0Title = hasMultipleFanSnapshots ? "风扇 1" : "风扇"
                 if let firstFan = thermal.fanSnapshots.first, settings.thermalEnabled {
                     let rpm0 = Int(firstFan.actualRPM)
                     Text("\(fan0Title) \(formattedRPM(rpm0)) RPM")
@@ -252,7 +313,7 @@ struct ThermalSectionView: View {
                         .foregroundColor(.secondary)
                 }
 
-                if hasMultipleFans, settings.thermalEnabled {
+                if hasMultipleFanSnapshots, settings.thermalEnabled {
                     let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
                     Text("风扇 2 \(formattedRPM(rpm1)) RPM")
                         .font(.system(size: 11, design: .rounded))
@@ -260,7 +321,7 @@ struct ThermalSectionView: View {
                 }
             }
 
-            if !settings.dualFanLinked {
+            if showsIndependentFanControls {
                 Divider()
 
                 Text("分别控制")
@@ -268,35 +329,31 @@ struct ThermalSectionView: View {
                     .foregroundColor(.secondary)
 
                 HStack(spacing: 10) {
-                    Text(thermal.fanSnapshots.count > 1 ? "风扇 1" : "风扇")
+                    Text("风扇 1")
                         .font(.system(size: 12))
                         .frame(width: 48, alignment: .leading)
 
-                    Slider(value: $settings.fan0CustomFraction, in: 0.0...1.0)
+                    Slider(value: perFanBinding(\.fan0CustomFraction), in: 0.0...1.0)
                         .tint(PopoverPalette.thermalAccent)
-                        .accessibilityLabel(thermal.fanSnapshots.count > 1 ? "风扇 1 转速" : "风扇转速")
+                        .accessibilityLabel("风扇 1 转速")
 
-                    let rpm0 = Int(thermal.fanSnapshots.first?.actualRPM ?? Float(settings.fan0CustomFraction * 5000 + 1200))
-                    Text(formattedRPM(rpm0))
+                    Text("\(Int(max(settings.fan0CustomFraction, thermal.safetyFloorFraction) * 100))%")
                         .font(.system(size: 12, design: .monospaced))
                         .frame(width: 48, alignment: .trailing)
                 }
 
-                if thermal.fanSnapshots.count > 1 {
-                    HStack(spacing: 10) {
-                        Text("风扇 2")
-                            .font(.system(size: 12))
-                            .frame(width: 48, alignment: .leading)
+                HStack(spacing: 10) {
+                    Text("风扇 2")
+                        .font(.system(size: 12))
+                        .frame(width: 48, alignment: .leading)
 
-                        Slider(value: $settings.fan1CustomFraction, in: 0.0...1.0)
-                            .tint(PopoverPalette.thermalAccent)
-                            .accessibilityLabel("风扇 2 转速")
+                    Slider(value: perFanBinding(\.fan1CustomFraction), in: 0.0...1.0)
+                        .tint(PopoverPalette.thermalAccent)
+                        .accessibilityLabel("风扇 2 转速")
 
-                        let rpm1 = Int(thermal.fanSnapshots[1].actualRPM)
-                        Text(formattedRPM(rpm1))
-                            .font(.system(size: 12, design: .monospaced))
-                            .frame(width: 48, alignment: .trailing)
-                    }
+                    Text("\(Int(max(settings.fan1CustomFraction, thermal.safetyFloorFraction) * 100))%")
+                        .font(.system(size: 12, design: .monospaced))
+                        .frame(width: 48, alignment: .trailing)
                 }
             }
 

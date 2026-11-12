@@ -6,6 +6,7 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
     private var controller: FanController?
     private var connectionCount = 0
     private let lock = NSLock()
+    private var signalSources: [DispatchSourceSignal] = []
 
     init(machServiceName: String) {
         self.listener = NSXPCListener(machServiceName: machServiceName)
@@ -15,17 +16,31 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
 
     func start() {
         listener.resume()
+        // 启动时先把风扇交还系统，避免上次异常退出遗留手动转速；
+        // App 若仍需手动控制会在下一个轮询周期重新写入
+        try? getController().restoreSystemControl()
         setupSignals()
         RunLoop.main.run()
     }
 
     private func setupSignals() {
-        signal(SIGINT) { _ in
-            exit(0)
+        for sig in [SIGINT, SIGTERM] {
+            // 忽略默认处理，改由主队列上的 DispatchSource 在退出前把风扇交还系统，
+            // 避免 Helper 重启/停止后 SMC 仍停留在手动转速
+            signal(sig, SIG_IGN)
+            let source = DispatchSource.makeSignalSource(signal: sig, queue: .main)
+            source.setEventHandler { [weak self] in
+                self?.restoreSystemControlBeforeExit()
+                exit(0)
+            }
+            source.resume()
+            signalSources.append(source)
         }
-        signal(SIGTERM) { _ in
-            exit(0)
-        }
+    }
+
+    private func restoreSystemControlBeforeExit() {
+        try? getController().restoreSystemControl()
+        try? getBattery().resetToDefaults()
     }
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
@@ -87,6 +102,16 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
             let c = try getController()
             _ = try c.enableManualMode(fanIndex: Int(fanIndex))
             try c.setTargetRPM(fanIndex: Int(fanIndex), rpm: rpm)
+            reply(true, nil)
+        } catch {
+            reply(false, error.localizedDescription)
+        }
+    }
+
+    func setFanFraction(_ fanIndex: UInt, fraction: Double, reply: @escaping (Bool, String?) -> Void) {
+        do {
+            let c = try getController()
+            try c.setIndependentFraction(fanIndex: Int(fanIndex), fraction: fraction)
             reply(true, nil)
         } catch {
             reply(false, error.localizedDescription)

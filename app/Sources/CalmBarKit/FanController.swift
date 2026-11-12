@@ -4,7 +4,15 @@ public final class FanController: @unchecked Sendable {
     public let connection: SMCConnection
     public let config: SMCHardwareConfig
 
-    private let ftstSettle: TimeInterval = 0.5
+    /// FTST 解锁后的稳定等待
+    public static let ftstSettleSeconds: TimeInterval = 0.5
+    /// FTST 解锁后重试写入手动模式的最长等待
+    public static let ftstUnlockTimeout: TimeInterval = 3.0
+    /// 单个风扇 `enableManualMode` 的最坏耗时（直接写失败后走 FTST 解锁）
+    public static var worstCaseManualModeSeconds: TimeInterval {
+        ftstSettleSeconds + ftstUnlockTimeout
+    }
+
     private let ftstRetry: TimeInterval = 0.1
 
     public init(connection: SMCConnection) {
@@ -100,9 +108,9 @@ public final class FanController: @unchecked Sendable {
         return .ftstUnlock
     }
 
-    public func unlockWithFtst(fanIndex: Int, timeout: TimeInterval = 6) throws {
+    public func unlockWithFtst(fanIndex: Int, timeout: TimeInterval = FanController.ftstUnlockTimeout) throws {
         try connection.writeKey(SMCFanKey.forceTest, bytes: [1])
-        Thread.sleep(forTimeInterval: ftstSettle)
+        Thread.sleep(forTimeInterval: Self.ftstSettleSeconds)
         let modeKey = SMCFanKey.key(config.modeKeyFormat, fan: fanIndex)
         let deadline = Date().addingTimeInterval(timeout)
         while Date() < deadline {

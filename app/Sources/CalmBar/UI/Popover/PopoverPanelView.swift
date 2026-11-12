@@ -119,6 +119,12 @@ struct PopoverPanelView: View {
     private var headerStatus: some View {
         if !dashboard.isSMCConnected {
             statusBadge(icon: "exclamationmark.triangle.fill", text: "无 SMC 驱动", tint: PopoverPalette.statusCritical)
+        } else if settings.thermalEnabled && thermal.isControlReleased {
+            statusBadge(
+                icon: "exclamationmark.triangle.fill",
+                text: thermal.isControlHandoffConfirmed ? "已交还系统" : "写入已暂停",
+                tint: PopoverPalette.statusWarning
+            )
         } else if settings.thermalEnabled && dashboard.safetyAction != .none {
             statusBadge(icon: "flame.fill", text: "温控保护中", tint: PopoverPalette.statusWarning)
         } else if !settings.thermalEnabled {

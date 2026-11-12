@@ -107,7 +107,7 @@ public final class HelperClient: ObservableObject {
                 self?.isHelperAvailable = isLatest
                 self?.needsHelperUpdate = !isLatest
                 if !isLatest {
-                    self?.lastError = "特权服务版本过旧（需更新以支持充电控制），请点击一键激活升级"
+                    self?.lastError = "特权服务版本过旧（需更新以支持双风扇独立调速），请点击一键激活升级"
                 } else {
                     self?.lastError = nil
                 }
@@ -168,6 +168,22 @@ public final class HelperClient: ObservableObject {
             return
         }
         proxy.setLinkedFraction(fraction) { [weak self] success, err in
+            DispatchQueue.main.async {
+                self?.isHelperAvailable = success || (err == nil)
+                completion(success, err)
+            }
+        }
+    }
+
+    /// 单风扇独立调速（双风扇分别控制）
+    public func setFanFraction(_ fanIndex: UInt, fraction: Double, completion: @escaping @MainActor (Bool, String?) -> Void) {
+        guard let proxy = getProxy(errorHandler: { err in
+            DispatchQueue.main.async { completion(false, err.localizedDescription) }
+        }) else {
+            completion(false, "Helper 未安装或未运行")
+            return
+        }
+        proxy.setFanFraction(fanIndex, fraction: fraction) { [weak self] success, err in
             DispatchQueue.main.async {
                 self?.isHelperAvailable = success || (err == nil)
                 completion(success, err)

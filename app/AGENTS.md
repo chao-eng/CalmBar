@@ -128,6 +128,7 @@ open build/CalmBar.app            # 运行打包产物
 | `doc/prd/` | 已落地功能的 PRD 与接入方案，作为实现依据与历史记录 |
 | `doc/design/CalmBar 新功能接入模板.md` | 新增功能的 10 项准入原则，动手前必读 |
 | `doc/design/无风扇机型适配方案.md` | 无风扇机型的降级与风扇控件隐藏规则 |
+| `doc/design/温控安全策略.md` | 温控档位阈值、控制权交接与双风扇联动/独立调速 |
 | `doc/guide/HyMT2部署/` | 本地翻译服务的 macOS / 跨平台部署指南 |
 | `doc/archive/` | 已失效的 2.0 规划与初版 PRD，不要据此实现 |
 | `doc/images/` | README 使用的静态资源 |

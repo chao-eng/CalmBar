@@ -7,6 +7,7 @@ public enum ServiceError: Error, LocalizedError, Sendable, Equatable {
     case operationFailed(String)
     case connectionLost
     case invalidParameter(String)
+    case timeout
 
     public var errorDescription: String? {
         switch self {
@@ -22,6 +23,8 @@ public enum ServiceError: Error, LocalizedError, Sendable, Equatable {
             return "与底层通信连接已中断"
         case .invalidParameter(let param):
             return "参数无效: \(param)"
+        case .timeout:
+            return "特权服务响应超时"
         }
     }
 }
