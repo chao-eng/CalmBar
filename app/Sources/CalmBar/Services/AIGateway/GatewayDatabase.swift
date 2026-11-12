@@ -150,50 +150,158 @@ public struct GatewayRequestFilter: Sendable, Equatable {
 
 // MARK: - 图表聚合
 
-public enum GatewayGranularity: String, CaseIterable, Identifiable, Sendable {
-    case minute
+/// 面板统计窗口：最近 1 小时 / 今天 / 近 30 天 / 全部
+/// 聚合粒度依次为 分钟 / 小时 / 天 / 天
+public enum GatewayRange: String, CaseIterable, Identifiable, Sendable {
     case hour
-    case day
+    case today
+    case month
+    case all
 
     public var id: String { rawValue }
 
-    public var bucketSeconds: Int {
-        switch self {
-        case .minute: return 60
-        case .hour: return 3600
-        case .day: return 86400
-        }
-    }
-
-    public var bucketCount: Int { 10 }
-
     public var title: String {
         switch self {
-        case .minute: return "分钟"
-        case .hour: return "小时"
-        case .day: return "天"
+        case .hour: return "1 小时"
+        case .today: return "今天"
+        case .month: return "30 天"
+        case .all: return "全部"
         }
     }
 
-    public var durationTitle: String {
+    /// 指标条、卡片标题与空状态里的窗口描述
+    public var windowTitle: String {
         switch self {
-        case .minute: return "10 分钟"
-        case .hour: return "10 小时"
-        case .day: return "10 天"
+        case .hour: return "近 1 小时"
+        case .today: return "今天"
+        case .month: return "近 30 天"
+        case .all: return "全部时间"
+        }
+    }
+
+    public var bucketSeconds: Int {
+        switch self {
+        case .hour: return 60
+        case .today: return 3600
+        case .month, .all: return 86400
+        }
+    }
+
+    /// 聚合单位，用于提示与无障碍文案
+    public var bucketTitle: String {
+        switch self {
+        case .hour: return "分钟"
+        case .today: return "小时"
+        case .month, .all: return "天"
+        }
+    }
+
+    /// 「全部」按天聚合时最多保留的桶数，避免历史很长时柱子挤在一起
+    public static let maxDayBuckets = 90
+
+    /// 窗口内的桶起点，升序；`.all` 依赖库内最早记录，缺失时返回空
+    public func buckets(now: Date = Date(), earliest: Date? = nil, calendar: Calendar = .current) -> [Date] {
+        switch self {
+        case .hour:
+            // 最近 60 个分钟桶，包含当前这一分钟
+            let currentMinute = Self.minuteStart(now)
+            return (0..<60).reversed().map { currentMinute.addingTimeInterval(TimeInterval(-$0 * 60)) }
+        case .today:
+            let start = calendar.startOfDay(for: now)
+            let currentHour = calendar.dateInterval(of: .hour, for: now)?.start ?? start
+            return Self.step(from: start, to: currentHour, component: .hour, calendar: calendar)
+        case .month:
+            let start = calendar.startOfDay(for: calendar.date(byAdding: .day, value: -29, to: now) ?? now)
+            return Self.step(from: start, to: now, component: .day, calendar: calendar)
+        case .all:
+            guard let earliest else { return [] }
+            let all = Self.step(from: calendar.startOfDay(for: earliest), to: now, component: .day, calendar: calendar)
+            return all.count > Self.maxDayBuckets ? Array(all.suffix(Self.maxDayBuckets)) : all
         }
     }
 
     /// 对齐到自然时间边界后的当前桶起点
-    public func currentBucketStart(now: Date = Date()) -> Date {
-        let seconds = Int(now.timeIntervalSince1970)
-        let size = bucketSeconds
-        return Date(timeIntervalSince1970: TimeInterval((seconds / size) * size))
+    public func currentBucketStart(now: Date = Date(), calendar: Calendar = .current) -> Date {
+        switch self {
+        case .hour:
+            return Self.minuteStart(now)
+        case .today:
+            return calendar.dateInterval(of: .hour, for: now)?.start ?? calendar.startOfDay(for: now)
+        case .month, .all:
+            return calendar.startOfDay(for: now)
+        }
     }
 
-    public func windowBuckets(now: Date = Date()) -> [Date] {
-        let current = currentBucketStart(now: now)
-        return (0..<bucketCount).reversed().map {
-            current.addingTimeInterval(TimeInterval(-$0 * bucketSeconds))
+    private static func minuteStart(_ date: Date) -> Date {
+        Date(timeIntervalSince1970: (date.timeIntervalSince1970 / 60).rounded(.down) * 60)
+    }
+
+    private static func step(from start: Date, to end: Date, component: Calendar.Component, calendar: Calendar) -> [Date] {
+        var result: [Date] = []
+        var cursor = start
+        let last = component == .day ? calendar.startOfDay(for: end) : end
+        while cursor <= last {
+            result.append(cursor)
+            guard let next = calendar.date(byAdding: component, value: 1, to: cursor) else { break }
+            cursor = next
+        }
+        return result
+    }
+}
+
+/// 一次查询的时间窗口：桶起点、桶宽与左闭右开边界
+public struct GatewayWindow: Sendable, Equatable {
+    public let buckets: [Date]
+    public let bucketSeconds: Int
+
+    public init(buckets: [Date], bucketSeconds: Int) {
+        self.buckets = buckets
+        self.bucketSeconds = bucketSeconds
+    }
+
+    public var start: Date? { buckets.first }
+    public var end: Date? { buckets.last.map { $0.addingTimeInterval(TimeInterval(bucketSeconds)) } }
+
+    /// 把时间点落到所属桶的起点；早于窗口起点返回 nil
+    public func bucket(containing date: Date) -> Date? {
+        // 「天」桶按自然日切分（夏令时那天 23 或 25 小时），二分查找桶起点比整除更稳
+        guard let first = buckets.first, date >= first else { return nil }
+        var low = 0
+        var high = buckets.count - 1
+        while low < high {
+            let mid = (low + high + 1) / 2
+            if buckets[mid] <= date {
+                low = mid
+            } else {
+                high = mid - 1
+            }
+        }
+        return buckets[low]
+    }
+}
+
+/// 渠道排行的排序维度
+public enum GatewayRankingMetric: String, CaseIterable, Identifiable, Sendable {
+    case requests
+    case tokens
+    case speed
+
+    public var id: String { rawValue }
+
+    public var title: String {
+        switch self {
+        case .requests: return "请求"
+        case .tokens: return "Token"
+        case .speed: return "速度"
+        }
+    }
+
+    /// 排行行右侧的主数值口径
+    public var unitTitle: String {
+        switch self {
+        case .requests: return "次"
+        case .tokens: return "token"
+        case .speed: return "tok/s"
         }
     }
 }
@@ -250,7 +358,7 @@ public struct GatewaySeriesResult: Sendable, Equatable {
     public let metric: GatewayMetric
 
     public static let empty = GatewaySeriesResult(
-        buckets: GatewayGranularity.minute.windowBuckets(),
+        buckets: [],
         series: [],
         points: [],
         metric: .speed
@@ -674,28 +782,29 @@ public actor GatewayDatabase {
     }
 
     /// 与图表同一时间窗口的汇总，供面板指标条使用
-    public func summary(granularity: GatewayGranularity, now: Date = Date()) throws -> GatewayWindowSummary {
-        let buckets = granularity.windowBuckets(now: now)
-        guard let windowStart = buckets.first else { return .empty }
-        let windowEnd = (buckets.last ?? now).addingTimeInterval(TimeInterval(granularity.bucketSeconds))
-        return try summary(since: windowStart, until: windowEnd)
+    public func summary(range: GatewayRange, now: Date = Date()) throws -> GatewayWindowSummary {
+        let window = try resolveWindow(range: range, now: now)
+        guard let start = window.start else { return .empty }
+        return try summary(since: start, until: window.end)
     }
 
-    /// 按粒度聚合最近 N 个桶的指标值，只保留请求量最高的若干系列
+    /// 按窗口与口径聚合指标值，只保留请求量最高的若干系列
     /// - 速度：仅统计成功请求的平均 Output TPS
     /// - Token：统计成功与失败请求的 Token 总量（本地拒绝不计入）
     /// - 请求：统计请求次数（本地拒绝不计入）
     public func series(
-        granularity: GatewayGranularity,
+        range: GatewayRange,
         metric: GatewayMetric = .speed,
         now: Date = Date(),
         seriesLimit: Int = 4
     ) throws -> GatewaySeriesResult {
         guard let db else { throw GatewayDatabaseError.openFailed("数据库未就绪") }
 
-        let buckets = granularity.windowBuckets(now: now)
-        guard let windowStart = buckets.first else { return .empty }
-        let bucketSeconds = granularity.bucketSeconds
+        let window = try resolveWindow(range: range, now: now)
+        guard let windowStart = window.start, let windowEnd = window.end else {
+            return GatewaySeriesResult(buckets: [], series: [], points: [], metric: metric)
+        }
+        let buckets = window.buckets
 
         let sql = """
         SELECT created_at, channel_name, requested_model, status, output_tps,
@@ -710,15 +819,12 @@ public actor GatewayDatabase {
         defer { sqlite3_finalize(stmt) }
 
         // 窗口右边界取当前桶的结束时刻，避免与查询同一毫秒写入的记录被 `< now` 排除
-        let windowEnd = (buckets.last ?? now).addingTimeInterval(TimeInterval(bucketSeconds))
         sqlite3_bind_int64(stmt, 1, Int64(windowStart.timeIntervalSince1970 * 1000))
         sqlite3_bind_int64(stmt, 2, Int64(windowEnd.timeIntervalSince1970 * 1000))
 
         struct Sample {
             let bucket: Date
             let key: String
-            let channel: String
-            let model: String
             /// 该样本对当前口径的贡献值
             let value: Double
         }
@@ -748,12 +854,12 @@ public actor GatewayDatabase {
             }
 
             let createdAt = Date(timeIntervalSince1970: TimeInterval(milliseconds) / 1000)
-            let seconds = Int(createdAt.timeIntervalSince1970)
-            let bucketStart = Date(timeIntervalSince1970: TimeInterval((seconds / bucketSeconds) * bucketSeconds))
+            // 按桶起点查表而非整除：跨时区与夏令时的「天」桶长度不固定
+            guard let bucketStart = window.bucket(containing: createdAt) else { continue }
             let key = "\(channel)|\(model)"
             counts[key, default: 0] += 1
             names[key] = (channel, model)
-            samples.append(Sample(bucket: bucketStart, key: key, channel: channel, model: model, value: contribution))
+            samples.append(Sample(bucket: bucketStart, key: key, value: contribution))
         }
 
         let topKeys = counts.sorted { lhs, rhs in
@@ -803,17 +909,25 @@ public actor GatewayDatabase {
         return GatewaySeriesResult(buckets: buckets, series: series, points: points, metric: metric)
     }
 
-    /// 统计窗口内的渠道排行：按请求数降序，返回前 limit 个「渠道 · 模型」组合
+    /// 统计窗口内的渠道排行，按 `metric` 降序返回前 limit 个「渠道 · 模型」组合
     public func channelSummaries(
-        granularity: GatewayGranularity,
+        range: GatewayRange,
         now: Date = Date(),
-        limit: Int = 3
+        limit: Int = 3,
+        metric: GatewayRankingMetric = .requests
     ) throws -> [GatewayChannelSummary] {
         guard let db else { throw GatewayDatabaseError.openFailed("数据库未就绪") }
 
-        let buckets = granularity.windowBuckets(now: now)
-        guard let windowStart = buckets.first else { return [] }
-        let windowEnd = (buckets.last ?? now).addingTimeInterval(TimeInterval(granularity.bucketSeconds))
+        let window = try resolveWindow(range: range, now: now)
+        guard let windowStart = window.start, let windowEnd = window.end else { return [] }
+
+        // 速度口径无有效样本时排到最后，避免 NULL 抢先
+        let order: String
+        switch metric {
+        case .requests: order = "total DESC"
+        case .tokens: order = "tokens DESC"
+        case .speed: order = "tps IS NULL, tps DESC"
+        }
 
         let sql = """
         SELECT channel_name,
@@ -828,7 +942,7 @@ public actor GatewayDatabase {
           AND status != 'rejected'
           AND channel_name IS NOT NULL AND channel_name != ''
         GROUP BY channel_name, requested_model
-        ORDER BY total DESC, channel_name ASC, requested_model ASC
+        ORDER BY \(order), total DESC, channel_name ASC, requested_model ASC
         LIMIT ?;
         """
         var stmt: OpaquePointer?
@@ -857,6 +971,27 @@ public actor GatewayDatabase {
             ))
         }
         return result
+    }
+
+    /// 库内最早一条记录的时间，供「全部」窗口计算桶范围
+    public func earliestRecordDate() throws -> Date? {
+        guard let db else { throw GatewayDatabaseError.openFailed("数据库未就绪") }
+        var stmt: OpaquePointer?
+        guard sqlite3_prepare_v2(db, "SELECT MIN(created_at) FROM requests;", -1, &stmt, nil) == SQLITE_OK, let stmt else {
+            throw GatewayDatabaseError.statementFailed(String(cString: sqlite3_errmsg(db)))
+        }
+        defer { sqlite3_finalize(stmt) }
+        guard sqlite3_step(stmt) == SQLITE_ROW, sqlite3_column_type(stmt, 0) != SQLITE_NULL else { return nil }
+        return Date(timeIntervalSince1970: TimeInterval(sqlite3_column_int64(stmt, 0)) / 1000)
+    }
+
+    /// 解析统计窗口；「全部」需要先查最早记录
+    public func resolveWindow(range: GatewayRange, now: Date = Date()) throws -> GatewayWindow {
+        let earliest = range == .all ? try earliestRecordDate() : nil
+        return GatewayWindow(
+            buckets: range.buckets(now: now, earliest: earliest),
+            bucketSeconds: range.bucketSeconds
+        )
     }
 
     // MARK: 工具

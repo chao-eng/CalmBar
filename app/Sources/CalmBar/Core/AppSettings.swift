@@ -466,8 +466,8 @@ public final class AppSettings: ObservableObject {
             }
         }
     }
-    @Published public var aiGatewayGranularity: GatewayGranularity {
-        didSet { defaults.set(aiGatewayGranularity.rawValue, forKey: "aiGatewayGranularity") }
+    @Published public var aiGatewayRange: GatewayRange {
+        didSet { defaults.set(aiGatewayRange.rawValue, forKey: "aiGatewayRange") }
     }
 
     // MARK: - LAN Share Settings（局域网互传 PRD）
@@ -672,9 +672,9 @@ public final class AppSettings: ObservableObject {
             .flatMap { try? JSONDecoder().decode([AIGatewayChannel].self, from: $0) } ?? []
         self.aiGatewayModels = defaults.data(forKey: "aiGatewayModels")
             .flatMap { try? JSONDecoder().decode([AIGatewayModelRoute].self, from: $0) } ?? []
-        self.aiGatewayGranularity = GatewayGranularity(
-            rawValue: defaults.string(forKey: "aiGatewayGranularity") ?? ""
-        ) ?? .minute
+        self.aiGatewayRange = GatewayRange(
+            rawValue: defaults.string(forKey: "aiGatewayRange") ?? ""
+        ) ?? .hour
 
         // LAN Share（局域网互传 PRD）
         self.lanShareEnabled = defaults.object(forKey: "lanShareEnabled") as? Bool ?? false

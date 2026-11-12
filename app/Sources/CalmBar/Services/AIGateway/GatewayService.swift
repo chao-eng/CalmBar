@@ -103,7 +103,7 @@ public final class GatewayService: ObservableObject {
 
         let issues = GatewayConfigValidator.validate(
             port: settings.aiGatewayPort,
-            serverKey: GatewayKeychain.serverKey(),
+            serverKey: GatewaySecretStore.serverKey(),
             channels: settings.aiGatewayChannels,
             models: settings.aiGatewayModels
         )
@@ -220,7 +220,7 @@ public final class GatewayService: ObservableObject {
         return GatewaySnapshotBuilder.makeSnapshot(
             enabled: settings.aiGatewayEnabled,
             port: settings.aiGatewayPort,
-            serverKey: GatewayKeychain.serverKey(),
+            serverKey: GatewaySecretStore.serverKey(),
             channels: settings.aiGatewayChannels,
             models: settings.aiGatewayModels
         )
@@ -234,26 +234,30 @@ public final class GatewayService: ObservableObject {
         let settings = AppSettings.shared
         return GatewayConfigValidator.validate(
             port: settings.aiGatewayPort,
-            serverKey: GatewayKeychain.serverKey(),
+            serverKey: GatewaySecretStore.serverKey(),
             channels: settings.aiGatewayChannels,
             models: settings.aiGatewayModels
         )
     }
 
-    public func series(granularity: GatewayGranularity, metric: GatewayMetric = .speed) async -> GatewaySeriesResult {
+    public func series(range: GatewayRange, metric: GatewayMetric = .speed) async -> GatewaySeriesResult {
         do {
-            return try await GatewayDatabase.shared.series(granularity: granularity, metric: metric)
+            return try await GatewayDatabase.shared.series(range: range, metric: metric)
         } catch {
             return .empty
         }
     }
 
-    public func summary(granularity: GatewayGranularity) async -> GatewayWindowSummary {
-        (try? await GatewayDatabase.shared.summary(granularity: granularity)) ?? .empty
+    public func summary(range: GatewayRange) async -> GatewayWindowSummary {
+        (try? await GatewayDatabase.shared.summary(range: range)) ?? .empty
     }
 
-    public func channelSummaries(granularity: GatewayGranularity, limit: Int = 3) async -> [GatewayChannelSummary] {
-        (try? await GatewayDatabase.shared.channelSummaries(granularity: granularity, limit: limit)) ?? []
+    public func channelSummaries(
+        range: GatewayRange,
+        limit: Int = 3,
+        metric: GatewayRankingMetric = .requests
+    ) async -> [GatewayChannelSummary] {
+        (try? await GatewayDatabase.shared.channelSummaries(range: range, limit: limit, metric: metric)) ?? []
     }
 
     public func recentRequests(limit: Int, offset: Int) async -> [GatewayRequestRecord] {

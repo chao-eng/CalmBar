@@ -15,11 +15,12 @@ struct GatewaySectionView: View {
     @State private var summary: GatewayWindowSummary = .empty
     @State private var ranking: [GatewayChannelSummary] = []
     @State private var metric: GatewayMetric = .speed
+    @State private var rankingMetric: GatewayRankingMetric = .requests
     @State private var showsRanking = false
     @State private var hoverDate: Date?
 
-    private var granularity: GatewayGranularity {
-        settings.aiGatewayGranularity
+    private var range: GatewayRange {
+        settings.aiGatewayRange
     }
 
     /// 内容卡的四段切换：前三段是图表口径，最后一段切到渠道排行
@@ -58,9 +59,9 @@ struct GatewaySectionView: View {
         }
     }
 
-    /// 粒度与口径任一变化都重新查询；排行视图复用速度口径的数据
+    /// 时间窗口、图表口径或排行维度任一变化都重新查询
     private var reloadKey: String {
-        "\(granularity.rawValue)-\(metric.rawValue)"
+        "\(range.rawValue)-\(metric.rawValue)-\(rankingMetric.rawValue)"
     }
 
     // MARK: 已启用
@@ -190,7 +191,7 @@ struct GatewaySectionView: View {
                 footnote: summary.failureCount > 0 ? "\(summary.failureCount) 次失败" : "全部成功",
                 footnoteTint: summary.failureCount > 0 ? PopoverPalette.statusCritical : nil,
                 accent: PopoverPalette.gatewayAccent,
-                detail: "近\(granularity.durationTitle)共 \(summary.requestCount) 次请求，成功 \(summary.successCount) 次，失败 \(summary.failureCount) 次"
+                detail: "\(range.windowTitle)共 \(summary.requestCount) 次请求，成功 \(summary.successCount) 次，失败 \(summary.failureCount) 次"
             )
 
             metricDivider
@@ -201,7 +202,7 @@ struct GatewaySectionView: View {
                 footnote: "输入 \(Self.compactTokens(summary.inputTokens)) · 输出 \(Self.compactTokens(summary.outputTokens))",
                 footnoteTint: nil,
                 accent: PopoverPalette.accentBlue,
-                detail: "近\(granularity.durationTitle)共消耗 \(summary.totalTokens) token，输入 \(summary.inputTokens)，输出 \(summary.outputTokens)"
+                detail: "\(range.windowTitle)共消耗 \(summary.totalTokens) token，输入 \(summary.inputTokens)，输出 \(summary.outputTokens)"
             )
 
             metricDivider
@@ -212,7 +213,7 @@ struct GatewaySectionView: View {
                 footnote: summary.averageTPS == nil ? "暂无样本" : "tok/s 输出",
                 footnoteTint: nil,
                 accent: PopoverPalette.accentGreen,
-                detail: summary.averageTPS.map { String(format: "近%@平均输出速率 %.1f tok/s", granularity.durationTitle, $0) } ?? "近\(granularity.durationTitle)暂无成功样本"
+                detail: summary.averageTPS.map { String(format: "%@平均输出速率 %.1f tok/s", range.windowTitle, $0) } ?? "\(range.windowTitle)暂无成功样本"
             )
         }
         .frame(height: Self.metricsStripHeight)
@@ -304,38 +305,51 @@ struct GatewaySectionView: View {
         }
     }
 
-    /// 头部左标题随视图切换；粒度控件只在趋势视图出现
+    /// 头部：左标题随视图切换；右侧固定是时间窗口，排行时左侧多一个排序维度
     private var contentHeader: some View {
         HStack(spacing: 5) {
             Image(systemName: showsRanking ? "list.bullet" : "clock.arrow.circlepath")
                 .font(.system(size: 10))
                 .foregroundStyle(.secondary)
 
-            Text(showsRanking ? "渠道排行" : "近\(granularity.durationTitle)")
+            Text(showsRanking ? "排行" : range.windowTitle)
                 .font(.system(size: 10, weight: .medium))
                 .lineLimit(1)
                 .minimumScaleFactor(0.8)
-
-            Text(showsRanking ? "· 按请求量" : "· \(metric.unitTitle)")
-                .font(.system(size: 9))
-                .foregroundStyle(.tertiary)
-                .lineLimit(1)
                 .fixedSize()
+
+            if showsRanking {
+                SegmentedPillBar(
+                    items: GatewayRankingMetric.allCases.map { ($0.rawValue, $0.title) },
+                    selection: rankingMetric.rawValue,
+                    compact: true
+                ) { raw in
+                    guard let value = GatewayRankingMetric(rawValue: raw) else { return }
+                    rankingMetric = value
+                }
+                .frame(width: 96)
+                .accessibilityLabel("排行排序维度")
+            } else {
+                Text("· \(metric.unitTitle)")
+                    .font(.system(size: 9))
+                    .foregroundStyle(.tertiary)
+                    .lineLimit(1)
+                    .fixedSize()
+            }
 
             Spacer(minLength: 4)
 
-            if !showsRanking {
-                SegmentedPillBar(
-                    items: GatewayGranularity.allCases.map { ($0.rawValue, $0.title) },
-                    selection: settings.aiGatewayGranularity.rawValue,
-                    compact: true
-                ) { raw in
-                    guard let value = GatewayGranularity(rawValue: raw) else { return }
-                    settings.aiGatewayGranularity = value
-                }
-                .frame(width: 96)
-                .accessibilityLabel("速率图时间粒度")
+            SegmentedPillBar(
+                items: GatewayRange.allCases.map { ($0.rawValue, $0.title) },
+                selection: range.rawValue,
+                compact: true
+            ) { raw in
+                guard let value = GatewayRange(rawValue: raw) else { return }
+                settings.aiGatewayRange = value
+                hoverDate = nil
             }
+            .frame(width: 116)
+            .accessibilityLabel("统计时间范围")
         }
     }
 
@@ -377,7 +391,7 @@ struct GatewaySectionView: View {
             Image(systemName: "chart.line.uptrend.xyaxis")
                 .font(.system(size: 18))
                 .foregroundStyle(.secondary)
-            Text("近\(granularity.durationTitle)暂无请求")
+            Text("\(range.windowTitle)暂无请求")
                 .font(.system(size: 11, weight: .medium))
             Text("发起一次请求后，这里会显示各渠道的\(metric.title)趋势")
                 .font(.system(size: 9))
@@ -414,7 +428,7 @@ struct GatewaySectionView: View {
             AxisMarks(values: xAxisValues) { value in
                 AxisGridLine()
                     .foregroundStyle(PopoverPalette.separatorHairline)
-                AxisValueLabel {
+                AxisValueLabel(anchor: xAxisAnchor(for: value)) {
                     if let date = value.as(Date.self) {
                         Text(xLabel(date))
                             .font(.system(size: 8))
@@ -572,11 +586,11 @@ struct GatewaySectionView: View {
             if ranking.isEmpty {
                 emptyRankingState
             } else {
-                let totalTokens = max(1, ranking.reduce(0) { $0 + $1.totalTokens })
+                let total = max(1, ranking.reduce(0) { $0 + rankingWeight($1) })
 
                 VStack(spacing: 12) {
                     ForEach(Array(ranking.enumerated()), id: \.element.id) { index, item in
-                        rankingRow(item, index: index, totalTokens: totalTokens)
+                        rankingRow(item, index: index, totalWeight: total)
                     }
                     Spacer(minLength: 0)
                 }
@@ -591,7 +605,7 @@ struct GatewaySectionView: View {
             Image(systemName: "list.bullet.rectangle")
                 .font(.system(size: 18))
                 .foregroundStyle(.secondary)
-            Text("近\(granularity.durationTitle)暂无渠道数据")
+            Text("\(range.windowTitle)暂无渠道数据")
                 .font(.system(size: 11, weight: .medium))
             Text("成功请求会按渠道聚合到这里")
                 .font(.system(size: 9))
@@ -602,9 +616,27 @@ struct GatewaySectionView: View {
         .accessibilityLabel("渠道排行空状态")
     }
 
-    private func rankingRow(_ item: GatewayChannelSummary, index: Int, totalTokens: Int) -> some View {
+    /// 排行主数值：随所选维度切换
+    private func rankingValue(_ item: GatewayChannelSummary) -> String {
+        switch rankingMetric {
+        case .requests: return "\(item.requestCount)"
+        case .tokens: return Self.compactTokens(item.totalTokens)
+        case .speed: return item.averageTPS.map { String(format: "%.0f", $0) } ?? "—"
+        }
+    }
+
+    /// 占比条权重：速度口径无样本时按 0 计
+    private func rankingWeight(_ item: GatewayChannelSummary) -> Double {
+        switch rankingMetric {
+        case .requests: return Double(item.requestCount)
+        case .tokens: return Double(item.totalTokens)
+        case .speed: return item.averageTPS ?? 0
+        }
+    }
+
+    private func rankingRow(_ item: GatewayChannelSummary, index: Int, totalWeight: Double) -> some View {
         let tint = rankingColor(for: item.key, fallbackIndex: index)
-        let share = Double(item.totalTokens) / Double(totalTokens)
+        let share = Double(rankingWeight(item)) / Double(totalWeight)
 
         return VStack(alignment: .leading, spacing: 4) {
             HStack(spacing: 5) {
@@ -617,7 +649,7 @@ struct GatewaySectionView: View {
                     .truncationMode(.middle)
                     .layoutPriority(1)
                 Spacer(minLength: 4)
-                Text(Self.compactTokens(item.totalTokens))
+                Text(rankingValue(item))
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .monospacedDigit()
                     .foregroundStyle(tint)
@@ -646,9 +678,16 @@ struct GatewaySectionView: View {
         .accessibilityLabel("\(item.channelName) \(item.model)，\(item.requestCount) 次请求，\(item.totalTokens) token")
     }
 
+    /// 细节行：主数值口径之外的信息，避免与右侧主数值重复
     private func rankingFootnote(_ item: GatewayChannelSummary) -> String {
-        var parts: [String] = ["\(item.requestCount) 次请求"]
-        if let tps = item.averageTPS {
+        var parts: [String] = []
+        if rankingMetric != .requests {
+            parts.append("\(item.requestCount) 次请求")
+        }
+        if rankingMetric != .tokens {
+            parts.append("\(Self.compactTokens(item.totalTokens)) token")
+        }
+        if rankingMetric != .speed, let tps = item.averageTPS {
             parts.append(String(format: "%.0f tok/s", tps))
         }
         if let ttft = item.averageTTFT {
@@ -722,20 +761,32 @@ struct GatewaySectionView: View {
 
     private var xDomain: ClosedRange<Date> {
         let buckets = series.buckets
-        guard let first = buckets.first, let last = buckets.last, first < last else {
-            let now = Date()
-            return now.addingTimeInterval(-Double(granularity.bucketSeconds))...now
-        }
         // 两端各留半个桶宽：折线末点与柱状最后一根柱都落在桶起点上，不留边距会被绘图区裁掉一半
-        let pad = Double(granularity.bucketSeconds) / 2
+        let pad = Double(range.bucketSeconds) / 2
+        guard let first = buckets.first, let last = buckets.last else {
+            let now = Date()
+            return now.addingTimeInterval(-Double(range.bucketSeconds))...now
+        }
+        if first == last {
+            // 只有一个桶（例如刚过零点看「今天」）时按单桶宽度铺开，避免退化成无宽度的区间
+            return first.addingTimeInterval(-pad)...first.addingTimeInterval(pad)
+        }
         return first.addingTimeInterval(-pad)...last.addingTimeInterval(pad)
     }
 
+    /// 三个刻度均匀铺开，并在右端留出余量：标签以刻度为中心，贴边时半宽会被裁掉
     private var xAxisValues: [Date] {
         let buckets = series.buckets
         guard buckets.count > 3 else { return buckets }
-        // 不标注最后一个桶，避免标签在绘图区右边缘被裁切
-        return [buckets[0], buckets[3], buckets[6]]
+        let lastIndex = Double(buckets.count - 1) * 0.85
+        var values: [Date] = []
+        for index in 0..<3 {
+            let ratio = Double(index) / 2
+            let position = Int((ratio * lastIndex).rounded())
+            let date = buckets[min(position, buckets.count - 1)]
+            if values.last != date { values.append(date) }
+        }
+        return values
     }
 
     private func seriesColor(at index: Int) -> Color {
@@ -752,20 +803,38 @@ struct GatewaySectionView: View {
         return seriesColor(at: offset + fallbackIndex)
     }
 
+    /// 首尾刻度把标签向内对齐，避免半宽被绘图区裁掉
+    private func xAxisAnchor(for value: AxisValue) -> UnitPoint? {
+        guard let date = value.as(Date.self), let first = xAxisValues.first, let last = xAxisValues.last else {
+            return nil
+        }
+        if date == first { return .topLeading }
+        if date == last { return .topTrailing }
+        return nil
+    }
+
     private func xLabel(_ date: Date) -> String {
         let components = Calendar.current.dateComponents([.month, .day, .hour, .minute], from: date)
-        if granularity == .day {
+        switch range {
+        case .hour:
+            return String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
+        case .today:
+            return String(format: "%02d:00", components.hour ?? 0)
+        case .month, .all:
             return String(format: "%02d-%02d", components.month ?? 0, components.day ?? 0)
         }
-        return String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
     }
 
     private func tooltipLabel(_ date: Date) -> String {
         let components = Calendar.current.dateComponents([.month, .day, .hour, .minute], from: date)
-        if granularity == .day {
+        switch range {
+        case .hour:
+            return String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
+        case .today:
+            return String(format: "%02d:00", components.hour ?? 0)
+        case .month, .all:
             return String(format: "%02d-%02d", components.month ?? 0, components.day ?? 0)
         }
-        return String(format: "%02d:%02d", components.hour ?? 0, components.minute ?? 0)
     }
 
     /// 坐标轴刻度：Token 用紧凑单位，其余保留整数或一位小数
@@ -817,12 +886,17 @@ struct GatewaySectionView: View {
             ranking = []
             return
         }
-        let currentGranularity = granularity
+        let currentRange = range
         let currentMetric = metric
+        let currentRankingMetric = rankingMetric
 
-        async let seriesTask = service.series(granularity: currentGranularity, metric: currentMetric)
-        async let summaryTask = service.summary(granularity: currentGranularity)
-        async let rankingTask = service.channelSummaries(granularity: currentGranularity, limit: 4)
+        async let seriesTask = service.series(range: currentRange, metric: currentMetric)
+        async let summaryTask = service.summary(range: currentRange)
+        async let rankingTask = service.channelSummaries(
+            range: currentRange,
+            limit: 4,
+            metric: currentRankingMetric
+        )
 
         let result = await seriesTask
         let windowSummary = await summaryTask

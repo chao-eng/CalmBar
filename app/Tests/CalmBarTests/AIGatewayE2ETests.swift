@@ -90,7 +90,7 @@ final class AIGatewayE2ETests: XCTestCase {
         XCTAssertNotNil(record.outputTPS)
         XCTAssertTrue((record.outputTPS ?? 0) > 0)
 
-        let result = try await database.series(granularity: .minute)
+        let result = try await database.series(range: .hour)
         XCTAssertEqual(result.series.count, 1)
         XCTAssertEqual(result.series.first?.channelName, "模拟渠道")
         XCTAssertEqual(result.points.count, 1)
