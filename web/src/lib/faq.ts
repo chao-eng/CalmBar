@@ -9,7 +9,7 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: 'gatekeeper',
     question: '首次打开提示“应用程序已损坏，无法打开”怎么办？',
     answer:
-      '这是 Gatekeeper 对未公证应用的拦截，不是文件损坏。确认安装包来自官方渠道后，在终端执行：\nsudo xattr -rd com.apple.quarantine /Applications/CalmBar.app\n应用内的「应用去隔离」工具也支持把任意 App 拖进去一键修复。',
+      '这是 Gatekeeper 对未公证应用的拦截，不是文件损坏。确认安装包来自官方渠道后，先对 DMG 去隔离再拖入「应用程序」：\nxattr -dr com.apple.quarantine ~/Downloads/CalmBar-x.y.z.dmg\nDMG 去隔离后，安装出来的 App 不需要再单独执行一次 xattr。若 App 已经装好并被拦截，应用内的「应用去隔离」工具支持把任意 App 拖进去一键修复。',
   },
   {
     id: 'permissions',

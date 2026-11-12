@@ -94,19 +94,13 @@ CalmBar/
 
 从 [Releases](https://github.com/chao-eng/CalmBar/releases) 下载 `CalmBar-x.y.z.dmg`。安装包同时包含 Apple Silicon 和 Intel 架构。
 
-应用使用临时签名（ad-hoc），没有走 Apple 公证。macOS Sequoia 及之后版本会在挂载 DMG 前就拦下文件，且弹窗里没有「仍要打开」。先去掉隔离标记再双击：
+应用使用临时签名（ad-hoc），没有走 Apple 公证。macOS Sequoia 及之后版本会在挂载 DMG 前就拦下文件，且弹窗里没有「仍要打开」。先去掉 DMG 的隔离标记再双击：
 
 ```bash
 xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.7.2.dmg
 ```
 
-把 CalmBar 拖进「应用程序」，再对安装后的 App 执行一次：
-
-```bash
-xattr -dr com.apple.quarantine /Applications/CalmBar.app
-```
-
-之后从 Spotlight 或程序坞正常启动即可。DMG 不在下载目录时替换成实际路径；`/Applications` 没有写入权限时在命令前加 `sudo`。
+然后把 CalmBar 拖进「应用程序」，直接从 Spotlight 或程序坞启动即可。DMG 已去隔离，安装后的 App 不需要再执行一次 `xattr`。DMG 不在下载目录时替换成实际路径。
 
 安装后可以通过「通用设置 → 关于 CalmBar → 检查更新」获取新版本，更新由 Sparkle 完成，不需要重新下载安装包。网络受限时可在「更新设置」里配置 HTTP/HTTPS 代理。
 

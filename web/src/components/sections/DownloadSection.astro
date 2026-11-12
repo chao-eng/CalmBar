@@ -55,14 +55,14 @@ import { DOWNLOAD_CHANNELS, INSTALL_COMMAND, SITE } from '@/lib/site'
             <span>
               应用使用临时签名（ad-hoc），没有走 Apple 公证。macOS Sequoia 及之后会在挂载 DMG 前就拦下文件，弹窗里也没有「仍要打开」。
               先去掉 DMG 的隔离标记，再双击挂载，把窗口里的 CalmBar 拖进
-              <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications</code>，最后对装好的 App 再执行一次。文件本身没坏。
+              <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications</code> 就能直接启动。文件本身没坏。
             </span>
           </p>
         </div>
 
         <div>
           <p class="text-sm leading-relaxed text-muted-foreground">
-            两条命令按顺序执行，第一条处理下载的 DMG，第二条处理装好的 App。DMG 不在下载目录时换成实际路径；<code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications</code> 没有写入权限就在命令前加 <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">sudo</code>。应用里的「应用去隔离」也接受直接拖拽修复。
+            只需执行下面这一条命令处理下载的 DMG；DMG 去隔离后，装好的 App 不再带隔离属性，不需要再对 <code class="rounded-sm bg-muted px-1.5 py-0.5 font-mono text-xs">/Applications/CalmBar.app</code> 执行一次。DMG 不在下载目录时换成实际路径。应用里的「应用去隔离」也接受直接拖拽修复。
           </p>
           <div class="mt-3">
             <CommandBlock client:visible code={INSTALL_COMMAND} label="移除 Gatekeeper 隔离标记" />

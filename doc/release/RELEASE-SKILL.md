@@ -159,17 +159,14 @@ DMG 采用 ad-hoc 签名，未经过 Apple 公证（公证需要付费的 Develo
 macOS Sequoia 可能在挂载前拦截，且弹窗不再提供「仍要打开」按钮。
 
 1. 下载 DMG。
-2. 双击前在终端执行：
+2. 双击前在终端执行（只需这一步）：
    xattr -dr com.apple.quarantine ~/Downloads/CalmBar-X.Y.Z.dmg
-3. 双击 DMG，把 CalmBar 拖入 Applications。
-4. 安装后再执行：
-   xattr -dr com.apple.quarantine /Applications/CalmBar.app
-5. 通过 Spotlight / 程序坞启动。
+3. 双击 DMG，把 CalmBar 拖入 Applications，从 Spotlight / 程序坞启动。
 EOF
 )"
 ```
 
-`xattr -dr com.apple.quarantine` 会移除浏览器下载附加的隔离属性，Gatekeeper 不再拦截。`/Applications` 无写入权限时可在第二条命令前加 `sudo`。
+`xattr -dr com.apple.quarantine` 会移除浏览器下载附加的隔离属性，Gatekeeper 不再拦截。DMG 去隔离后，拖出来的 App 不再带隔离属性，安装后不需要再对 `/Applications/CalmBar.app` 执行一次 `xattr`。
 
 ---
 
