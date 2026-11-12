@@ -27,7 +27,7 @@ public enum GatewayConnectionTestError: LocalizedError {
 public enum GatewayConnectionTester {
     /// 只验证 /models 端点可达与延迟，不代表 Chat / Responses 端点可用
     public static func test(channel: AIGatewayChannel) async throws {
-        _ = try await fetchModels(channel: channel, apiKey: GatewayKeychain.apiKey(for: channel.id))
+        _ = try await fetchModels(channel: channel, apiKey: GatewaySecretStore.apiKey(for: channel.id))
     }
 
     /// 拉取上游模型列表；apiKey 传入 nil 时读取钥匙串（新增渠道尚未保存时可直接用草稿中的密钥）
@@ -39,7 +39,7 @@ public enum GatewayConnectionTester {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         request.timeoutInterval = 15
-        let apiKey = apiKey ?? GatewayKeychain.apiKey(for: channel.id)
+        let apiKey = apiKey ?? GatewaySecretStore.apiKey(for: channel.id)
         if !apiKey.isEmpty {
             switch channel.authHeader {
             case .bearer:

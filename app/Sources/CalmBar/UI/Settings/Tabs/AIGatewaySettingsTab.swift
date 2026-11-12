@@ -49,7 +49,7 @@ public struct AIGatewaySettingsTab: View {
         }
         .onAppear {
             portText = String(settings.aiGatewayPort)
-            serverKeyDraft = GatewayKeychain.serverKey()
+            serverKeyDraft = GatewaySecretStore.serverKey()
         }
         .onReceive(cooldownTimer) { now = $0 }
         .sheet(item: $editingChannel) { draft in
@@ -158,14 +158,14 @@ public struct AIGatewaySettingsTab: View {
                         .frame(minWidth: 140, maxWidth: 320)
                         .layoutPriority(1)
                     Button("保存密钥") {
-                        GatewayKeychain.setServerKey(serverKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines))
+                        GatewaySecretStore.setServerKey(serverKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines))
                         service.restart()
                     }
                     .fixedSize()
                     Button(generatedServerKey ? "已生成并复制" : "随机生成") {
                         let key = Self.randomServerKey()
                         serverKeyDraft = key
-                        GatewayKeychain.setServerKey(key)
+                        GatewaySecretStore.setServerKey(key)
                         service.restart()
                         copyToPasteboard(key)
                         generatedServerKey = true
@@ -384,7 +384,7 @@ public struct AIGatewaySettingsTab: View {
                     editingChannel = ChannelDraft(
                         channel: channel,
                         apiKey: "",
-                        proxyPassword: channel.proxy.passwordKeyID.map { GatewayKeychain.proxyPassword(for: $0) } ?? "",
+                        proxyPassword: channel.proxy.passwordKeyID.map { GatewaySecretStore.proxyPassword(for: $0) } ?? "",
                         isNew: false
                     )
                 }
@@ -543,7 +543,7 @@ public struct AIGatewaySettingsTab: View {
         channel.models = AIGatewayChannel.normalizedModels(channel.models)
         let key = draft.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
         if !key.isEmpty {
-            GatewayKeychain.setAPIKey(key, for: channel.id)
+            GatewaySecretStore.setAPIKey(key, for: channel.id)
         }
 
         var proxy = channel.proxy
@@ -551,7 +551,7 @@ public struct AIGatewaySettingsTab: View {
             proxy = GatewayProxyConfig()
         } else if !draft.proxyPassword.isEmpty {
             let keyID = proxy.passwordKeyID ?? "channel.\(channel.id).proxy"
-            GatewayKeychain.setProxyPassword(draft.proxyPassword, for: keyID)
+            GatewaySecretStore.setProxyPassword(draft.proxyPassword, for: keyID)
             proxy.passwordKeyID = keyID
         }
         channel.proxy = proxy
@@ -567,9 +567,9 @@ public struct AIGatewaySettingsTab: View {
 
     private func deleteChannel(_ channel: AIGatewayChannel) {
         settings.aiGatewayChannels.removeAll { $0.id == channel.id }
-        GatewayKeychain.removeAPIKey(for: channel.id)
+        GatewaySecretStore.removeAPIKey(for: channel.id)
         if let keyID = channel.proxy.passwordKeyID {
-            GatewayKeychain.setProxyPassword("", for: keyID)
+            GatewaySecretStore.setProxyPassword("", for: keyID)
         }
         testStates[channel.id] = nil
         service.restart()
@@ -607,7 +607,7 @@ public struct AIGatewaySettingsTab: View {
     }
 
     private func maskedKey(_ channelID: String) -> String {
-        let key = GatewayKeychain.apiKey(for: channelID)
+        let key = GatewaySecretStore.apiKey(for: channelID)
         guard !key.isEmpty else { return "无密钥" }
         guard key.count > 8 else { return "sk-***" }
         return "\(key.prefix(3))***\(key.suffix(4))"

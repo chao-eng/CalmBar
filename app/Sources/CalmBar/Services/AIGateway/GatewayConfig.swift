@@ -238,145 +238,6 @@ public struct AIGatewayModelRoute: Codable, Identifiable, Equatable, Sendable {
     }
 }
 
-// MARK: - Keychain
-
-/// 所有网关密钥合并存放在同一条钥匙串记录中。
-/// ad-hoc 签名下每次重新打包都会改变 cdhash，钥匙串 ACL 必然失效；
-/// 合并成单条后，更新后最多只弹一次授权，而不是按密钥数量弹多次。
-public enum GatewayKeychain {
-    /// 测试进程改用纯内存存储，避免读写真实配置或触发授权弹窗
-    private static let isTesting: Bool = {
-        ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] != nil
-            || NSClassFromString("XCTestCase") != nil
-    }()
-
-    private static let service = "com.calmbar.aigateway"
-
-    /// 单条记录内部以 account -> secret 的 JSON 存储
-    private static let vaultAccount = "vault"
-
-    public static let serverKeyID = "server.accessKey"
-
-    public static func apiKey(for channelID: String) -> String {
-        value(for: channelID)
-    }
-
-    public static func setAPIKey(_ value: String, for channelID: String) {
-        set(value, for: channelID)
-    }
-
-    public static func removeAPIKey(for channelID: String) {
-        set("", for: channelID)
-    }
-
-    public static func serverKey() -> String {
-        value(for: serverKeyID)
-    }
-
-    public static func setServerKey(_ value: String) {
-        set(value, for: serverKeyID)
-    }
-
-    public static func proxyPassword(for keyID: String) -> String {
-        value(for: keyID)
-    }
-
-    public static func setProxyPassword(_ value: String, for keyID: String) {
-        set(value, for: keyID)
-    }
-
-    // MARK: 单条记录读写
-
-    /// 整个 vault 只从钥匙串读取一次，之后全部命中内存
-    private static let cacheLock = NSLock()
-    nonisolated(unsafe) private static var cachedVault: [String: String]?
-    nonisolated(unsafe) private static var testingVault: [String: String] = [:]
-
-    private static func value(for account: String) -> String {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        if isTesting { return testingVault[account] ?? "" }
-        return loadVaultLocked()[account] ?? ""
-    }
-
-    private static func set(_ value: String, for account: String) {
-        cacheLock.lock()
-        defer { cacheLock.unlock() }
-        if isTesting {
-            if value.isEmpty {
-                testingVault.removeValue(forKey: account)
-            } else {
-                testingVault[account] = value
-            }
-            return
-        }
-        var vault = loadVaultLocked()
-        if value.isEmpty {
-            vault.removeValue(forKey: account)
-        } else {
-            vault[account] = value
-        }
-        if persist(vault) {
-            cachedVault = vault
-        }
-    }
-
-    /// 调用方需持有 cacheLock
-    private static func loadVaultLocked() -> [String: String] {
-        if let cachedVault { return cachedVault }
-        let vault: [String: String]
-        if let data = readVaultData(),
-           let decoded = try? JSONDecoder().decode([String: String].self, from: data) {
-            vault = decoded
-        } else {
-            vault = [:]
-        }
-        cachedVault = vault
-        return vault
-    }
-
-    private static func baseQuery() -> [String: Any] {
-        [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: vaultAccount
-        ]
-    }
-
-    /// 注：这里使用登录钥匙串（而非 kSecUseDataProtectionKeychain）。
-    /// 本项目为 ad-hoc 签名、无 keychain-access-groups 权限，数据保护钥匙串写入会返回 -34018，
-    /// 导致密钥实际未保存、UI 一直显示「无密钥」。
-    private static func readVaultData() -> Data? {
-        var query = baseQuery()
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-        var item: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &item)
-        guard status == errSecSuccess, let data = item as? Data else { return nil }
-        return data
-    }
-
-    private static func persist(_ vault: [String: String]) -> Bool {
-        if vault.isEmpty {
-            let status = SecItemDelete(baseQuery() as CFDictionary)
-            return status == errSecSuccess || status == errSecItemNotFound
-        }
-        guard let data = try? JSONEncoder().encode(vault) else { return false }
-        let query = baseQuery()
-        let attributes: [String: Any] = [
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
-        ]
-        let status = SecItemUpdate(query as CFDictionary, attributes as CFDictionary)
-        if status == errSecItemNotFound {
-            var insert = query
-            insert.merge(attributes) { _, new in new }
-            return SecItemAdd(insert as CFDictionary, nil) == errSecSuccess
-        }
-        return status == errSecSuccess
-    }
-}
-
 // MARK: - 运行时快照（已完成 Keychain 解析，供后台请求线程使用）
 
 public struct GatewayChannelRuntime: Identifiable, Sendable, Equatable {
@@ -619,9 +480,9 @@ public enum GatewaySnapshotBuilder {
                 baseURL: channel.baseURL,
                 model: channel.model,
                 authHeader: channel.authHeader,
-                apiKey: GatewayKeychain.apiKey(for: channel.id),
+                apiKey: GatewaySecretStore.apiKey(for: channel.id),
                 proxy: channel.proxy,
-                proxyPassword: channel.proxy.passwordKeyID.map { GatewayKeychain.proxyPassword(for: $0) } ?? "",
+                proxyPassword: channel.proxy.passwordKeyID.map { GatewaySecretStore.proxyPassword(for: $0) } ?? "",
                 protocolMode: channel.protocolMode,
                 models: channel.models
             )
