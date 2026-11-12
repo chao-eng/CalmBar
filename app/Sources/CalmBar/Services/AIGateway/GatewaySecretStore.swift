@@ -6,7 +6,7 @@ import SQLite3
 // 早期实现放在登录钥匙串里：ad-hoc 签名每次重新打包都会改变 cdhash，
 // 钥匙串 ACL 随之失效，重启或更新后必然弹一次授权，使用成本高于收益。
 // 现在改为明文存放在网关数据库的 secrets 表：文件权限 0600，仅本机当前用户可读，
-// 不再触发任何系统授权弹窗。首次升级会尝试把钥匙串里的旧密钥迁移过来，成功后删除钥匙串记录。
+// 不再触发任何系统授权弹窗。
 
 public enum GatewaySecretStore {
     /// 测试进程改用纯内存存储，避免污染真实密钥
@@ -62,7 +62,6 @@ public enum GatewaySecretStore {
     nonisolated(unsafe) private static var cached: [String: String]?
     nonisolated(unsafe) private static var testingValues: [String: String] = [:]
     nonisolated(unsafe) private static var db: OpaquePointer?
-    nonisolated(unsafe) private static var migrationAttempted = false
 
     private static let transient = unsafeBitCast(-1, to: sqlite3_destructor_type.self)
 
@@ -102,19 +101,6 @@ public enum GatewaySecretStore {
         var values: [String: String] = [:]
         if openIfNeeded() {
             values = readAllRows()
-        }
-        if values.isEmpty, !migrationAttempted {
-            migrationAttempted = true
-            if let legacy = LegacyKeychain.readVault() {
-                for (account, secret) in legacy where !secret.isEmpty {
-                    values[account] = secret
-                    upsertRow(account: account, value: secret)
-                }
-                // 迁移完成即清掉钥匙串记录，之后启动不再触发授权
-                if !legacy.isEmpty {
-                    LegacyKeychain.removeVault()
-                }
-            }
         }
         cached = values
         return values
@@ -186,37 +172,5 @@ public enum GatewaySecretStore {
         defer { sqlite3_finalize(stmt) }
         sqlite3_bind_text(stmt, 1, account, -1, transient)
         _ = sqlite3_step(stmt)
-    }
-
-    // MARK: 旧钥匙串（仅用于一次性迁移）
-
-    private enum LegacyKeychain {
-        private static let service = "com.calmbar.aigateway"
-        private static let account = "vault"
-
-        private static func query() -> [String: Any] {
-            [
-                kSecClass as String: kSecClassGenericPassword,
-                kSecAttrService as String: service,
-                kSecAttrAccount as String: account
-            ]
-        }
-
-        static func readVault() -> [String: String]? {
-            var query = query()
-            query[kSecReturnData as String] = true
-            query[kSecMatchLimit as String] = kSecMatchLimitOne
-            var item: CFTypeRef?
-            guard SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-                  let data = item as? Data,
-                  let decoded = try? JSONDecoder().decode([String: String].self, from: data) else {
-                return nil
-            }
-            return decoded
-        }
-
-        static func removeVault() {
-            SecItemDelete(query() as CFDictionary)
-        }
     }
 }
