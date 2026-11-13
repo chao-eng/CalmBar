@@ -198,7 +198,7 @@ public enum SettingsTab: String, CaseIterable, Identifiable, Hashable {
         case .audio:
             return ["音频", "音量", "静音", "混音", "输出设备", "路由", "增强", "audio", "volume", "mute", "mixer"]
         case .recorder:
-            return ["录制", "录屏", "屏幕录制", "截屏", "麦克风", "系统声音", "record", "recorder", "screen", "luping"]
+            return ["录制", "录屏", "屏幕录制", "截屏", "麦克风", "系统声音", "计划", "定时", "schedule", "dingshi", "jihua", "record", "recorder", "screen", "luping"]
         case .aiGateway:
             return ["网关", "AI", "代理", "渠道", "路由", "Token", "TPS", "gateway", "API", "OpenAI"]
         case .lanShare:

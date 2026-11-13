@@ -7,6 +7,8 @@ import CalmBarKit
 public struct RecorderSettingsTab: View {
     @ObservedObject private var settings = AppSettings.shared
     @ObservedObject private var recorder = ScreenRecorderService.shared
+    @ObservedObject private var scheduleCoordinator = RecorderScheduleCoordinator.shared
+    @ObservedObject private var scheduleNotifier = RecorderScheduleNotifier.shared
 
     public init() {}
 
@@ -21,6 +23,40 @@ public struct RecorderSettingsTab: View {
                     inactiveSubtitle: "已停用 · 录制入口隐藏，正在进行的录制会自动保存并停止",
                     isEnabled: $settings.screenRecorderEnabled
                 )
+
+                GroupBox(label: Label("录制计划", systemImage: "calendar.badge.clock")) {
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 10) {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text(scheduleSummaryText)
+                                    .font(.system(size: 12.5, weight: .medium))
+                                Text("到点自动开始与结束；创建时固定录制源与画质参数，计划期间保持系统唤醒。")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.secondary)
+                                    .lineSpacing(2)
+                                if scheduleNotifier.isDegraded {
+                                    Text("通知权限未开启，计划仍会执行，但不会提醒。")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.orange)
+                                }
+                                if !scheduleCoordinator.hasScreenPermission {
+                                    Text("屏幕录制权限未开启，计划到点会被跳过。")
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.orange)
+                                }
+                            }
+                            Spacer(minLength: 8)
+                            Button("录制计划") {
+                                RecorderScheduleWindowController.shared.show()
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.small)
+                        }
+                    }
+                    .padding(8)
+                }
+                .disabled(!settings.screenRecorderEnabled)
+                .opacity(settings.screenRecorderEnabled ? 1.0 : 0.6)
 
                 GroupBox(label: Label("画质与编码", systemImage: "film")) {
                     VStack(alignment: .leading, spacing: 12) {
@@ -282,6 +318,19 @@ public struct RecorderSettingsTab: View {
             }
             .padding(16)
         }
+    }
+
+    private var scheduleSummaryText: String {
+        if scheduleCoordinator.schedules.isEmpty {
+            return "尚未创建录制计划"
+        }
+        if let summary = scheduleCoordinator.nextScheduleSummary {
+            return summary
+        }
+        if scheduleCoordinator.schedules.contains(where: \.isEnabled) {
+            return "暂无后续执行"
+        }
+        return "所有计划已停用"
     }
 
     private var stateDescription: String {

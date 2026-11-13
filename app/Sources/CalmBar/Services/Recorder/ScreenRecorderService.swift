@@ -21,6 +21,25 @@ public enum RecorderState: String, CaseIterable, Sendable {
     }
 }
 
+// MARK: - 计划结束原因
+
+public enum RecorderSessionEndReason: String, Sendable {
+    case userStopped
+    case scheduledStop
+    case diskSpaceLow
+    case runtimeFailure
+    case startFailed
+}
+
+/// 一次录制结束后交给计划协调器的结果快照。
+public struct RecorderFinishedSession: Sendable {
+    public let scheduleID: UUID?
+    public let recording: RecorderRecording?
+    public let state: RecorderState
+    public let reason: RecorderSessionEndReason
+    public let error: String?
+}
+
 // MARK: - 录制历史
 
 public struct RecorderRecording: Identifiable, Codable, Sendable {
@@ -75,6 +94,13 @@ public final class ScreenRecorderService: ObservableObject {
     @Published public private(set) var recentRecordings: [RecorderRecording] = []
     @Published public private(set) var pendingPartials: [URL] = []
     @Published public private(set) var lastFinishedRecording: RecorderRecording?
+    /// 当前录制是否由定时计划启动；用于协调器识别计划执行与手动操作。
+    @Published public private(set) var activeScheduleID: UUID?
+
+    /// 每次录制收尾后回调（手动与计划录制都会触发）
+    public var onFinished: ((RecorderFinishedSession) -> Void)?
+    /// 录制中磁盘低于阈值、即将强制收尾
+    public var onDiskSpaceCritical: (() -> Void)?
 
     private let settings = AppSettings.shared
     private let defaults = UserDefaults.standard
@@ -82,6 +108,7 @@ public final class ScreenRecorderService: ObservableObject {
     private var engine: RecorderCaptureEngine?
     private var countdownTask: Task<Void, Never>?
     private var elapsedTimer: Timer?
+    private var diskCheckTimer: Timer?
     private var accumulatedElapsed: TimeInterval = 0
     private var elapsedStart: Date?
     private var activeFinalURL: URL?
@@ -140,13 +167,18 @@ public final class ScreenRecorderService: ObservableObject {
         }
     }
 
-    private func hasEnoughDiskSpace() -> Bool {
+    /// 录制开始与录制中巡检共用的磁盘检查。
+    public func hasEnoughDiskSpace() -> Bool {
+        guard let available = availableDiskBytes() else { return true }
+        return available >= RecorderScheduleLimits.minimumDiskBytes
+    }
+
+    public func availableDiskBytes() -> Int64? {
         let directory = saveDirectory
-        guard let values = try? directory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]),
-              let available = values.volumeAvailableCapacityForImportantUsage else {
-            return true
+        guard let values = try? directory.resourceValues(forKeys: [.volumeAvailableCapacityForImportantUsageKey]) else {
+            return nil
         }
-        return available >= 500 * 1024 * 1024
+        return values.volumeAvailableCapacityForImportantUsage
     }
 
     // MARK: - 准备阶段
@@ -169,50 +201,76 @@ public final class ScreenRecorderService: ObservableObject {
                capturesSystemAudio: Bool,
                capturesMicrophone: Bool,
                countdown: Int) {
-        guard state == .idle || state == .preparing || state == .done || state == .failed else { return }
+        var profile = RecorderCaptureProfile.fromSettings(settings)
+        profile.capturesSystemAudio = capturesSystemAudio
+        profile.capturesMicrophone = capturesMicrophone
+        startSession(region: region, profile: profile, countdown: countdown, scheduleID: nil)
+    }
+
+    /// 计划录制入口：使用创建计划时的参数快照，固定跳过倒计时。
+    /// 返回 false 表示前置检查未通过（状态、权限、磁盘或目录）。
+    @discardableResult
+    func startScheduled(region: RecorderRegion,
+                        profile: RecorderCaptureProfile,
+                        scheduleID: UUID) -> Bool {
+        guard !state.isActive else { return false }
+        return startSession(region: region, profile: profile, countdown: 0, scheduleID: scheduleID)
+    }
+
+    @discardableResult
+    private func startSession(region: RecorderRegion,
+                              profile: RecorderCaptureProfile,
+                              countdown: Int,
+                              scheduleID: UUID?) -> Bool {
+        guard state == .idle || state == .preparing || state == .done || state == .failed else { return false }
         lastError = nil
         lastFinishedRecording = nil
+        activeScheduleID = scheduleID
 
         guard ensureScreenPermission() else {
             fail("未获得屏幕录制权限，请前往系统设置授权后重试", state: .failed)
-            return
+            reportFinished(recording: nil, state: .failed, reason: .startFailed,
+                           error: lastError)
+            return false
         }
         guard ensureSaveDirectory() else {
             fail(lastError ?? "录制目录不可写", state: .failed)
-            return
+            reportFinished(recording: nil, state: .failed, reason: .startFailed,
+                           error: lastError)
+            return false
         }
         guard hasEnoughDiskSpace() else {
             fail(RecorderCaptureFailure.diskFull.message, state: .failed)
-            return
+            reportFinished(recording: nil, state: .failed, reason: .startFailed,
+                           error: lastError)
+            return false
         }
 
         Task { @MainActor [weak self] in
             guard let self else { return }
-            var microphone = capturesMicrophone
-            if microphone {
+            var effectiveProfile = profile
+            if effectiveProfile.capturesMicrophone {
                 let granted = await self.requestMicrophonePermission()
                 if !granted {
-                    microphone = false
+                    effectiveProfile.capturesMicrophone = false
                     self.lastError = "麦克风未授权，本次仅录制系统声音"
                 }
             }
-            self.microphoneEnabled = microphone
+            self.microphoneEnabled = effectiveProfile.capturesMicrophone
 
             if countdown > 0 {
                 self.runCountdown(seconds: countdown,
                                   region: region,
-                                  capturesSystemAudio: capturesSystemAudio,
-                                  capturesMicrophone: microphone)
+                                  profile: effectiveProfile)
             } else {
-                self.beginRecording(region: region,
-                                    capturesSystemAudio: capturesSystemAudio,
-                                    capturesMicrophone: microphone)
+                self.beginRecording(region: region, profile: effectiveProfile)
             }
         }
+        return true
     }
 
     private func runCountdown(seconds: Int, region: RecorderRegion,
-                              capturesSystemAudio: Bool, capturesMicrophone: Bool) {
+                              profile: RecorderCaptureProfile) {
         countdownRemaining = seconds
         state = .countdown
         RecorderControlBarController.shared.show()
@@ -227,9 +285,7 @@ public final class ScreenRecorderService: ObservableObject {
             if Task.isCancelled { return }
             self.countdownRemaining = 0
             self.countdownTask = nil
-            self.beginRecording(region: region,
-                                capturesSystemAudio: capturesSystemAudio,
-                                capturesMicrophone: capturesMicrophone)
+            self.beginRecording(region: region, profile: profile)
         }
     }
 
@@ -239,12 +295,12 @@ public final class ScreenRecorderService: ObservableObject {
         countdownTask = nil
         countdownRemaining = 0
         state = .idle
+        activeScheduleID = nil
         RecorderControlBarController.shared.hide()
     }
 
     private func beginRecording(region: RecorderRegion,
-                                capturesSystemAudio: Bool,
-                                capturesMicrophone: Bool) {
+                                profile: RecorderCaptureProfile) {
         let stamp = Self.fileStamp.string(from: Date())
         let directory = saveDirectory
         let partialURL = directory.appendingPathComponent("录制 \(stamp).partial.mp4")
@@ -252,7 +308,8 @@ public final class ScreenRecorderService: ObservableObject {
 
         let engine = RecorderCaptureEngine(partialURL: partialURL,
                                            finalURL: finalURL,
-                                           codec: settings.recorderCodec)
+                                           codec: profile.codec,
+                                           quality: profile.quality)
         engine.onFailure = { [weak self] failure in
             Task { @MainActor in
                 self?.handleRuntimeFailure(failure)
@@ -269,10 +326,11 @@ public final class ScreenRecorderService: ObservableObject {
         isStopping = false
         state = .recording
         startElapsedTimer()
+        startDiskCheckTimer()
         RecorderControlBarController.shared.show()
 
-        let frameRate = max(1, settings.recorderFPS)
-        let includeCursor = settings.recorderIncludeCursor
+        let frameRate = max(1, profile.fps)
+        let includeCursor = profile.includeCursor
         Task { @MainActor [weak self] in
             guard let self else { return }
             // 启动期间用户已停止：此时服务已放弃该引擎，必须取消，否则采集会继续写盘且无法再被停止
@@ -283,8 +341,8 @@ public final class ScreenRecorderService: ObservableObject {
             let failure = await engine.start(region: region,
                                              frameRate: frameRate,
                                              includeCursor: includeCursor,
-                                             capturesSystemAudio: capturesSystemAudio,
-                                             capturesMicrophone: capturesMicrophone)
+                                             capturesSystemAudio: profile.capturesSystemAudio,
+                                             capturesMicrophone: profile.capturesMicrophone)
             guard self.engine === engine else {
                 engine.cancel()
                 return
@@ -293,11 +351,14 @@ public final class ScreenRecorderService: ObservableObject {
                 engine.cancel()
                 self.engine = nil
                 self.stopElapsedTimer()
+                self.stopDiskCheckTimer()
                 self.activePartialURL = nil
                 self.activeFinalURL = nil
                 self.state = .failed
                 self.lastError = failure.message
                 RecorderControlBarController.shared.hide()
+                self.reportFinished(recording: nil, state: .failed, reason: .startFailed,
+                                    error: failure.message)
             }
         }
     }
@@ -330,7 +391,7 @@ public final class ScreenRecorderService: ObservableObject {
         }
     }
 
-    public func stop() {
+    public func stop(reason: RecorderSessionEndReason = .userStopped) {
         guard isRecording, !isStopping else { return }
         isStopping = true
         state = .finalizing
@@ -340,11 +401,13 @@ public final class ScreenRecorderService: ObservableObject {
         }
         elapsed = accumulatedElapsed
         stopElapsedTimer()
+        stopDiskCheckTimer()
 
         guard let engine else {
             isStopping = false
             state = .idle
             RecorderControlBarController.shared.hide()
+            reportFinished(recording: nil, state: .idle, reason: reason, error: lastError)
             return
         }
         self.engine = nil
@@ -356,9 +419,10 @@ public final class ScreenRecorderService: ObservableObject {
             guard let self else { return }
             let finishedURL = await engine.finish()
             if let finishedURL, let finalURL, FileManager.default.fileExists(atPath: finalURL.path) {
-                self.registerRecording(at: finishedURL, duration: duration, createdAt: createdAt)
+                let recording = self.registerRecording(at: finishedURL, duration: duration, createdAt: createdAt)
                 self.state = .done
                 self.lastError = nil
+                self.reportFinished(recording: recording, state: .done, reason: reason, error: nil)
                 try? await Task.sleep(nanoseconds: 1_000_000_000)
                 // 只在仍停留在「完成」态时收尾，避免把 1 秒内新开录制的控制条一起隐藏
                 if self.state == .done {
@@ -371,6 +435,7 @@ public final class ScreenRecorderService: ObservableObject {
                 // 立刻把残留临时文件暴露给恢复入口，无需等到下次启动
                 self.refreshPendingPartials()
                 RecorderControlBarController.shared.hide()
+                self.reportFinished(recording: nil, state: .failed, reason: reason, error: self.lastError)
             }
             self.isStopping = false
             self.activePartialURL = nil
@@ -378,10 +443,23 @@ public final class ScreenRecorderService: ObservableObject {
         }
     }
 
+    private func reportFinished(recording: RecorderRecording?,
+                                state: RecorderState,
+                                reason: RecorderSessionEndReason,
+                                error: String?) {
+        let scheduleID = activeScheduleID
+        activeScheduleID = nil
+        onFinished?(RecorderFinishedSession(scheduleID: scheduleID,
+                                            recording: recording,
+                                            state: state,
+                                            reason: reason,
+                                            error: error))
+    }
+
     private func handleRuntimeFailure(_ failure: RecorderCaptureFailure) {
         guard isRecording else { return }
         lastError = failure.message
-        stop()
+        stop(reason: .runtimeFailure)
     }
 
     // MARK: - 失败处理
@@ -411,6 +489,33 @@ public final class ScreenRecorderService: ObservableObject {
         elapsedTimer = nil
     }
 
+    // MARK: - 录制中磁盘巡检（BR-40：60 秒）
+
+    private func startDiskCheckTimer() {
+        stopDiskCheckTimer()
+        diskCheckTimer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in
+            Task { @MainActor in
+                self?.checkDiskSpaceDuringRecording()
+            }
+        }
+        if let timer = diskCheckTimer {
+            RunLoop.main.add(timer, forMode: .common)
+        }
+    }
+
+    private func stopDiskCheckTimer() {
+        diskCheckTimer?.invalidate()
+        diskCheckTimer = nil
+    }
+
+    private func checkDiskSpaceDuringRecording() {
+        guard isRecording else { return }
+        guard !hasEnoughDiskSpace() else { return }
+        lastError = RecorderCaptureFailure.diskFull.message
+        onDiskSpaceCritical?()
+        stop(reason: .diskSpaceLow)
+    }
+
     // MARK: - 权限
 
     private func ensureScreenPermission() -> Bool {
@@ -432,7 +537,8 @@ public final class ScreenRecorderService: ObservableObject {
 
     // MARK: - 历史
 
-    private func registerRecording(at url: URL, duration: TimeInterval, createdAt: Date) {
+    @discardableResult
+    private func registerRecording(at url: URL, duration: TimeInterval, createdAt: Date) -> RecorderRecording {
         let size = (try? FileManager.default.attributesOfItem(atPath: url.path)[.size] as? NSNumber)?
             .int64Value ?? 0
         let recording = RecorderRecording(
@@ -449,6 +555,7 @@ public final class ScreenRecorderService: ObservableObject {
         }
         lastFinishedRecording = recording
         persistHistory()
+        return recording
     }
 
     private func loadHistory() {

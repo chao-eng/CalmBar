@@ -14,7 +14,6 @@ final class MonitorAlertEngine: ObservableObject {
 
     private let settings = AppSettings.shared
     private var gate = MonitorAlertGate(rules: [])
-    private let delegate = MonitorNotificationDelegate()
 
     /// 未打包为 .app 时（如直接运行 SwiftPM 产物）通知中心不可用，需要降级为面板内提示
     private static var isNotificationAvailable: Bool {
@@ -24,7 +23,7 @@ final class MonitorAlertEngine: ObservableObject {
     private init() {
         gate.updateRules(Self.rules(from: settings))
         guard Self.isNotificationAvailable else { return }
-        UNUserNotificationCenter.current().delegate = delegate
+        // delegate 统一由 AppNotificationRouter 持有，这里只刷新授权状态
         Task { await refreshAuthorization() }
     }
 
@@ -166,30 +165,5 @@ final class MonitorAlertEngine: ObservableObject {
             trigger: nil
         )
         UNUserNotificationCenter.current().add(request)
-    }
-}
-
-// MARK: - 通知点击跳转监控分区
-
-final class MonitorNotificationDelegate: NSObject, UNUserNotificationCenterDelegate {
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        // 采样端已在睡眠 / 锁屏期间抑制投递，这里只负责展示样式
-        completionHandler([.banner, .sound])
-    }
-
-    func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
-        didReceive response: UNNotificationResponse,
-        withCompletionHandler completionHandler: @escaping () -> Void
-    ) {
-        completionHandler()
-        Task { @MainActor in
-            StatusBarManager.shared.showPopover()
-            _ = StatusBarManager.shared.selectPopoverTab(.monitor)
-        }
     }
 }

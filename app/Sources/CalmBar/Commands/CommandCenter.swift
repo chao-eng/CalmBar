@@ -302,6 +302,9 @@ public final class CommandCenter: ObservableObject {
         if commandID.contains("history") {
             aliases.append(contentsOf: ["history", "ls", "历史", "记录"])
         }
+        if commandID.contains("schedule") {
+            aliases.append(contentsOf: ["计划", "定时", "schedule", "dingshi", "jihua"])
+        }
         if commandID.contains("scan") {
             aliases.append(contentsOf: ["scan", "clean", "扫描", "清理"])
         }

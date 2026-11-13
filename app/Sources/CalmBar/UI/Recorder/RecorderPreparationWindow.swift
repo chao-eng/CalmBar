@@ -72,9 +72,41 @@ struct RecorderWindowInfo: Identifiable, Hashable {
     let id: CGWindowID
     let title: String
     let appName: String
+    let bundleIdentifier: String
 
     var displayName: String {
         title.isEmpty ? appName : "\(appName) · \(title)"
+    }
+}
+
+// MARK: - 窗口列表加载（准备面板与计划编辑器共用）
+
+@MainActor
+enum RecorderShareableContentLoader {
+    static func loadWindows() async throws -> [RecorderWindowInfo] {
+        let content = try await SCShareableContent.excludingDesktopWindows(false,
+                                                                          onScreenWindowsOnly: true)
+        let ownPID = NSRunningApplication.current.processIdentifier
+        let items: [RecorderWindowInfo] = content.windows.compactMap { window in
+            guard window.isOnScreen,
+                  window.frame.width > 80, window.frame.height > 60,
+                  window.owningApplication?.processID != ownPID else { return nil }
+            let title = window.title ?? ""
+            let app = window.owningApplication?.applicationName ?? "未知应用"
+            let bundleIdentifier = window.owningApplication?.bundleIdentifier ?? ""
+            return RecorderWindowInfo(id: window.windowID,
+                                      title: title,
+                                      appName: app,
+                                      bundleIdentifier: bundleIdentifier)
+        }
+        return items.sorted { lhs, rhs in
+            lhs.appName.localizedStandardCompare(rhs.appName) == .orderedAscending
+        }
+    }
+
+    static func displayID(of screen: NSScreen) -> CGDirectDisplayID {
+        let number = screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? NSNumber
+        return number?.uint32Value ?? CGMainDisplayID()
     }
 }
 
@@ -294,20 +326,7 @@ struct RecorderPreparationView: View {
         hint = nil
         defer { isLoadingWindows = false }
         do {
-            let content = try await SCShareableContent.excludingDesktopWindows(false,
-                                                                              onScreenWindowsOnly: true)
-            let ownPID = NSRunningApplication.current.processIdentifier
-            let items: [RecorderWindowInfo] = content.windows.compactMap { window in
-                guard window.isOnScreen,
-                      window.frame.width > 80, window.frame.height > 60,
-                      window.owningApplication?.processID != ownPID else { return nil }
-                let title = window.title ?? ""
-                let app = window.owningApplication?.applicationName ?? "未知应用"
-                return RecorderWindowInfo(id: window.windowID, title: title, appName: app)
-            }
-            windows = items.sorted { lhs, rhs in
-                lhs.appName.localizedStandardCompare(rhs.appName) == .orderedAscending
-            }
+            windows = try await RecorderShareableContentLoader.loadWindows()
             if selectedWindowID == nil {
                 selectedWindowID = windows.first?.id
             }

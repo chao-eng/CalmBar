@@ -41,6 +41,9 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
         // 应用持久化的外观偏好（跟随系统/浅色/深色）
         AppSettings.shared.applyAppearance()
 
+        // 通知 delegate 必须在任何通知投递前安装一次，按 identifier 前缀统一路由
+        AppNotificationRouter.shared.install()
+
         // 启动 Sparkle 自动更新（版本源与公钥由 Info.plist 提供）
         // 调试驱动常以裸二进制运行，Sparkle 无法启动会弹出「无法检查更新」，自动化模式下跳过
         if Updater.canStartUpdater {
@@ -72,6 +75,7 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     /// 通知权限可能在本 App 之外被修改（如跳转系统设置），回前台时复查
     public func applicationDidBecomeActive(_ notification: Notification) {
         Task { await MonitorAlertEngine.shared.refreshAuthorization() }
+        Task { await RecorderScheduleCoordinator.shared.refreshAuthorization() }
     }
 
     public func applicationWillTerminate(_ notification: Notification) {
@@ -83,6 +87,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func cleanup() {
+        // 先标记计划录制被退出打断，再按既有顺序收尾录制；计划侧只在之后读取结果
+        RecorderScheduleCoordinator.shared.prepareForTermination()
         RecoveryCoordinator.shared.performRecovery(reason: .appQuit)
     }
 }

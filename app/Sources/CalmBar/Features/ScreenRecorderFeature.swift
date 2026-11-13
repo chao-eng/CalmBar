@@ -48,6 +48,14 @@ public final class ScreenRecorderFeature: CalmFeature {
                 }
             ),
             FeatureCommand(
+                id: "recorder.schedule",
+                title: "录制计划",
+                subtitle: "管理一次性与每天重复的定时录制",
+                action: {
+                    RecorderScheduleWindowController.shared.show()
+                }
+            ),
+            FeatureCommand(
                 id: "recorder.openFolder",
                 title: "打开录制文件夹",
                 subtitle: "在访达中显示录制保存目录",
@@ -75,10 +83,15 @@ public final class ScreenRecorderFeature: CalmFeature {
         updateState()
 
         AppSettings.shared.$screenRecorderEnabled
+            .dropFirst()
             .receive(on: RunLoop.main)
             .sink { [weak self] enabled in
                 if !enabled {
+                    RecorderScheduleCoordinator.shared.cancelActiveRunForFeatureDisable()
                     self?.recorder.stop()
+                    RecorderScheduleCoordinator.shared.stop()
+                } else {
+                    RecorderScheduleCoordinator.shared.start()
                 }
                 self?.updateState()
             }
@@ -106,14 +119,19 @@ public final class ScreenRecorderFeature: CalmFeature {
 
     public func start() {
         updateState()
+        if AppSettings.shared.screenRecorderEnabled {
+            RecorderScheduleCoordinator.shared.start()
+        }
     }
 
     public func stop() {
+        RecorderScheduleCoordinator.shared.stop()
         recorder.stop()
         updateState()
     }
 
     public func cleanup() {
+        RecorderScheduleCoordinator.shared.stop()
         recorder.stop()
     }
 }

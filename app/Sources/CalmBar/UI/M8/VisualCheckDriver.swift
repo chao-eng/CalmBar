@@ -37,6 +37,23 @@ final class VisualCheckDriver {
         settings.systemMonitorEnabled = true
         settings.audioHubEnabled = false
 
+        // 计划状态 chip 验证：临时创建一条不影响真实配置的计划，截图后删除
+        var visualScheduleID: UUID?
+        let demoStart = Calendar.current.date(bySettingHour: 4, minute: 0, second: 0,
+                                              of: Date().addingTimeInterval(86_400)) ?? Date().addingTimeInterval(86_400)
+        let demoSchedule = RecorderSchedule(
+            name: "视觉回归计划",
+            repeatRule: .once(start: demoStart, end: demoStart.addingTimeInterval(30 * 60)),
+            source: .display(displayID: CGMainDisplayID()),
+            profile: RecorderCaptureProfile()
+        )
+        if RecorderScheduleCoordinator.shared.save(demoSchedule) == nil {
+            visualScheduleID = demoSchedule.id
+            M1Trace.log("visual schedule demo summary=\(RecorderScheduleCoordinator.shared.nextScheduleSummary ?? "nil")")
+        } else {
+            M1Trace.log("visual schedule demo skipped due to conflict")
+        }
+
         try? await Task.sleep(for: .milliseconds(800))
         manager.showPopover()
         try? await Task.sleep(for: .milliseconds(600))
@@ -95,6 +112,16 @@ final class VisualCheckDriver {
             _ = M1Trace.capture(prep, to: "/tmp/calmbar_visual/light_recorder_prep.png")
         }
         RecorderPreparationWindowController.shared.cancelAndClose()
+
+        // 录制计划窗口：列表、编辑器与参数布局
+        RecorderScheduleWindowController.shared.show()
+        try? await Task.sleep(for: .milliseconds(800))
+        if let scheduleWindow = NSApp.windows.first(where: { $0.title == "录制计划" }) {
+            _ = M1Trace.capture(scheduleWindow, to: "/tmp/calmbar_visual/light_recorder_schedule.png")
+            scheduleWindow.orderOut(nil)
+        } else {
+            M1Trace.log("visual recorder schedule window not found")
+        }
 
         // 设置窗口：默认页 + 新增音频/录制页，浅深各截一张
         NSApp.appearance = NSAppearance(named: .aqua)
@@ -164,6 +191,9 @@ final class VisualCheckDriver {
         if injectDemoData {
             settings.aiGatewayChannels = savedChannels
             settings.aiGatewayModels = savedModels
+        }
+        if let visualScheduleID {
+            _ = RecorderScheduleCoordinator.shared.delete(id: visualScheduleID)
         }
 
         M1Trace.log("visual summary tabs=\(tabs.map(\.rawValue).joined(separator: ",")) done")

@@ -64,7 +64,7 @@ enum ToolGridItem: String, CaseIterable, Identifiable, Sendable {
         case .cleaner: "软件残留 · 开发缓存 · 孤立工作区清理"
         case .gatekeeper: "修复未签名或损坏应用提示"
         case .launchManager: "管理后台自启项、常驻守护服务与监听端口"
-        case .recorder: "录制屏幕与系统声音 (⌥⌘R 快速开始/停止，右键打开录制目录)"
+        case .recorder: "录制屏幕与系统声音 (⌥⌘R 快速开始/停止，右键打开录制目录或录制计划)"
         case .lanShare: "在同一 Wi-Fi 下与手机、平板互传文件与文本"
         }
     }
@@ -160,6 +160,9 @@ struct ToolGridSectionView: View {
         case .recorder:
             Button("打开录制文件夹") {
                 onContextAction?(tool, "recorderFolder")
+            }
+            Button("录制计划") {
+                onContextAction?(tool, "recorderSchedule")
             }
             Button("打开录制设置") {
                 onContextAction?(tool, "recorderSettings")

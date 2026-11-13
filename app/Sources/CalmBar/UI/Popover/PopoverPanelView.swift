@@ -10,6 +10,7 @@ struct PopoverPanelView: View {
     @ObservedObject private var dashboard = DashboardViewModel.shared
     @ObservedObject private var thermal = ThermalMonitor.shared
     @ObservedObject private var helper = HelperClient.shared
+    @ObservedObject private var scheduleCoordinator = RecorderScheduleCoordinator.shared
 
     var openSettingsAction: (SettingsTab) -> Void
     var closePanel: () -> Void
@@ -173,6 +174,14 @@ struct PopoverPanelView: View {
 
             switch route.tab {
             case .tools:
+                if let summary = scheduleCoordinator.nextScheduleSummary {
+                    Text(summary)
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundStyle(.secondary)
+                        .lineLimit(1)
+                        .fixedSize()
+                        .accessibilityLabel("录制计划状态：\(summary)")
+                }
                 titleAction("自定义") {
                     openSettingsAction(.general)
                 }
@@ -303,6 +312,8 @@ struct PopoverPanelView: View {
             LaunchManagerWindowController.shared.show(initialTab: .services)
         case "recorderFolder":
             ScreenRecorderService.shared.openRecordingsFolder()
+        case "recorderSchedule":
+            RecorderScheduleWindowController.shared.show()
         case "recorderSettings":
             openSettingsAction(.recorder)
         default:

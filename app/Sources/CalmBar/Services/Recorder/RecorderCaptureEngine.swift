@@ -289,6 +289,7 @@ final class RecorderCaptureEngine: NSObject, SCStreamOutput, SCStreamDelegate,
     private let partialURL: URL
     private let finalURL: URL
     private let codec: RecorderCodec
+    private let quality: RecorderQuality
     private var writer: RecorderSessionWriter?
     private var microphoneSession: AVCaptureSession?
     private var targetClock: CMClock?
@@ -297,10 +298,11 @@ final class RecorderCaptureEngine: NSObject, SCStreamOutput, SCStreamDelegate,
 
     var onFailure: (@Sendable (RecorderCaptureFailure) -> Void)?
 
-    init(partialURL: URL, finalURL: URL, codec: RecorderCodec) {
+    init(partialURL: URL, finalURL: URL, codec: RecorderCodec, quality: RecorderQuality) {
         self.partialURL = partialURL
         self.finalURL = finalURL
         self.codec = codec
+        self.quality = quality
         super.init()
     }
 
@@ -352,7 +354,6 @@ final class RecorderCaptureEngine: NSObject, SCStreamOutput, SCStreamDelegate,
 
         let configuration = SCStreamConfiguration()
         let shortEdge = min(pixelSize.width, pixelSize.height)
-        let quality = await AppSettings.shared.recorderQuality
         let scale = shortEdge > 0 ? min(1, quality.shortEdge / shortEdge) : 1
         let width = Self.even(max(2, Int((pixelSize.width * scale).rounded())))
         let height = Self.even(max(2, Int((pixelSize.height * scale).rounded())))
