@@ -1,7 +1,15 @@
+import { SITE } from '@/lib/site'
+
+export interface FaqLink {
+  label: string
+  href: string
+}
+
 export interface FaqItem {
   id: string
   question: string
   answer: string
+  links?: FaqLink[]
 }
 
 export const FAQ_ITEMS: FaqItem[] = [
@@ -51,6 +59,9 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: 'translation-server',
     question: 'AI 划词翻译的服务端怎么配置？',
     answer:
-      '翻译走纯 HTTP 的 OpenAI 兼容协议，端点由你自己填写。macOS 可用 MLX 硬件加速部署 Hy-MT2-1.8B（显存按需加载、空闲释放），其他系统可用 Docker 运行 llama-server 的 GGUF 量化模型。在「智能翻译」中填入 API 地址（本地为 http://127.0.0.1:8000/v1）并测试连接即可。',
+      '翻译走纯 HTTP 的 OpenAI 兼容协议，端点由你自己填写。macOS 可用 MLX 硬件加速部署 Hy-MT2-1.8B（显存按需加载、空闲释放），也可以用一键部署 Skill 直接装好；其他系统可用 Docker 运行 llama-server 的 GGUF 量化模型。在「智能翻译」中填入 API 地址（本地为 http://127.0.0.1:8000/v1）并测试连接即可。',
+    links: [
+      { label: 'macOS M 芯片一键部署 Skill（WorkBuddy）', href: SITE.translationSkill },
+    ],
   },
 ]

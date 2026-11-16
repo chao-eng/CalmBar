@@ -75,6 +75,7 @@
 翻译服务可以本地跑，也可以放在 NAS 或 Docker 里。
 
 - [macOS MLX 硬件加速部署（M1~M4）](doc/guide/HyMT2部署/MacOs%20MLX加速部署.md)
+- [macOS M 芯片一键部署 Skill](https://www.workbuddy.cn/share/asset?shareCode=8wtnv3dJoZNiwKeKsq938Y&sig=Z5OOkod-aNdJY35U)（WorkBuddy 技能，自动装好运行时、依赖与约 1.0GB 权重，输出 OpenAI 兼容服务，无需克隆仓库）
 - [Linux / Docker / NAS / Windows 跨平台部署](doc/guide/HyMT2部署/其他系统部署.md)
 
 ---

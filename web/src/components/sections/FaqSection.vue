@@ -54,6 +54,18 @@ function toSegments(answer: string): Segment[] {
               >
                 {{ segment.text }}
               </p>
+              <p v-if="item.links?.length" class="mt-3 flex flex-wrap gap-x-4 gap-y-1">
+                <a
+                  v-for="link in item.links"
+                  :key="link.href"
+                  :href="link.href"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="link-brand text-sm"
+                >
+                  {{ link.label }}
+                </a>
+              </p>
             </AccordionContent>
           </AccordionItem>
         </Accordion>

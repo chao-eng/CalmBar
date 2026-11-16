@@ -64,6 +64,8 @@ export const SITE = {
   issues: 'https://github.com/chao-eng/CalmBar/issues',
   licenseUrl: 'https://github.com/chao-eng/CalmBar/blob/main/LICENSE',
   downloadURL: 'https://downloads.bujic.cc/calmbar/CalmBar-2.7.3.dmg',
+  translationSkill:
+    'https://www.workbuddy.cn/share/asset?shareCode=8wtnv3dJoZNiwKeKsq938Y&sig=Z5OOkod-aNdJY35U',
 } as const
 
 export const NAV_ITEMS: NavItem[] = [
