@@ -15,6 +15,8 @@
 | 通用 App | `app/build_app.sh` | arm64 + x86_64 编译、`lipo` 合并、内嵌 Sparkle、ad-hoc 签名 |
 | DMG | `app/scripts/make-dmg.sh` | 生成含 Applications 快捷方式的 UDZO DMG |
 | 一键发版 | `app/scripts/release.sh` | 版本递增、构建、DMG、EdDSA 签名、写入 appcast |
+| 安装包镜像 | R2 存储桶 `bujic-echo` 的 `calmbar/` 目录 | 国内直链 `https://downloads.bujic.cc/calmbar/CalmBar-X.Y.Z.dmg`，与 Release 是同一份 DMG |
+| 镜像凭证 | `~/.config/cloudflare/config.env` | 权限 `600`，`CLOUDFLARE_R2_*`；仓库内不得出现任何 R2 凭证 |
 
 **硬性规则**
 
@@ -119,7 +121,8 @@ cd app
 1. 执行 `release.sh`，本地生成 DMG 与 appcast。
 2. 提交版本号、发版说明与脚本改动，**暂时不提交 appcast**，推送 `main`。
 3. 创建 tag 与 GitHub Release，上传 DMG。
-4. 提交 `appcast.xml` 并推送 `main`。
+4. 用 `cloudflare-r2-s3` skill 把**同一份 DMG** 上传到 R2 的 `bujic-echo/calmbar/`（见第 5 节）。
+5. 提交 `appcast.xml` 并推送 `main`。
 
 ```bash
 # 2. 提交除 appcast 外的发版改动
@@ -133,7 +136,12 @@ git push origin vX.Y.Z
 gh release create vX.Y.Z app/build/CalmBar-X.Y.Z.dmg \
   --verify-tag --title "CalmBar X.Y.Z" --notes "发版说明"
 
-# 4. appcast 最后上线
+# 4. R2 镜像（详见第 5 节）
+R2_UPLOAD="$HOME/.agents/skills/cloudflare-r2-s3-1.0.0/scripts/r2_uploader.py"
+uv run --no-project --with boto3 --with python-dotenv python "$R2_UPLOAD" \
+  upload app/build/CalmBar-X.Y.Z.dmg calmbar/CalmBar-X.Y.Z.dmg
+
+# 5. appcast 最后上线
 git add appcast.xml
 git commit -m "release: vX.Y.Z appcast"
 git push origin main
@@ -170,7 +178,50 @@ EOF
 
 ---
 
-## 5. 验证清单
+## 5. R2 镜像分发（国内直链）
+
+GitHub Release 仍是 Sparkle 的更新源，**保持不变**；R2 只存放**同一份 DMG** 作为国内直链镜像，供官网与 README 的下载按钮使用。
+
+| 项目 | 值 |
+| :--- | :--- |
+| 存储桶 | `bujic-echo` |
+| 目录前缀 | `calmbar/` |
+| 公网直链 | `https://downloads.bujic.cc/calmbar/CalmBar-X.Y.Z.dmg` |
+| 凭证文件 | `~/.config/cloudflare/config.env`（`CLOUDFLARE_R2_*`，权限 `600`） |
+| 上传方式 | `cloudflare-r2-s3` skill（`scripts/r2_uploader.py`） |
+
+### 5.1 时机
+
+**Git 提交、tag 与 GitHub Release 完成之后**执行，并且要在推送 `appcast.xml` 之前完成——这样官网/README 引用的直链不会出现 404 窗口。
+
+```bash
+# 1) 确认 GitHub Release 资产已就位
+gh release view vX.Y.Z --json assets --jq '.assets[].name'
+
+# 2) 上传同一份 DMG（签名只对这份字节有效，禁止重新打包）
+R2_UPLOAD="$HOME/.agents/skills/cloudflare-r2-s3-1.0.0/scripts/r2_uploader.py"
+uv run --no-project --with boto3 --with python-dotenv python "$R2_UPLOAD" \
+    upload app/build/CalmBar-X.Y.Z.dmg calmbar/CalmBar-X.Y.Z.dmg
+
+# 3) 校验直链与字节数
+curl -sIL https://downloads.bujic.cc/calmbar/CalmBar-X.Y.Z.dmg | grep -iE "HTTP/|content-length"
+stat -f%z app/build/CalmBar-X.Y.Z.dmg
+```
+
+`R2_UPLOAD` 指向本机 skill 目录，路径不同时改成 `cloudflare-r2-s3` skill 里 `scripts/r2_uploader.py` 的实际位置。依赖不装进系统 Python，统一用 `uv run --with` 临时拉起。
+
+### 5.2 约定
+
+- 对象名统一写 `calmbar/CalmBar-X.Y.Z.dmg`；桶根目录不放安装包。
+- 上传的必须是**已签名、且已传给 `gh release create` 的那一份** DMG。重新构建或重新打包会改变字节，`edSignature` 与 `length` 立刻失效。
+- 只新增本次文件，不删历史版本：旧直链会被用户收藏、被论坛与官网缓存引用。
+- `appcast.xml` 的 `enclosure url` 继续指向 GitHub Releases，**不要**改成 R2 直链；R2 不参与自动更新，只做下载镜像。
+- `bujic-echo` 是共享桶（其他项目如 `apk/` 也在里面），只操作 `calmbar/` 前缀，不要 `list` 后整桶清理。
+- 仓库与提交记录里不得出现 Access Key、Secret Key 或 `config.env` 内容。
+
+---
+
+## 6. 验证清单
 
 | 检查项 | 命令 | 预期 |
 | :--- | :--- | :--- |
@@ -184,13 +235,15 @@ EOF
 | App 可启动 | 启动构建产物观察日志 | 无 Sparkle / 崩溃报错 |
 | Release 资产 | `gh release view vX.Y.Z --json assets` | 包含 DMG 且大小正确 |
 | 资产可下载 | `curl -sIL <DMG URL>` | HTTP 200 |
+| R2 镜像直链 | `curl -sIL https://downloads.bujic.cc/calmbar/CalmBar-X.Y.Z.dmg` | HTTP 200，`content-length` 与本地 DMG 一致 |
+| R2 对象路径 | `r2_uploader.py list` | 输出含 `calmbar/CalmBar-X.Y.Z.dmg`，其他前缀未被改动 |
 | 远端 appcast | `gh api repos/chao-eng/CalmBar/contents/appcast.xml --jq .content \| base64 -d` | 含新版本 `<item>` |
 
 > `raw.githubusercontent.com` 有 CDN 缓存，刚推送后直接 `curl` 可能仍返回旧内容；以 GitHub API 读取结果为准，Sparkle 稍后会自动拿到新版本。
 
 ---
 
-## 6. 常见坑
+## 7. 常见坑
 
 1. **沙箱限制**：`hdiutil` 访问 `/dev/rdisk*`、`sign_update` 读钥匙串、`swift build --disable-sandbox` 需要在外层终端执行。
 2. **Sparkle 下载进程读不到 App 配置**：代理必须通过 App 内的 `127.0.0.1` 回环转发服务生效，不能只设置 `URLSession` 代理。
@@ -202,10 +255,12 @@ EOF
 8. **先 Release 后 appcast**：否则更新源指向不存在的安装包。
 9. **ad-hoc 签名 = 首次安装需清隔离**：README 与 GitHub Release 都要写清 `xattr` 命令。
 10. **App 未放入 `/Applications`**：自动更新仍可能工作，但建议统一安装到应用程序目录，减少权限与替换问题。
+11. **R2 镜像传了重新打包的 DMG**：镜像必须与 GitHub Release 资产字节完全一致（可用 `shasum -a 256` 比对），否则下载到的包与 `edSignature` 不匹配，签名校验失败。
+12. **把 appcast 的 `enclosure url` 改成 R2 直链**：自动更新会跟着镜像域名走，代理、缓存与配额都受影响；R2 只承担手动下载，更新源固定 GitHub。
 
 ---
 
-## 7. 发版最短路径
+## 8. 发版最短路径
 
 ```bash
 # 1. 更新 doc/release/RELEASE.md 的概览表与版本章节
@@ -230,7 +285,13 @@ git push origin vX.Y.Z
 gh release create vX.Y.Z app/build/CalmBar-X.Y.Z.dmg --verify-tag \
   --title "CalmBar X.Y.Z" --notes "发版说明"
 
-# 6. appcast 最后上线
+# 6. R2 镜像：同一份 DMG → bujic-echo/calmbar/
+R2_UPLOAD="$HOME/.agents/skills/cloudflare-r2-s3-1.0.0/scripts/r2_uploader.py"
+uv run --no-project --with boto3 --with python-dotenv python "$R2_UPLOAD" \
+  upload app/build/CalmBar-X.Y.Z.dmg calmbar/CalmBar-X.Y.Z.dmg
+curl -sIL https://downloads.bujic.cc/calmbar/CalmBar-X.Y.Z.dmg | grep -iE "HTTP/|content-length"
+
+# 7. appcast 最后上线
 git add appcast.xml
 git commit -m "release: vX.Y.Z appcast"
 git push origin main
