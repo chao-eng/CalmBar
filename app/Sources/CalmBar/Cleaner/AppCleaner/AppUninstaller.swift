@@ -119,10 +119,10 @@ public final class AppUninstaller: @unchecked Sendable {
         // Check again
         guard fileManager.fileExists(atPath: url.path) else { return true }
 
-        // Tier 3: Shell mv to ~/.Trash
+        // Tier 3: Shell mv to ~/.Trash（-n 防止覆盖废纸篓里已有的同名文件）
         let mvProcess = Process()
         mvProcess.executableURL = URL(fileURLWithPath: "/bin/mv")
-        mvProcess.arguments = [url.path, destinationURL.path]
+        mvProcess.arguments = ["-n", url.path, destinationURL.path]
         if let _ = try? mvProcess.run() {
             mvProcess.waitUntilExit()
             if !fileManager.fileExists(atPath: url.path) {
@@ -130,12 +130,8 @@ public final class AppUninstaller: @unchecked Sendable {
             }
         }
 
-        // Tier 4: Direct removeItem
-        do {
-            try fileManager.removeItem(at: url)
-            return !fileManager.fileExists(atPath: url.path)
-        } catch {
-            return !fileManager.fileExists(atPath: url.path)
-        }
+        // 不再自动降级到 removeItem：移入废纸篓失败时保留文件并上报失败，
+        // 由用户显式处理，避免卸载流程永久删除数据。
+        return false
     }
 }

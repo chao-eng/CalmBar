@@ -70,6 +70,14 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 色彩令牌视觉验收（临时，真实面板路径）
         VisualCheckDriver.shared.startIfRequested()
+
+        // 旧 Helper 没有客户端签名校验；首次升级后主动提示更新，自动化验收时跳过。
+        if !args.contains("--visual"), !args.contains("--m8") {
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+                HelperClient.shared.promptForSecurityUpdateIfNeeded()
+            }
+        }
     }
 
     /// 通知权限可能在本 App 之外被修改（如跳转系统设置），回前台时复查
@@ -87,6 +95,8 @@ public final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func cleanup() {
+        // 防抖中的密钥写入在退出前立即落盘
+        AppSettings.shared.flushPendingSecretWrites()
         // 先标记计划录制被退出打断，再按既有顺序收尾录制；计划侧只在之后读取结果
         RecorderScheduleCoordinator.shared.prepareForTermination()
         RecoveryCoordinator.shared.performRecovery(reason: .appQuit)

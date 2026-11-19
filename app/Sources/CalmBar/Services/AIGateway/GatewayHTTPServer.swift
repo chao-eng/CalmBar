@@ -148,14 +148,20 @@ public struct GatewayHTTPRequestParser {
         let consumed: Int
 
         if let transferEncoding, transferEncoding.contains("chunked") {
-            guard let decoded = Self.decodeChunked(buffer, bodyStart: headerEnd.bodyStart) else {
+            switch Self.decodeChunked(buffer,
+                                      bodyStart: headerEnd.bodyStart,
+                                      maxBodyBytes: maxBodyBytes) {
+            case .incomplete:
                 if buffer.count > maxBodyBytes + maxHeaderBytes {
                     return .failure(status: 413, message: "请求体超过 20MB 限制")
                 }
                 return .needMore
+            case .tooLarge:
+                return .failure(status: 413, message: "请求体超过 20MB 限制")
+            case .complete(let decodedBody, let decodedConsumed):
+                body = decodedBody
+                consumed = headerEnd.bodyStart + decodedConsumed
             }
-            body = decoded.body
-            consumed = headerEnd.bodyStart + decoded.consumed
         } else if let contentLength {
             guard contentLength <= maxBodyBytes else {
                 return .failure(status: 413, message: "请求体超过 20MB 限制")
@@ -198,33 +204,47 @@ public struct GatewayHTTPRequestParser {
         return nil
     }
 
-    private static func decodeChunked(_ data: Data, bodyStart: Int) -> (body: Data, consumed: Int)? {
+    private enum ChunkedBodyResult {
+        case incomplete
+        case tooLarge
+        case complete(body: Data, consumed: Int)
+    }
+
+    private static func decodeChunked(_ data: Data,
+                                      bodyStart: Int,
+                                      maxBodyBytes: Int) -> ChunkedBodyResult {
         var cursor = bodyStart
         var body = Data()
+        var totalBytes = 0
 
         while true {
-            guard let lineEnd = findCRLF(data, from: cursor) else { return nil }
+            guard let lineEnd = findCRLF(data, from: cursor) else { return .incomplete }
             let sizeLine = String(decoding: data[cursor..<lineEnd], as: UTF8.self)
             let sizeText = sizeLine.split(separator: ";", maxSplits: 1).first.map(String.init) ?? sizeLine
             guard let size = Int(sizeText.trimmingCharacters(in: .whitespaces), radix: 16), size >= 0 else {
-                return nil
+                return .incomplete
             }
             let afterLine = lineEnd + 2
             if size == 0 {
                 // 0\r\n 之后是可选 trailer，以空行结束
                 if afterLine + 1 < data.count, data[afterLine] == 0x0D, data[afterLine + 1] == 0x0A {
-                    return (body, afterLine + 2 - bodyStart)
+                    return .complete(body: body, consumed: afterLine + 2 - bodyStart)
                 }
                 if let trailerEnd = data.range(of: Data("\r\n\r\n".utf8), in: afterLine..<data.count) {
-                    return (body, trailerEnd.upperBound - bodyStart)
+                    return .complete(body: body, consumed: trailerEnd.upperBound - bodyStart)
                 }
-                return nil
+                return .incomplete
             }
-            guard size <= 20 * 1024 * 1024 else { return nil }
-            guard data.count >= afterLine + size + 2 else { return nil }
+            // 单个 chunk 与累计 body 都必须受限，否则本地客户端可用大量
+            // 19MB chunk 把整个请求体堆进内存。
+            guard size <= maxBodyBytes, totalBytes + size <= maxBodyBytes else {
+                return .tooLarge
+            }
+            guard data.count >= afterLine + size + 2 else { return .incomplete }
             body.append(data.subdata(in: afterLine..<(afterLine + size)))
+            totalBytes += size
             let terminator = afterLine + size
-            guard data[terminator] == 0x0D, data[terminator + 1] == 0x0A else { return nil }
+            guard data[terminator] == 0x0D, data[terminator + 1] == 0x0A else { return .incomplete }
             cursor = terminator + 2
         }
     }

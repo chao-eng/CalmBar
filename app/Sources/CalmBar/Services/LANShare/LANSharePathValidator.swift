@@ -103,7 +103,6 @@ public enum LANSharePathValidator {
     public static func open(root: String, relativePath: String, allowDirectory: Bool = true) throws -> LANShareOpenedFile {
         try validateRelativePath(relativePath)
         let rootHandle = try openRootDirectory(root)
-        var currentFD = rootHandle.fd
 
         let components = relativePath.split(separator: "/").map(String.init)
         guard !components.isEmpty else {
@@ -113,20 +112,34 @@ public enum LANSharePathValidator {
             }
             return rootHandle
         }
+        // 非空相对路径最终返回的是最内层 fd；根目录 fd 必须在所有退出路径关闭，
+        // 否则每次列表/下载都会泄漏一个目录描述符。
+        defer { rootHandle.close() }
 
+        var currentFD: Int32?
         for (index, component) in components.enumerated() {
             let isLast = index == components.count - 1
             // 最后一层在下载单个文件时必须是普通文件，不能带 O_DIRECTORY。
             let flags = isLast && !allowDirectory
                 ? O_RDONLY | O_CLOEXEC | O_NOFOLLOW
                 : O_RDONLY | O_DIRECTORY | O_CLOEXEC | O_NOFOLLOW
-            let nextFD = openat(currentFD, component, flags)
-            if currentFD != rootHandle.fd { _ = Darwin.close(currentFD) }
+            let parentFD: Int32
+            if index == 0 {
+                parentFD = rootHandle.fd
+            } else if let currentFD {
+                parentFD = currentFD
+            } else {
+                throw LANShareError.itemNotFound
+            }
+            let nextFD = openat(parentFD, component, flags)
+            if index > 0 { _ = Darwin.close(parentFD) }
             guard nextFD >= 0 else {
-                if index == 0 && currentFD == rootHandle.fd { rootHandle.close() }
                 throw LANShareError.itemNotFound
             }
             currentFD = nextFD
+        }
+        guard let currentFD else {
+            throw LANShareError.itemNotFound
         }
 
         var statInfo = stat()

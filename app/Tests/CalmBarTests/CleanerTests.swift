@@ -13,6 +13,65 @@ struct CleanerTests {
         #expect(finder.normalize("Bartender 5.0.2") == "bartender502")
     }
 
+    @Test("关联文件匹配只对 bundle id / 精确名称默认勾选")
+    func testAssociatedNameMatchConfidence() {
+        let bundleMatch = AssociatedPathsFinder.matchName(
+            itemLower: "com.spotify.client",
+            normalizedItem: "comspotifyclient",
+            bundleId: "com.spotify.client",
+            normalizedBundleId: "comspotifyclient",
+            normalizedLastTwo: "spotifyclient",
+            normalizedAppName: "spotify",
+            normalizedStrippedName: "spotify",
+            normalizedPathName: "spotify",
+            sensitivity: .balanced
+        )
+        #expect(bundleMatch.matches)
+        #expect(bundleMatch.isConfident)
+
+        let exactName = AssociatedPathsFinder.matchName(
+            itemLower: "spotify",
+            normalizedItem: "spotify",
+            bundleId: "com.spotify.client",
+            normalizedBundleId: "comspotifyclient",
+            normalizedLastTwo: "spotifyclient",
+            normalizedAppName: "spotify",
+            normalizedStrippedName: "spotify",
+            normalizedPathName: "spotify",
+            sensitivity: .balanced
+        )
+        #expect(exactName.matches)
+        #expect(exactName.isConfident)
+
+        // 宽泛前缀命中只在深度模式出现，且不默认勾选
+        let broad = AssociatedPathsFinder.matchName(
+            itemLower: "spotifyhelper",
+            normalizedItem: "spotifyhelper",
+            bundleId: "com.spotify.client",
+            normalizedBundleId: "comspotifyclient",
+            normalizedLastTwo: "spotifyclient",
+            normalizedAppName: "spotify",
+            normalizedStrippedName: "spotify",
+            normalizedPathName: "spotify",
+            sensitivity: .balanced
+        )
+        #expect(!broad.matches)
+
+        let deep = AssociatedPathsFinder.matchName(
+            itemLower: "spotifyhelper",
+            normalizedItem: "spotifyhelper",
+            bundleId: "com.spotify.client",
+            normalizedBundleId: "comspotifyclient",
+            normalizedLastTwo: "spotifyclient",
+            normalizedAppName: "spotify",
+            normalizedStrippedName: "spotify",
+            normalizedPathName: "spotify",
+            sensitivity: .deep
+        )
+        #expect(deep.matches)
+        #expect(!deep.isConfident)
+    }
+
     @Test("Test strip trailing digits from app name")
     func testStripTrailingDigits() {
         let finder = AssociatedPathsFinder.shared

@@ -350,6 +350,8 @@ public enum LANShareLimits {
     public static let maxJSONBytes = 1024 * 1024
     public static let maxFileBytes: Int64 = 20 * 1024 * 1024 * 1024
     public static let maxRequestBodyBytes: Int64 = maxFileBytes + 8 * 1024 * 1024
+    /// 所有进行中的上传合计占用的临时空间上限，避免多连接并发写满磁盘。
+    public static let maxConcurrentUploadBytes: Int64 = 40 * 1024 * 1024 * 1024
     public static let maxMultipartParts = 8
     public static let maxPartHeaderBytes = 8 * 1024
     public static let maxBoundaryLength = 70

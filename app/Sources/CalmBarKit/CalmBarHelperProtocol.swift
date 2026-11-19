@@ -4,7 +4,11 @@ public enum CalmBarConfig {
     public static let appBundleID = "com.chaoeng.CalmBar"
     public static let helperMachService = "com.chaoeng.CalmBar.helper"
     public static let helperLabel = "com.chaoeng.CalmBar.helper"
-    public static let helperVersion = 5
+    public static let helperVersion = 6
+    public static let helperConfigDirectory = "/Library/Application Support/CalmBar/Helper"
+    public static let helperClientRequirementPath = "\(helperConfigDirectory)/client-requirement"
+    public static let helperClientPathFile = "\(helperConfigDirectory)/client-path"
+    public static let helperHeartbeatPath = "\(helperConfigDirectory)/heartbeat"
 }
 
 @objc public protocol CalmBarHelperProtocol: NSObjectProtocol {

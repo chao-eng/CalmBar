@@ -413,12 +413,11 @@ public final class ScreenRecorderService: ObservableObject {
         self.engine = nil
         let duration = elapsed
         let createdAt = sessionCreatedAt ?? Date()
-        let finalURL = activeFinalURL
 
         Task { @MainActor [weak self] in
             guard let self else { return }
             let finishedURL = await engine.finish()
-            if let finishedURL, let finalURL, FileManager.default.fileExists(atPath: finalURL.path) {
+            if let finishedURL, FileManager.default.fileExists(atPath: finishedURL.path) {
                 let recording = self.registerRecording(at: finishedURL, duration: duration, createdAt: createdAt)
                 self.state = .done
                 self.lastError = nil
@@ -614,13 +613,14 @@ public final class ScreenRecorderService: ObservableObject {
                 self.lastError = "该临时文件不可恢复，可移入废纸篓"
                 return
             }
-            let finalURL = URL(fileURLWithPath: url.path.replacingOccurrences(of: ".partial.mp4",
-                                                                             with: ".mp4"))
+            let preferredURL = URL(fileURLWithPath: url.path.replacingOccurrences(of: ".partial.mp4",
+                                                                                 with: ".mp4"))
             do {
-                if FileManager.default.fileExists(atPath: finalURL.path) {
-                    try FileManager.default.removeItem(at: finalURL)
-                }
-                try FileManager.default.moveItem(at: url, to: finalURL)
+                // 不覆盖已有成片：同名时自动改用 “名称 (1).mp4”。
+                let finalURL = try RecorderFileUtilities.moveToUniqueDestination(
+                    from: url,
+                    preferred: preferredURL
+                )
                 self.registerRecording(at: finalURL, duration: duration,
                                        createdAt: (try? FileManager.default.attributesOfItem(
                                         atPath: finalURL.path)[.creationDate] as? Date) ?? Date())

@@ -218,15 +218,15 @@ final class RecorderSessionWriter: @unchecked Sendable {
     }
 
     /// 停止后在采集队列上调用：收尾文件并原子改名为正式文件名。
-    func finish(hostEnd: CMTime) async -> Bool {
+    func finish(hostEnd: CMTime) async -> URL? {
         guard started else {
             cancel()
-            return false
+            return nil
         }
         // 写入过程中已失败时不再追加数据，但保留已周期性落盘的 .partial 供恢复流程使用
         guard !failed, frameCount > 0 else {
             abandonWriting()
-            return false
+            return nil
         }
         let end = mappedTime(hostEnd) ?? lastVideoTime
         if let lastVideoSample, end > lastVideoTime, videoInput.isReadyForMoreMediaData,
@@ -247,16 +247,15 @@ final class RecorderSessionWriter: @unchecked Sendable {
         }
         guard completed else {
             // 收尾失败同样保留 partialURL，避免把用户已录内容直接删掉
-            return false
+            return nil
         }
         do {
-            if FileManager.default.fileExists(atPath: finalURL.path) {
-                try FileManager.default.removeItem(at: finalURL)
-            }
-            try FileManager.default.moveItem(at: partialURL, to: finalURL)
-            return true
+            return try RecorderFileUtilities.moveToUniqueDestination(
+                from: partialURL,
+                preferred: finalURL
+            )
         } catch {
-            return false
+            return nil
         }
     }
 
@@ -443,8 +442,8 @@ final class RecorderCaptureEngine: NSObject, SCStreamOutput, SCStreamDelegate,
         queue.sync {}
         let hostEnd = CMClockGetTime(CMClockGetHostTimeClock())
         let activeWriter = queue.sync { writer }
-        guard let activeWriter, await activeWriter.finish(hostEnd: hostEnd) else { return nil }
-        return activeWriter.finalURL
+        guard let activeWriter else { return nil }
+        return await activeWriter.finish(hostEnd: hostEnd)
     }
 
     func cancel() {

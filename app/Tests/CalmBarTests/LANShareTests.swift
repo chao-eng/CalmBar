@@ -1,3 +1,4 @@
+import Darwin
 import Foundation
 import Testing
 @testable import CalmBar
@@ -272,6 +273,35 @@ struct LANSharePathValidatorTests {
         #expect(directoryHandle.isDirectory)
         directoryHandle.close()
     }
+
+    @Test("重复打开文件不会泄漏根目录 fd")
+    func doesNotLeakRootFileDescriptor() throws {
+        let root = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LANShareFD-\(UUID().uuidString)", isDirectory: true)
+        try FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
+        defer { try? FileManager.default.removeItem(at: root) }
+        try Data("hello".utf8).write(to: root.appendingPathComponent("note.txt"))
+
+        func openFileDescriptorCount() -> Int {
+            (0..<4096).reduce(into: 0) { count, fd in
+                if fcntl(Int32(fd), F_GETFD) != -1 { count += 1 }
+            }
+        }
+
+        let before = openFileDescriptorCount()
+        for _ in 0..<200 {
+            let handle = try LANSharePathValidator.open(
+                root: root.path,
+                relativePath: "note.txt",
+                allowDirectory: false
+            )
+            handle.close()
+        }
+        let after = openFileDescriptorCount()
+
+        // 泄漏时 200 次调用会稳定增加 200 个 fd；阈值留给并行测试的正常抖动。
+        #expect(after - before < 100, "根目录 fd 泄漏：\(after - before)")
+    }
 }
 
 // MARK: - 文本条目命名
@@ -373,6 +403,48 @@ struct LANShareNetworkInterfaceTests {
 
 // MARK: - 会话与认证
 
+@Suite("LANShare Passcode Store", .serialized)
+struct LANSharePasscodeStoreTests {
+    @Test("口令在重新创建设置存储后仍可校验")
+    func passcodePersistsAcrossInstances() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LANSharePasscode-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let first = LANSharePasscodeStore(stateDirectory: directory)
+        let passcode = try first.setPasscode(nil)
+
+        let verifierURL = directory.appendingPathComponent("passcode.json")
+        let attributes = try FileManager.default.attributesOfItem(atPath: verifierURL.path)
+        let permissions = (attributes[.posixPermissions] as? NSNumber)?.intValue
+        #expect(permissions == 0o600)
+
+        let second = LANSharePasscodeStore(stateDirectory: directory)
+        #expect(second.hasPasscode)
+        #expect(second.verify(passcode))
+
+        second.clear()
+        #expect(!second.hasPasscode)
+    }
+
+    @Test("verifier 存在但密钥缺失时不会静默生成新密钥")
+    func missingKeyDoesNotRotateSilently() throws {
+        let directory = FileManager.default.temporaryDirectory
+            .appendingPathComponent("LANSharePasscode-\(UUID().uuidString)", isDirectory: true)
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let first = LANSharePasscodeStore(stateDirectory: directory)
+        let passcode = try first.setPasscode(nil)
+
+        AppSecretStore.shared.set("", for: AppSecretStore.lanSharePasscodeKeyAccount)
+
+        let second = LANSharePasscodeStore(stateDirectory: directory)
+        #expect(second.hasPasscode)
+        #expect(!second.verify(passcode))
+        #expect(AppSecretStore.shared.value(for: AppSecretStore.lanSharePasscodeKeyAccount).isEmpty)
+    }
+}
+
 @Suite("LANShare Session Manager")
 struct LANShareSessionManagerTests {
     private func makeManager(passcodeEnabled: Bool = false) -> (LANShareSessionManager, URL) {
@@ -400,6 +472,21 @@ struct LANShareSessionManagerTests {
         let session = manager.authenticate(cookieHeader: "calmbar_session=\(token)", peerIP: "192.168.1.20")
         #expect(session != nil)
         #expect(manager.activeSessionCount == 1)
+    }
+
+    @Test("会话 Cookie 不能跨源地址重放")
+    func rejectsCrossPeerSessionReplay() throws {
+        let (manager, directory) = makeManager()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let token = try manager.login(
+            linkToken: manager.currentLinkToken,
+            passcode: nil,
+            peerIP: "192.168.1.20",
+            userAgent: "Test"
+        )
+        #expect(manager.authenticate(cookieHeader: "calmbar_session=\(token)", peerIP: "192.168.1.20") != nil)
+        #expect(manager.authenticate(cookieHeader: "calmbar_session=\(token)", peerIP: "192.168.1.30") == nil)
     }
 
     @Test("错误链接令牌返回 401")

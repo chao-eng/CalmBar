@@ -111,6 +111,7 @@ public final class LANShareHTTPServer: @unchecked Sendable {
     private var connectionsPerIP: [String: Int] = [:]
     private var downloadsPerIP: [String: Int] = [:]
     private var activeConnections = 0
+    private var activeUploadBytes: Int64 = 0
     private var actualPort: Int = 0
     private var candidates: [Int] = []
     private var candidateIndex = 0
@@ -162,7 +163,11 @@ public final class LANShareHTTPServer: @unchecked Sendable {
             : [settings.port]
         candidateIndex = 0
         stopped = false
-        onQueue { self.attemptNextPort() }
+        onQueue {
+            // 上次进程异常退出可能留下未清理的上传临时文件，启动时先清空。
+            self.cleanupTemporaryDirectory()
+            self.attemptNextPort()
+        }
     }
 
     public func stop() {
@@ -562,9 +567,15 @@ public final class LANShareHTTPServer: @unchecked Sendable {
                 respondStatus(context, status: 413, message: message(forStatus: 413))
             }
         case .multipart(let parser):
+            let incoming = Int64(data.count)
+            if activeUploadBytes + incoming > LANShareLimits.maxConcurrentUploadBytes {
+                respondStatus(context, status: 507, message: "服务器临时空间不足，请稍后再试")
+                return
+            }
             do {
                 try parser.consume(data)
-                context.uploadBytes += Int64(data.count)
+                context.uploadBytes += incoming
+                activeUploadBytes += incoming
                 if let taskID = context.uploadTaskID {
                     if let fileName = parser.currentFileName {
                         transfers.updateFileName(id: taskID, fileName: fileName)
@@ -1128,6 +1139,9 @@ public final class LANShareHTTPServer: @unchecked Sendable {
     private func finalizeUpload(_ context: Context, parser: LANShareMultipartParser) {
         do {
             let result = try parser.finish()
+            // finish() 已把临时文件从 parser 移交出来；在 rename 成功前由 context 持有，
+            // 这样 moveUploadedFile 失败时 cleanupCurrentUpload 能真正删除它。
+            context.tempURL = result.tempURL
             let destination = try moveUploadedFile(
                 tempURL: result.tempURL,
                 preferredName: result.filename,
@@ -1284,6 +1298,7 @@ public final class LANShareHTTPServer: @unchecked Sendable {
         case 415: errorCode = "unsupported_media"
         case 416: errorCode = "range_not_satisfiable"
         case 429: errorCode = "rate_limited"
+        case 507: errorCode = "insufficient_storage"
         default: errorCode = "server_error"
         }
         var headers = extraHeaders
@@ -1501,6 +1516,10 @@ public final class LANShareHTTPServer: @unchecked Sendable {
         }
         if let mode = context.bodyMode, case .multipart(let parser) = mode {
             parser.cancel()
+        }
+        if context.uploadBytes > 0 {
+            activeUploadBytes = max(0, activeUploadBytes - context.uploadBytes)
+            context.uploadBytes = 0
         }
         cleanupCurrentUpload(context)
         finishDownload(context, state: .cancelled)

@@ -27,14 +27,22 @@ public struct TemperatureGaugeView: View {
             }
 
             HStack(alignment: .lastTextBaseline, spacing: 1) {
-                Text("\(Int(temp))")
-                    .font(.system(size: 19, weight: .semibold, design: .rounded))
-                    .foregroundColor(.primary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.8)
-                Text("°")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundColor(.secondary)
+                if temp > 0 {
+                    Text("\(Int(temp))")
+                        .font(.system(size: 19, weight: .semibold, design: .rounded))
+                        .foregroundColor(.primary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.8)
+                    Text("°")
+                        .font(.system(size: 13, weight: .medium, design: .rounded))
+                        .foregroundColor(.secondary)
+                } else {
+                    // 传感器不可用或温控未启用时显示占位符，不伪造 0°C。
+                    Text("--")
+                        .font(.system(size: 19, weight: .semibold, design: .rounded))
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                }
             }
         }
         .frame(maxWidth: .infinity)

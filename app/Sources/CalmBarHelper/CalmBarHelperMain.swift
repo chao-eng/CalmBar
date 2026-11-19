@@ -3,10 +3,12 @@ import CalmBarKit
 
 final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelperProtocol, @unchecked Sendable {
     private let listener: NSXPCListener
+    private let clientValidator = HelperClientValidator()
     private var controller: FanController?
     private var connectionCount = 0
     private let lock = NSLock()
     private var signalSources: [DispatchSourceSignal] = []
+    private var heartbeatTimer: DispatchSourceTimer?
 
     init(machServiceName: String) {
         self.listener = NSXPCListener(machServiceName: machServiceName)
@@ -16,11 +18,37 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
 
     func start() {
         listener.resume()
+        startHeartbeat()
         // 启动时先把风扇交还系统，避免上次异常退出遗留手动转速；
         // App 若仍需手动控制会在下一个轮询周期重新写入
         try? getController().restoreSystemControl()
         setupSignals()
         RunLoop.main.run()
+    }
+
+    /// 定时写入心跳，供 App 区分“Helper 未运行（后台项目被阻止）”
+    /// 与“Helper 在运行但拒绝客户端（签名/配置问题）”。
+    private func startHeartbeat() {
+        writeHeartbeat()
+        let timer = DispatchSource.makeTimerSource(queue: .main)
+        timer.schedule(deadline: .now() + 30, repeating: 30)
+        timer.setEventHandler { [weak self] in
+            self?.writeHeartbeat()
+        }
+        timer.resume()
+        heartbeatTimer = timer
+    }
+
+    private func writeHeartbeat() {
+        let path = CalmBarConfig.helperHeartbeatPath
+        let directory = (path as NSString).deletingLastPathComponent
+        try? FileManager.default.createDirectory(atPath: directory, withIntermediateDirectories: true)
+        let data = Data("\(Date().timeIntervalSince1970)\n".utf8)
+        guard (try? data.write(to: URL(fileURLWithPath: path), options: .atomic)) != nil else { return }
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: 0o644],
+            ofItemAtPath: path
+        )
     }
 
     private func setupSignals() {
@@ -44,6 +72,10 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
     }
 
     func listener(_ listener: NSXPCListener, shouldAcceptNewConnection newConnection: NSXPCConnection) -> Bool {
+        guard clientValidator.configure(newConnection) else {
+            NSLog("CalmBarHelper: 拒绝未通过签名校验的 XPC 连接")
+            return false
+        }
         newConnection.exportedInterface = NSXPCInterface(with: CalmBarHelperProtocol.self)
         newConnection.exportedObject = self
         lock.lock()
@@ -100,8 +132,11 @@ final class CalmBarHelperService: NSObject, NSXPCListenerDelegate, CalmBarHelper
     func setFanRPM(_ fanIndex: UInt, rpm: Float, reply: @escaping (Bool, String?) -> Void) {
         do {
             let c = try getController()
-            _ = try c.enableManualMode(fanIndex: Int(fanIndex))
-            try c.setTargetRPM(fanIndex: Int(fanIndex), rpm: rpm)
+            let index = Int(fanIndex)
+            let snapshot = try c.snapshot(fanIndex: index)
+            let clamped = min(max(rpm, snapshot.minRPM), snapshot.maxRPM)
+            _ = try c.enableManualMode(fanIndex: index)
+            try c.setTargetRPM(fanIndex: index, rpm: clamped)
             reply(true, nil)
         } catch {
             reply(false, error.localizedDescription)

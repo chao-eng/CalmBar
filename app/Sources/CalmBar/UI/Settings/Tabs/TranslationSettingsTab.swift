@@ -51,6 +51,11 @@ public struct TranslationSettingsTab: View {
                                 SecureField("sk-...", text: $settings.translationAPIKey)
                                     .textFieldStyle(.roundedBorder)
                                     .font(.system(size: 12, design: .monospaced))
+                                if let error = settings.secretStorageError {
+                                    Text(error)
+                                        .font(.system(size: 11))
+                                        .foregroundColor(.red)
+                                }
                             }
                         }
 

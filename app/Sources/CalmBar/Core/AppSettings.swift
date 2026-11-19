@@ -31,6 +31,8 @@ public final class AppSettings: ObservableObject {
     public static let shared = AppSettings()
 
     private let defaults = UserDefaults.standard
+    private var translationAPIKeySaveTask: Task<Void, Never>?
+    @Published public private(set) var secretStorageError: String?
 
     // MARK: - Thermal Settings
     @Published public var thermalEnabled: Bool {
@@ -273,7 +275,21 @@ public final class AppSettings: ObservableObject {
         didSet { defaults.set(translationAPIBaseURL, forKey: "translationAPIBaseURL") }
     }
     @Published public var translationAPIKey: String {
-        didSet { defaults.set(translationAPIKey, forKey: "translationAPIKey") }
+        didSet {
+            // SecureField 每输入一个字符都会触发 didSet；合并短时间内的连续修改，
+            // 避免在 MainActor 上逐字符做 JSON 编码、原子写盘和 chmod。
+            translationAPIKeySaveTask?.cancel()
+            let value = translationAPIKey
+            translationAPIKeySaveTask = Task { [weak self] in
+                try? await Task.sleep(nanoseconds: 350_000_000)
+                guard !Task.isCancelled else { return }
+                let saved = AppSecretStore.shared.set(
+                    value,
+                    for: AppSecretStore.translationAPIKeyAccount
+                )
+                self?.secretStorageError = saved ? nil : "API Key 保存失败，请检查磁盘权限或空间"
+            }
+        }
     }
     @Published public var translationModel: String {
         didSet { defaults.set(translationModel, forKey: "translationModel") }
@@ -593,7 +609,7 @@ public final class AppSettings: ObservableObject {
 
         self.translationEnabled = defaults.object(forKey: "translationEnabled") as? Bool ?? true
         self.translationAPIBaseURL = defaults.string(forKey: "translationAPIBaseURL") ?? ""
-        self.translationAPIKey = defaults.string(forKey: "translationAPIKey") ?? ""
+        self.translationAPIKey = AppSecretStore.shared.value(for: AppSecretStore.translationAPIKeyAccount)
         self.translationModel = defaults.string(forKey: "translationModel") ?? "Hy-MT2"
         self.translationTargetLanguageCode = defaults.string(forKey: "translationTargetLanguageCode") ?? "zh"
         self.translationCustomPrompt = defaults.string(forKey: "translationCustomPrompt") ?? ""
@@ -679,6 +695,17 @@ public final class AppSettings: ObservableObject {
         // LAN Share（局域网互传 PRD）
         self.lanShareEnabled = defaults.object(forKey: "lanShareEnabled") as? Bool ?? false
         self.popoverShowLANShare = defaults.object(forKey: "popoverShowLANShare") as? Bool ?? true
+    }
+
+    /// 退出前把防抖中的翻译 API Key 立即落盘。
+    public func flushPendingSecretWrites() {
+        translationAPIKeySaveTask?.cancel()
+        translationAPIKeySaveTask = nil
+        let saved = AppSecretStore.shared.set(
+            translationAPIKey,
+            for: AppSecretStore.translationAPIKeyAccount
+        )
+        secretStorageError = saved ? nil : "API Key 保存失败，请检查磁盘权限或空间"
     }
 }
 

@@ -276,7 +276,8 @@ public final class ThermalMonitor: ObservableObject {
         }
 
         self.cpuTemp = maxCpu > 0 ? maxCpu : maxPrimary
-        self.gpuTemp = maxGpu > 0 ? maxGpu : (self.cpuTemp > 0 ? max(30.0, self.cpuTemp - 4.0) : 0.0)
+        // 没有 GPU 传感器时保持 0，由 UI 显示 “--”；不要用 CPU 温度推算伪造读数。
+        self.gpuTemp = maxGpu
         self.batteryTemp = maxBattery
 
         if supportsFanControl, let fans = try? controller.allFans() {

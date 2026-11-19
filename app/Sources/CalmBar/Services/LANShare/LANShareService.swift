@@ -32,7 +32,9 @@ public final class LANShareService: ObservableObject {
     private let passcodeStore: LANSharePasscodeStore
     private let sessions: LANShareSessionManager
     private let transferManager = LANShareTransferManager()
-    private let zipper = LANShareZipper()
+    /// 每次 start 使用新的 zipper：stop 时 cancelAll 会把旧实例标记为永久停止，
+    /// 复用同一个实例会导致重启后文件夹下载一直返回“服务已停止”。
+    private var zipper = LANShareZipper()
     private let networkMonitor = LANShareNetworkMonitor()
     private let webRoot: URL
 
@@ -123,6 +125,10 @@ public final class LANShareService: ObservableObject {
         networkPrefix = network.prefixText
         sessions.configure(passcodeEnabled: current.passcodeEnabled, rotateToken: true)
         status = .starting
+        // 重试启动时先清理旧 server，避免旧监听和旧 zipper 残留。
+        server?.stop()
+        server = nil
+        zipper = LANShareZipper()
 
         let server = LANShareHTTPServer(
             store: store,

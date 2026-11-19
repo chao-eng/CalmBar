@@ -75,33 +75,19 @@ public final class AssociatedPathsFinder: @unchecked Sendable {
                     continue
                 }
 
-                var isMatch = false
+                let match = Self.matchName(
+                    itemLower: itemLower,
+                    normalizedItem: normItem,
+                    bundleId: bundleId,
+                    normalizedBundleId: normBundleId,
+                    normalizedLastTwo: normLastTwo,
+                    normalizedAppName: normAppName,
+                    normalizedStrippedName: normStrippedName,
+                    normalizedPathName: normPathName,
+                    sensitivity: sensitivity
+                )
 
-                // 1. Exact bundle identifier match (e.g. com.apple.xxx or com.spotify.client)
-                if itemLower == bundleId || normItem == normBundleId || normItem.hasPrefix(normBundleId) {
-                    isMatch = true
-                }
-                // 2. Contains full bundle identifier in name
-                else if itemLower.contains(bundleId) {
-                    isMatch = true
-                }
-                // 3. Match app display name (normalized)
-                else if normItem == normAppName || normItem == normStrippedName || normItem == normPathName {
-                    isMatch = true
-                }
-                // 4. Sensitivity balanced / deep matches
-                else if sensitivity != .strict {
-                    // Match last two bundle components (e.g. spotifyclient)
-                    if !normLastTwo.isEmpty && (normItem == normLastTwo || normItem.hasPrefix(normLastTwo)) {
-                        isMatch = true
-                    }
-                    // Match app name prefix if name length >= 4
-                    else if normAppName.count >= 4 && (normItem.hasPrefix(normAppName) || normItem.hasSuffix(normAppName)) {
-                        isMatch = true
-                    }
-                }
-
-                if isMatch {
+                if match.matches {
                     // Avoid adding the main .app bundle as an associated item in this step
                     if itemPath == app.path {
                         continue
@@ -116,7 +102,8 @@ public final class AssociatedPathsFinder: @unchecked Sendable {
                         url: itemURL,
                         category: catType,
                         sizeBytes: size,
-                        isSelected: true,
+                        // 只有 bundle id / 精确名称命中的条目默认勾选；启发式匹配交给用户确认。
+                        isSelected: match.isConfident,
                         isPrivileged: isPrivileged
                     ))
                 }
@@ -130,6 +117,53 @@ public final class AssociatedPathsFinder: @unchecked Sendable {
         }
 
         return Array(uniqueDict.values).sorted { $0.category.id < $1.category.id }
+    }
+
+    struct AssociatedNameMatch: Equatable {
+        let matches: Bool
+        let isConfident: Bool
+    }
+
+    /// 判断某个 Library 条目是否属于目标应用。`isConfident` 为 true 时才会默认勾选，
+    /// 避免宽泛的前缀/后缀匹配把无关文件带进卸载列表。
+    static func matchName(itemLower: String,
+                          normalizedItem: String,
+                          bundleId: String,
+                          normalizedBundleId: String,
+                          normalizedLastTwo: String,
+                          normalizedAppName: String,
+                          normalizedStrippedName: String,
+                          normalizedPathName: String,
+                          sensitivity: SearchSensitivityLevel) -> AssociatedNameMatch {
+        // 1. bundle id 精确匹配，或完整 bundle id 出现在名称中
+        if itemLower == bundleId || normalizedItem == normalizedBundleId || itemLower.contains(bundleId) {
+            return AssociatedNameMatch(matches: true, isConfident: true)
+        }
+
+        // 2. 应用显示名 / 去掉版本号后的名称 / 应用文件名精确匹配
+        if normalizedItem == normalizedAppName
+            || normalizedItem == normalizedStrippedName
+            || normalizedItem == normalizedPathName {
+            return AssociatedNameMatch(matches: true, isConfident: true)
+        }
+
+        guard sensitivity != .strict else {
+            return AssociatedNameMatch(matches: false, isConfident: false)
+        }
+
+        // 3. bundle id 最后两段精确匹配（例如 spotifyclient），仍需用户确认
+        if !normalizedLastTwo.isEmpty, normalizedItem == normalizedLastTwo {
+            return AssociatedNameMatch(matches: true, isConfident: false)
+        }
+
+        // 4. 只有深度模式才允许名称前缀/后缀匹配，且不默认勾选
+        if sensitivity == .deep,
+           normalizedAppName.count >= 4,
+           normalizedItem.hasPrefix(normalizedAppName) || normalizedItem.hasSuffix(normalizedAppName) {
+            return AssociatedNameMatch(matches: true, isConfident: false)
+        }
+
+        return AssociatedNameMatch(matches: false, isConfident: false)
     }
 
     /// Check if item is in safety exclusion list

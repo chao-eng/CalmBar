@@ -15,6 +15,7 @@ public struct AIGatewaySettingsTab: View {
     @State private var testStates: [String: ChannelTestState] = [:]
     @State private var copiedEndpoint = false
     @State private var generatedServerKey = false
+    @State private var secretSaveError: String?
     @State private var now = Date()
 
     private let cooldownTimer = Timer.publish(every: 10, on: .main, in: .common).autoconnect()
@@ -38,6 +39,12 @@ public struct AIGatewaySettingsTab: View {
                 }
 
                 validationBanner
+
+                if let secretSaveError {
+                    Text(secretSaveError)
+                        .font(.system(size: 11.5))
+                        .foregroundStyle(.red)
+                }
 
                 serviceConfig
                 modelSection
@@ -158,14 +165,24 @@ public struct AIGatewaySettingsTab: View {
                         .frame(minWidth: 140, maxWidth: 320)
                         .layoutPriority(1)
                     Button("保存密钥") {
-                        GatewaySecretStore.setServerKey(serverKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines))
+                        if GatewaySecretStore.setServerKey(
+                            serverKeyDraft.trimmingCharacters(in: .whitespacesAndNewlines)
+                        ) {
+                            secretSaveError = nil
+                        } else {
+                            secretSaveError = "访问密钥保存失败，请检查磁盘权限或空间"
+                        }
                         service.restart()
                     }
                     .fixedSize()
                     Button(generatedServerKey ? "已生成并复制" : "随机生成") {
                         let key = Self.randomServerKey()
                         serverKeyDraft = key
-                        GatewaySecretStore.setServerKey(key)
+                        if GatewaySecretStore.setServerKey(key) {
+                            secretSaveError = nil
+                        } else {
+                            secretSaveError = "访问密钥保存失败，请检查磁盘权限或空间"
+                        }
                         service.restart()
                         copyToPasteboard(key)
                         generatedServerKey = true
@@ -542,8 +559,9 @@ public struct AIGatewaySettingsTab: View {
         var channel = draft.channel
         channel.models = AIGatewayChannel.normalizedModels(channel.models)
         let key = draft.apiKey.trimmingCharacters(in: .whitespacesAndNewlines)
+        var secretsSaved = true
         if !key.isEmpty {
-            GatewaySecretStore.setAPIKey(key, for: channel.id)
+            secretsSaved = GatewaySecretStore.setAPIKey(key, for: channel.id)
         }
 
         var proxy = channel.proxy
@@ -551,9 +569,10 @@ public struct AIGatewaySettingsTab: View {
             proxy = GatewayProxyConfig()
         } else if !draft.proxyPassword.isEmpty {
             let keyID = proxy.passwordKeyID ?? "channel.\(channel.id).proxy"
-            GatewaySecretStore.setProxyPassword(draft.proxyPassword, for: keyID)
+            secretsSaved = GatewaySecretStore.setProxyPassword(draft.proxyPassword, for: keyID) && secretsSaved
             proxy.passwordKeyID = keyID
         }
+        secretSaveError = secretsSaved ? nil : "渠道密钥保存失败，请检查磁盘权限或空间"
         channel.proxy = proxy
 
         if let index = settings.aiGatewayChannels.firstIndex(where: { $0.id == channel.id }) {
@@ -567,10 +586,11 @@ public struct AIGatewaySettingsTab: View {
 
     private func deleteChannel(_ channel: AIGatewayChannel) {
         settings.aiGatewayChannels.removeAll { $0.id == channel.id }
-        GatewaySecretStore.removeAPIKey(for: channel.id)
+        var secretsSaved = GatewaySecretStore.removeAPIKey(for: channel.id)
         if let keyID = channel.proxy.passwordKeyID {
-            GatewaySecretStore.setProxyPassword("", for: keyID)
+            secretsSaved = GatewaySecretStore.setProxyPassword("", for: keyID) && secretsSaved
         }
+        secretSaveError = secretsSaved ? nil : "渠道密钥清理失败，请检查磁盘权限或空间"
         testStates[channel.id] = nil
         service.restart()
     }

@@ -4,7 +4,7 @@ import XCTest
 final class AIGatewayTests: XCTestCase {
     // MARK: 密钥
 
-    func testKeychainAPIKeyRoundTrip() {
+    func testSecretStoreAPIKeyRoundTrip() {
         let channelID = "test-keychain-\(UUID().uuidString)"
         defer { GatewaySecretStore.setAPIKey("", for: channelID) }
 
@@ -543,6 +543,26 @@ final class AIGatewayTests: XCTestCase {
         try await database.deleteAll()
         let emptyCount = try await database.count()
         XCTAssertEqual(emptyCount, 0)
+    }
+
+    func testChunkedBodyRejectsCumulativeOversize() {
+        var parser = GatewayHTTPRequestParser()
+        parser.maxBodyBytes = 64
+
+        var data = Data("POST /v1/chat/completions HTTP/1.1\r\nHost: 127.0.0.1\r\nTransfer-Encoding: chunked\r\n\r\n".utf8)
+        for _ in 0..<2 {
+            data.append(Data("3c\r\n".utf8))
+            data.append(Data(repeating: 0x61, count: 60))
+            data.append(Data("\r\n".utf8))
+        }
+        parser.append(data)
+
+        switch parser.nextRequest() {
+        case .failure(let status, _):
+            XCTAssertEqual(status, 413)
+        case .request, .needMore:
+            XCTFail("累计超过 maxBodyBytes 的 chunked 请求应被拒绝")
+        }
     }
 
     private func sample(

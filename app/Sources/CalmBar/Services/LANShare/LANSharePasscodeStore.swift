@@ -30,44 +30,80 @@ enum LANShareConstantTime {
     }
 }
 
-// MARK: - Keychain 密钥
+// MARK: - 口令 HMAC 密钥
 
-enum LANShareKeychain {
-    static let service = "com.calmbar.lanshare"
-    static let account = "passcode-hmac-key"
+/// 口令 HMAC 密钥统一保存在 `AppSecretStore`（JSON + 0600）。
+/// 旧版本存在 Keychain 中，首次读取时迁移一次并删除旧条目。
+enum LANSharePasscodeKey {
+    static let legacyService = "com.calmbar.lanshare"
+    static let legacyAccount = "passcode-hmac-key"
 
-    static func loadOrCreateKey() -> Data {
-        if let existing = loadKey(), existing.count >= 32 {
+    /// 只读取已有密钥并执行一次 Keychain 迁移；找不到时返回 nil，不生成新密钥。
+    static func loadExistingKey() -> Data? {
+        if let existing = loadManagedKey(), existing.count >= 32 {
+            // JSON 已有密钥时顺手清理可能残留的旧 Keychain 条目。
+            deleteLegacyKey()
             return existing
         }
-        var bytes = [UInt8](repeating: 0, count: 32)
-        if SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) != errSecSuccess {
-            bytes = (0..<32).map { _ in UInt8.random(in: 0...255) }
+
+        // 测试环境使用内存存储，禁止触碰用户真实的 Keychain 条目。
+        guard !AppSecretStore.shared.isUsingMemoryStore,
+              let legacy = loadLegacyKey(), legacy.count >= 32 else {
+            return nil
         }
-        let data = Data(bytes)
-        saveKey(data)
+        // JSON 写入成功后才删除 Keychain 旧条目，失败时保留旧数据继续可用。
+        if saveManagedKey(legacy) {
+            deleteLegacyKey()
+        }
+        return legacy
+    }
+
+    /// 设置新口令时使用：没有密钥才生成。
+    static func loadOrCreateKey() -> Data {
+        if let existing = loadExistingKey() {
+            return existing
+        }
+        let data = generateKey()
+        saveManagedKey(data)
         return data
     }
 
     static func rotateKey() -> Data {
-        deleteKey()
-        return loadOrCreateKey()
+        let data = generateKey()
+        // 新密钥成功落盘后再删除旧 Keychain 条目，避免迁移失败丢密钥。
+        if saveManagedKey(data) {
+            deleteLegacyKey()
+        }
+        return data
     }
 
-    static func deleteKey() {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account
-        ]
-        SecItemDelete(query as CFDictionary)
+    private static func loadManagedKey() -> Data? {
+        let raw = AppSecretStore.shared.value(for: AppSecretStore.lanSharePasscodeKeyAccount)
+        guard !raw.isEmpty, let data = Data(base64Encoded: raw) else { return nil }
+        return data
     }
 
-    private static func loadKey() -> Data? {
+    @discardableResult
+    private static func saveManagedKey(_ data: Data) -> Bool {
+        AppSecretStore.shared.set(
+            data.base64EncodedString(),
+            for: AppSecretStore.lanSharePasscodeKeyAccount
+        )
+    }
+
+    private static func generateKey() -> Data {
+        var bytes = [UInt8](repeating: 0, count: 32)
+        if SecRandomCopyBytes(kSecRandomDefault, bytes.count, &bytes) != errSecSuccess {
+            bytes = (0..<32).map { _ in UInt8.random(in: 0...255) }
+        }
+        return Data(bytes)
+    }
+
+    private static func loadLegacyKey() -> Data? {
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account,
+            kSecAttrService as String: legacyService,
+            kSecAttrAccount as String: legacyAccount,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
@@ -76,25 +112,18 @@ enum LANShareKeychain {
         return result as? Data
     }
 
-    private static func saveKey(_ data: Data) {
+    private static func deleteLegacyKey() {
+        guard !AppSecretStore.shared.isUsingMemoryStore else { return }
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: account
+            kSecAttrService as String: legacyService,
+            kSecAttrAccount as String: legacyAccount
         ]
-        let attributes: [String: Any] = [
-            kSecValueData as String: data,
-            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlock
-        ]
-        if SecItemUpdate(query as CFDictionary, attributes as CFDictionary) != errSecSuccess {
-            var addQuery = query
-            addQuery.merge(attributes) { _, new in new }
-            SecItemAdd(addQuery as CFDictionary, nil)
-        }
+        SecItemDelete(query as CFDictionary)
     }
 }
 
-// MARK: - 口令存储（HMAC verifier 落盘，密钥在 Keychain）
+// MARK: - 口令存储（HMAC verifier 落盘，密钥在 secrets.json）
 
 public final class LANSharePasscodeStore: @unchecked Sendable {
     private struct State: Codable {
@@ -109,6 +138,11 @@ public final class LANSharePasscodeStore: @unchecked Sendable {
         stateURL = stateDirectory.appendingPathComponent("passcode.json")
         try? FileManager.default.createDirectory(at: stateDirectory, withIntermediateDirectories: true)
         load()
+        // 已有口令的用户在启动时就把旧 Keychain 密钥迁移到 JSON；
+        // 如果密钥确实缺失，不要静默生成新密钥覆盖旧 passcode，交给 verify 返回失败。
+        if verifier != nil {
+            _ = LANSharePasscodeKey.loadExistingKey()
+        }
     }
 
     public var hasPasscode: Bool {
@@ -129,7 +163,7 @@ public final class LANSharePasscodeStore: @unchecked Sendable {
         } else {
             passcode = Self.generatePasscode()
         }
-        let key = LANShareKeychain.loadOrCreateKey()
+        let key = LANSharePasscodeKey.loadOrCreateKey()
         let digest = HMAC<SHA256>.authenticationCode(for: Data(passcode.utf8), using: SymmetricKey(data: key))
         let hex = digest.map { String(format: "%02x", $0) }.joined()
         lock.lock()
@@ -144,21 +178,27 @@ public final class LANSharePasscodeStore: @unchecked Sendable {
         verifier = nil
         lock.unlock()
         try? FileManager.default.removeItem(at: stateURL)
-        _ = LANShareKeychain.rotateKey()
+        _ = LANSharePasscodeKey.rotateKey()
     }
 
     public func verify(_ code: String) -> Bool {
         lock.lock()
         let current = verifier
         lock.unlock()
-        guard let current else { return false }
-        let key = LANShareKeychain.loadOrCreateKey()
+        guard let current,
+              let key = LANSharePasscodeKey.loadExistingKey() else { return false }
         let digest = HMAC<SHA256>.authenticationCode(for: Data(code.utf8), using: SymmetricKey(data: key))
         let hex = digest.map { String(format: "%02x", $0) }.joined()
         return LANShareConstantTime.equals(hex, current)
     }
 
     private func load() {
+        if FileManager.default.fileExists(atPath: stateURL.path) {
+            try? FileManager.default.setAttributes(
+                [.posixPermissions: 0o600],
+                ofItemAtPath: stateURL.path
+            )
+        }
         guard let data = try? Data(contentsOf: stateURL),
               let state = try? JSONDecoder().decode(State.self, from: data),
               !state.verifier.isEmpty else { return }
@@ -173,6 +213,10 @@ public final class LANSharePasscodeStore: @unchecked Sendable {
         let state = State(verifier: current)
         guard let data = try? JSONEncoder().encode(state) else { return }
         try? data.write(to: stateURL, options: .atomic)
+        try? FileManager.default.setAttributes(
+            [.posixPermissions: 0o600],
+            ofItemAtPath: stateURL.path
+        )
     }
 
     static func generatePasscode() -> String {

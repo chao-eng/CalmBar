@@ -178,6 +178,8 @@ public final class LANShareSessionManager: @unchecked Sendable {
             sessions.removeValue(forKey: token)
             return nil
         }
+        // Cookie 只对登录时的源地址有效，避免局域网内被嗅探后跨设备重放。
+        guard session.peerIP == peerIP else { return nil }
         session.lastSeenAt = now
         session.expiresAt = now.addingTimeInterval(LANShareLimits.sessionTTL)
         sessions[token] = session
