@@ -48,17 +48,17 @@ public struct LaunchManagerGuideSheetView: View {
 
                         guideItem(
                             title: "【登录时打开】(应用级登录项)",
-                            body: "系统设置上半部分展示的是图形应用（如微信、CalmBar 等）。它们是用户登录 Mac 桌面后直接拉起窗口运行的常规 App，由系统的 LaunchServices 框架维护。"
+                            body: "系统设置上半部分展示的是图形应用（如微信、檐下等）。它们是用户登录 Mac 桌面后直接拉起窗口运行的常规 App，由系统的 LaunchServices 框架维护。"
                         )
 
                         guideItem(
                             title: "【允许在后台】(macOS 13+ BTM 聚合管理 与 为什么单页看起来更少)",
-                            body: "系统设置下半部分的「允许在后台」并不是单一目录，而是将三大目录（~/Library/LaunchAgents、/Library/LaunchAgents、/Library/LaunchDaemons）以及现代应用嵌入在 App 安装包内的 SMAppService 辅助工具全部混在一起，并按「软件开发商」进行卡片折叠展示。\nCalmBar 为了精准排查，将它们严格分门别类为「用户自启项」、「全局自启项」与「系统守护服务」三个独立标签页。将对应标签页的项目相加，即可涵盖系统的所有物理常驻项。"
+                            body: "系统设置下半部分的「允许在后台」并不是单一目录，而是将三大目录（~/Library/LaunchAgents、/Library/LaunchAgents、/Library/LaunchDaemons）以及现代应用嵌入在 App 安装包内的 SMAppService 辅助工具全部混在一起，并按「软件开发商」进行卡片折叠展示。\n檐下为了精准排查，将它们严格分门别类为「用户自启项」、「全局自启项」与「系统守护服务」三个独立标签页。将对应标签页的项目相加，即可涵盖系统的所有物理常驻项。"
                         )
 
                         guideItem(
                             title: "系统守护服务的真实状态 (system domain)",
-                            body: "系统守护服务由系统最高特权 root 在开机时启动（位于 system 域）。CalmBar 穿透查询 macOS launchd system 域探针，实时反映守护进程的常驻 PID、空闲待命或崩溃状态。"
+                            body: "系统守护服务由系统最高特权 root 在开机时启动（位于 system 域）。檐下穿透查询 macOS launchd system 域探针，实时反映守护进程的常驻 PID、空闲待命或崩溃状态。"
                         )
                     }
 
@@ -110,7 +110,7 @@ public struct LaunchManagerGuideSheetView: View {
 
                         guideItem(
                             title: "删除安全吗？",
-                            body: "CalmBar 在删除任何自启项前均会自动在本地创建无损备份快照。若误删，可在「快照恢复中心」中一键还原。"
+                            body: "檐下在删除任何自启项前均会自动在本地创建无损备份快照。若误删，可在「快照恢复中心」中一键还原。"
                         )
 
                         guideItem(

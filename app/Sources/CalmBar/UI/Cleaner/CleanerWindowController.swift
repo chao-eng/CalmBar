@@ -23,7 +23,7 @@ public final class CleanerWindowController {
             backing: .buffered,
             defer: false
         )
-        win.title = "CalmBar 卸载与深度清理"
+        win.title = "檐下卸载与深度清理"
         win.titleVisibility = .hidden
         win.titlebarAppearsTransparent = true
         win.minSize = NSSize(width: 740, height: 500)

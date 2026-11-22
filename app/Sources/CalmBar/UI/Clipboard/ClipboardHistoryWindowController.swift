@@ -24,7 +24,7 @@ public final class ClipboardHistoryWindowController: NSObject, NSWindowDelegate 
             backing: .buffered,
             defer: false
         )
-        win.title = "CalmBar 剪贴板历史记录"
+        win.title = "檐下剪贴板历史记录"
         win.minSize = NSSize(width: 480, height: 420)
         win.center()
         win.contentViewController = NSHostingController(rootView: ClipboardHistoryView())

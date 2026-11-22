@@ -58,7 +58,7 @@ struct PopoverPanelView: View {
             header
                 .frame(height: PopoverLayout.headerHeight)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("CalmBar 状态栏")
+                .accessibilityLabel("檐下状态栏")
 
             Color.clear.frame(height: PopoverLayout.sectionGap)
 
@@ -95,7 +95,7 @@ struct PopoverPanelView: View {
         HStack(spacing: 6) {
             Image(systemName: "wind")
                 .font(.system(size: 15))
-            Text("CalmBar")
+            Text("檐下")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
             Spacer()
             headerStatus
@@ -343,12 +343,12 @@ struct PopoverPanelView: View {
             Button {
                 NSApplication.shared.terminate(nil)
             } label: {
-                Text("退出 CalmBar")
+                Text("退出檐下")
                     .font(.system(size: 11))
             }
             .buttonStyle(.plain)
             .foregroundStyle(.secondary)
-            .accessibilityLabel("退出 CalmBar")
+            .accessibilityLabel("退出檐下")
         }
     }
 }

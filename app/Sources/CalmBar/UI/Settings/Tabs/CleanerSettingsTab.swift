@@ -60,7 +60,7 @@ public struct CleanerSettingsTab: View {
 
                 GroupBox(label: Label("完全磁盘访问权限 (Full Disk Access)", systemImage: "lock.shield")) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("为完整扫描 ~/Library/Containers、Group Containers 及保护目录下的应用残留，建议为 CalmBar 开启完全磁盘访问权限。")
+                        Text("为完整扫描 ~/Library/Containers、Group Containers 及保护目录下的应用残留，建议为檐下开启完全磁盘访问权限。")
                             .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
                             .lineSpacing(2)

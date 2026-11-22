@@ -19,7 +19,7 @@ struct M1Scene: View {
             header
                 .frame(height: PopoverLayout.headerHeight)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("CalmBar 状态栏")
+                .accessibilityLabel("檐下状态栏")
 
             Color.clear.frame(height: PopoverLayout.sectionGap)
 
@@ -67,7 +67,7 @@ struct M1Scene: View {
         HStack(spacing: 6) {
             Image(systemName: "wind")
                 .font(.system(size: 15))
-            Text("CalmBar")
+            Text("檐下")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
             Spacer()
             Text("● 温度监控中")

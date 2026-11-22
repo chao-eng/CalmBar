@@ -64,7 +64,7 @@ enum SpikeA11yProbe {
     private static func category(of element: AXUIElement) -> String? {
         let description = stringValue(element, kAXDescriptionAttribute) ?? ""
         let value = stringValue(element, kAXValueAttribute) ?? ""
-        if description == "CalmBar 状态栏" { return "header" }
+        if description == "檐下状态栏" { return "header" }
         if description.contains("个分区中第") { return "tabbar" }
         if value.hasPrefix("grid=") { return "footer" }
         if description == "应用去隔离" { return "content" }

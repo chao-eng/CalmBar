@@ -66,7 +66,7 @@ struct SpikeMockHeader: View {
         HStack(spacing: 6) {
             Image(systemName: "wind")
                 .font(.system(size: 15))
-            Text("CalmBar")
+            Text("檐下")
                 .font(.system(size: 14, weight: .bold, design: .rounded))
             Spacer()
             Text("● 温度监控中")

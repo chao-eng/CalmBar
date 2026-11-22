@@ -74,7 +74,7 @@ public struct CaffeineSettingsTab: View {
 
                         Divider()
 
-                        Toggle("启动 CalmBar 时自动开启保持清醒", isOn: $settings.caffeineActivateAtLaunch)
+                        Toggle("启动檐下时自动开启保持清醒", isOn: $settings.caffeineActivateAtLaunch)
                             .font(.system(size: 12.5, weight: .medium))
 
                         Toggle("Mac 手动进入睡眠时自动解除保持清醒", isOn: $settings.caffeineDeactivateOnManualSleep)
@@ -124,7 +124,7 @@ public struct CaffeineSettingsTab: View {
                             .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
                             .lineSpacing(2)
-                        Text("• **安全释放机制 (Fail-Safe)**：CalmBar 退出、重启或系统锁屏切换用户时，将自动释放所有电源断言并暂停微动，确保节能策略正常。")
+                        Text("• **安全释放机制 (Fail-Safe)**：檐下退出、重启或系统锁屏切换用户时，将自动释放所有电源断言并暂停微动，确保节能策略正常。")
                             .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
                             .lineSpacing(2)

@@ -22,7 +22,7 @@ public final class OCRHistoryWindowController {
             backing: .buffered,
             defer: false
         )
-        win.title = "CalmBar 识别历史记录"
+        win.title = "檐下识别历史记录"
         win.minSize = NSSize(width: 420, height: 400)
         win.center()
         win.contentViewController = NSHostingController(rootView: OCRHistoryView())

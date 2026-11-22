@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="app/Resources/AppIcon.iconset/icon_128x128@2x.png" width="128" alt="CalmBar">
+  <img src="app/Resources/AppIcon.iconset/icon_128x128@2x.png" width="128" alt="檐下">
 </p>
 
-<h1 align="center">CalmBar</h1>
+<h1 align="center">檐下</h1>
 
 <hr>
 
@@ -112,9 +112,9 @@ CalmBar/
 xattr -dr com.apple.quarantine ~/Downloads/CalmBar-2.8.1.dmg
 ```
 
-然后把 CalmBar 拖进「应用程序」，直接从 Spotlight 或程序坞启动即可。DMG 已去隔离，安装后的 App 不需要再执行一次 `xattr`。DMG 不在下载目录时替换成实际路径。
+然后把「檐下」拖进「应用程序」，直接从 Spotlight 或程序坞启动即可。DMG 已去隔离，安装后的 App 不需要再执行一次 `xattr`。DMG 不在下载目录时替换成实际路径。
 
-安装后可以通过「通用设置 → 关于 CalmBar → 检查更新」获取新版本，更新由 Sparkle 完成，不需要重新下载安装包。网络受限时可在「更新设置」里配置 HTTP/HTTPS 代理。
+安装后可以通过「通用设置 → 关于檐下 → 检查更新」获取新版本，更新由 Sparkle 完成，不需要重新下载安装包。网络受限时可在「更新设置」里配置 HTTP/HTTPS 代理。
 
 ---
 

@@ -64,7 +64,7 @@ public final class LaunchManagerWindowController: ObservableObject {
             backing: .buffered,
             defer: false
         )
-        win.title = "CalmBar 启动项与常驻服务管理"
+        win.title = "檐下启动项与常驻服务管理"
         win.titleVisibility = .hidden
         win.titlebarAppearsTransparent = true
         win.minSize = NSSize(width: 940, height: 580)

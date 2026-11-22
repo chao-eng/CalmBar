@@ -15,7 +15,7 @@ struct SpikeContentScene: View {
             SpikeMockHeader()
                 .frame(height: SpikeContentMetrics.headerHeight)
                 .accessibilityElement(children: .contain)
-                .accessibilityLabel("CalmBar 状态栏")
+                .accessibilityLabel("檐下状态栏")
 
             Color.clear.frame(height: SpikeContentMetrics.sectionGap)
 

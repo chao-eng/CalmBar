@@ -36,7 +36,7 @@ public struct CleanerMainContainerView: View {
                     Image(systemName: "sparkles")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundStyle(LinearGradient(colors: [.blue, .purple], startPoint: .topLeading, endPoint: .bottomTrailing))
-                    Text("CalmBar 清理中心")
+                    Text("檐下清理中心")
                         .font(.system(size: 14, weight: .bold))
                 }
 

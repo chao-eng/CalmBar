@@ -54,13 +54,13 @@ public final class StatusBarManager: ObservableObject {
     private func setupStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         if let button = item.button {
-            let img = NSImage(systemSymbolName: "wind", accessibilityDescription: "CalmBar")
+            let img = NSImage(systemSymbolName: "wind", accessibilityDescription: "檐下")
             img?.isTemplate = true
             button.image = img
             button.target = self
             button.action = #selector(togglePopover(_:))
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-            button.toolTip = "CalmBar 全能菜单栏增强 (左键打开面板，右键偏好设置)"
+            button.toolTip = "檐下全能菜单栏增强 (左键打开面板，右键偏好设置)"
         }
         item.autosaveName = "calmbar_main"
         item.isVisible = true

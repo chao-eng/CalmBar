@@ -27,7 +27,7 @@ public final class LANShareWindowController: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        win.title = "CalmBar 局域网互传"
+        win.title = "檐下局域网互传"
         win.minSize = NSSize(width: 700, height: 560)
         win.center()
         let host = NSHostingController(rootView: LANShareWindowView())

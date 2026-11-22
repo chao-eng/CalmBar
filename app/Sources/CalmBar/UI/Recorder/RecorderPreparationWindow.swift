@@ -334,7 +334,7 @@ struct RecorderPreparationView: View {
                 hint = "没有可录制的窗口，请确认目标窗口未最小化"
             }
         } catch {
-            hint = "无法读取窗口列表，请在系统设置中允许 CalmBar 屏幕录制"
+            hint = "无法读取窗口列表，请在系统设置中允许檐下屏幕录制"
         }
     }
 }

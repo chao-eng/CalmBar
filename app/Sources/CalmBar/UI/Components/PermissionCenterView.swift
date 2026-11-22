@@ -14,7 +14,7 @@ public struct PermissionCenterView: View {
                 // 统一状态卡片Header Banner
                 GroupBox(label: Label("系统权限与安全性说明", systemImage: "shield.lefthalf.filled")) {
                     VStack(alignment: .leading, spacing: 6) {
-                        Text("CalmBar 严格遵循 macOS 最小权限原则，所有功能与深度清理均在本地执行，绝不收集或上传任何个人隐私。")
+                        Text("檐下严格遵循 macOS 最小权限原则，所有功能与深度清理均在本地执行，绝不收集或上传任何个人隐私。")
                             .font(.system(size: 11))
                             .foregroundColor(.secondary)
                     }

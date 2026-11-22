@@ -27,7 +27,7 @@ public final class GatewayHistoryWindowController: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        win.title = "CalmBar AI 网关 · 请求历史"
+        win.title = "檐下AI 网关 · 请求历史"
         win.minSize = NSSize(width: 900, height: 520)
         win.center()
         let host = NSHostingController(rootView: GatewayHistoryView())

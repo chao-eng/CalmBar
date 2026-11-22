@@ -67,7 +67,7 @@ enum M1A11yProbe {
 
     private static func category(of element: AXUIElement) -> String? {
         let description = stringValue(element, kAXDescriptionAttribute) ?? ""
-        if description == "CalmBar 状态栏" { return "header" }
+        if description == "檐下状态栏" { return "header" }
         if description.contains("个分区中第") { return "tabbar" }
         if description == "分区标题" { return "sectionTitle" }
         if description == "内容区" { return "content" }

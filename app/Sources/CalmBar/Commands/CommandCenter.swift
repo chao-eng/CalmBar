@@ -341,7 +341,7 @@ public final class CommandCenter: ObservableObject {
         register(CommandDescriptor(
             id: "system.settings",
             title: "打开偏好设置",
-            subtitle: "配置 CalmBar 各模块偏好与高级选项",
+            subtitle: "配置檐下各模块偏好与高级选项",
             iconName: "gearshape",
             category: .general,
             aliases: ["settings", "preferences", "config", "设置", "偏好设置", "sz", "ph"],

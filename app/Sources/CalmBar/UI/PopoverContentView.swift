@@ -122,7 +122,7 @@ public struct PopoverContentView: View {
                 Image(systemName: "wind")
                     .font(.system(size: 15, weight: .bold))
                     .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
-                Text("CalmBar")
+                Text("檐下")
                     .font(.system(size: 14, weight: .bold, design: .rounded))
             }
             Spacer()
@@ -935,7 +935,7 @@ public struct PopoverContentView: View {
             Button(action: {
                 NSApplication.shared.terminate(nil)
             }) {
-                Text("退出 CalmBar")
+                Text("退出檐下")
                     .font(.system(size: 11))
             }
             .buttonStyle(.plain)

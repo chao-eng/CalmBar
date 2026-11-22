@@ -24,7 +24,7 @@ final class AudioMixerWindowController: NSObject, NSWindowDelegate {
             backing: .buffered,
             defer: false
         )
-        win.title = "CalmBar 音频控制"
+        win.title = "檐下音频控制"
         win.minSize = NSSize(width: 680, height: 480)
         win.center()
         win.contentViewController = NSHostingController(rootView: AudioMixerWindowView())

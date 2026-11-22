@@ -142,7 +142,7 @@ public struct AudioSettingsTab: View {
 
                 GroupBox(label: Label("不接管的音频", systemImage: "lock.shield")) {
                     VStack(alignment: .leading, spacing: 10) {
-                        Text("系统提示音、来电与通话音频属于受保护音频，CalmBar 始终不会接管，以免影响系统提醒与通话质量。")
+                        Text("系统提示音、来电与通话音频属于受保护音频，檐下始终不会接管，以免影响系统提醒与通话质量。")
                             .font(.system(size: 11.5))
                             .foregroundColor(.secondary)
                             .lineSpacing(2)

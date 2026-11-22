@@ -93,7 +93,7 @@ public struct ThermalSettingsTab: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("本机无内置风扇（被动散热）")
                         .font(.system(size: 12.5, weight: .semibold))
-                    Text("温度读取为只读 SMC 操作，无需安装特权助手。CalmBar 已自动切换为纯温度监控：仅持续监听传感器与过温提醒，由 macOS 官方策略负责被动散热。")
+                    Text("温度读取为只读 SMC 操作，无需安装特权助手。檐下已自动切换为纯温度监控：仅持续监听传感器与过温提醒，由 macOS 官方策略负责被动散热。")
                         .font(.system(size: 11.5))
                         .foregroundColor(.secondary)
                         .lineSpacing(2)

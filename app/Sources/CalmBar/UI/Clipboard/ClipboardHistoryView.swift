@@ -568,7 +568,7 @@ public struct ClipboardHistoryView: View {
                 .foregroundColor(.secondary.opacity(0.6))
             Text("暂无剪贴板历史记录")
                 .font(.system(size: 14, weight: .medium))
-            Text("在任意应用中按下 ⌘+C 复制文本、图片或文件，CalmBar 将自动在此为您安全归档。")
+            Text("在任意应用中按下 ⌘+C 复制文本、图片或文件，檐下将自动在此为您安全归档。")
                 .font(.system(size: 12))
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)

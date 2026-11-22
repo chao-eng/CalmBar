@@ -17,9 +17,9 @@ public struct GeneralSettingsTab: View {
                     FeatureMasterToggleCard(
                         icon: "power",
                         iconColors: SettingsTab.general.gradientColors,
-                        title: "登录时自动启动 CalmBar",
+                        title: "登录时自动启动檐下",
                         activeSubtitle: "已激活 · 开机登录系统后自动在后台常驻启动",
-                        inactiveSubtitle: "已停用 · 开机不自启，需要时请手动打开 CalmBar",
+                        inactiveSubtitle: "已停用 · 开机不自启，需要时请手动打开檐下",
                         isEnabled: $settings.launchAtLogin
                     )
 
@@ -109,7 +109,7 @@ public struct GeneralSettingsTab: View {
                                 }
                                 .padding(.vertical, 2)
                             } else {
-                                Text("CalmBar 支持通过以下全局快捷键在任意 App 中即时呼出功能：")
+                                Text("檐下支持通过以下全局快捷键在任意 App 中即时呼出功能：")
                                     .font(.system(size: 11.5))
                                     .foregroundColor(.secondary)
                             }
@@ -128,14 +128,14 @@ public struct GeneralSettingsTab: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                     }
 
-                    GroupBox(label: Label("关于 CalmBar", systemImage: "info.circle")) {
+                    GroupBox(label: Label("关于檐下", systemImage: "info.circle")) {
                         VStack(alignment: .leading, spacing: 8) {
                             HStack {
                                 Image(systemName: "wind")
                                     .font(.system(size: 28, weight: .bold))
                                     .foregroundStyle(LinearGradient(colors: [.blue, .cyan], startPoint: .topLeading, endPoint: .bottomTrailing))
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text("CalmBar")
+                                    Text("檐下")
                                         .font(.system(size: 13.5, weight: .bold))
                                     Text("Version \(Updater.currentVersionText) (Native Swift 6 & SwiftUI)")
                                         .font(.system(size: 11.5))

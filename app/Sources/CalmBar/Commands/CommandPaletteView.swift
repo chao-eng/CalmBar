@@ -88,7 +88,7 @@ public struct CommandPaletteView: View {
     public var body: some View {
         CommandPaletteKit.CommandPaletteView(
             placeholder: "搜索命令、功能或快捷操作...",
-            emptyMessage: "输入关键词搜索 CalmBar 功能与快捷操作",
+            emptyMessage: "输入关键词搜索檐下功能与快捷操作",
             noMatchesMessage: "未找到相关命令",
             resultLimit: 50,
             width: 580,

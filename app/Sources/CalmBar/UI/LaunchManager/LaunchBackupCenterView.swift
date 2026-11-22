@@ -15,7 +15,7 @@ public struct LaunchBackupCenterView: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("快照与还原中心")
                         .font(.system(size: 14, weight: .bold))
-                    Text("CalmBar 在修改或删除任何自启项前自动创建快照，可随时无损还原，保留 30 天")
+                    Text("檐下在修改或删除任何自启项前自动创建快照，可随时无损还原，保留 30 天")
                         .font(.system(size: 11))
                         .foregroundStyle(.secondary)
                 }

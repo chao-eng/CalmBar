@@ -97,7 +97,7 @@ final class VisualCheckDriver {
         NSApp.appearance = NSAppearance(named: .aqua)
         AudioMixerWindowController.shared.show()
         try? await Task.sleep(for: .milliseconds(1500))
-        if let mixerWindow = NSApp.windows.first(where: { $0.title == "CalmBar 音频控制" }) {
+        if let mixerWindow = NSApp.windows.first(where: { $0.title == "檐下音频控制" }) {
             _ = M1Trace.capture(mixerWindow, to: "/tmp/calmbar_visual/light_audio_mixer.png")
             mixerWindow.orderOut(nil)
         } else {

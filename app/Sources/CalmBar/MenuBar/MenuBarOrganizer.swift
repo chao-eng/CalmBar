@@ -66,7 +66,7 @@ public final class MenuBarOrganizer: ObservableObject {
             button.target = self
             button.action = #selector(handleExpandCollapseClick)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-            button.toolTip = "CalmBar 展开/收起按钮 (点击展开/折叠，按住 ⌘ 拖动)"
+            button.toolTip = "檐下展开/收起按钮 (点击展开/折叠，按住 ⌘ 拖动)"
         }
         btnExpandCollapse.autosaveName = "calmbar_expandcollapse"
         btnExpandCollapse.isVisible = true
@@ -79,7 +79,7 @@ public final class MenuBarOrganizer: ObservableObject {
             button.target = self
             button.action = #selector(handleExpandCollapseClick)
             button.sendAction(on: [.leftMouseUp, .rightMouseUp])
-            button.toolTip = "CalmBar 收纳分隔符：按住 ⌘ 将需要隐藏的图标拖到此分隔符左侧"
+            button.toolTip = "檐下收纳分隔符：按住 ⌘ 将需要隐藏的图标拖到此分隔符左侧"
         }
         btnSeparate.autosaveName = "calmbar_separate"
         btnSeparate.isVisible = true
