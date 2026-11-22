@@ -1,0 +1,55 @@
+---
+import {
+  AudioLinesIcon,
+  BatteryChargingIcon,
+  ClipboardListIcon,
+  CoffeeIcon,
+  CommandIcon,
+  LanguagesIcon,
+  LockIcon,
+  MouseIcon,
+  MusicIcon,
+  PanelTopIcon,
+  RocketIcon,
+  ScanTextIcon,
+  SettingsIcon,
+  ShieldCheckIcon,
+  ThermometerIcon,
+  Trash2Icon,
+  VideoIcon,
+  WifiIcon,
+} from '@lucide/vue'
+import type { FeatureIconKey } from '@/lib/features'
+
+export interface Props {
+  name: FeatureIconKey
+  class?: string
+}
+
+const { name, class: className = 'size-4' } = Astro.props
+
+const ICONS = {
+  thermometer: ThermometerIcon,
+  battery: BatteryChargingIcon,
+  command: CommandIcon,
+  menu: PanelTopIcon,
+  mouse: MouseIcon,
+  clipboard: ClipboardListIcon,
+  wifi: WifiIcon,
+  coffee: CoffeeIcon,
+  music: MusicIcon,
+  scan: ScanTextIcon,
+  languages: LanguagesIcon,
+  audio: AudioLinesIcon,
+  video: VideoIcon,
+  trash: Trash2Icon,
+  shield: ShieldCheckIcon,
+  lock: LockIcon,
+  settings: SettingsIcon,
+  rocket: RocketIcon,
+} satisfies Record<FeatureIconKey, unknown>
+
+const Icon = ICONS[name]
+---
+
+<Icon class={className} />

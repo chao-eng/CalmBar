@@ -1,9 +1,8 @@
-# AGENTS.md —— CalmBar 官网前端工程约束规范
+# AGENTS.md —— 檐下（CalmBar）官网前端工程约束规范
 
-> 范围：本文件只约束 `web/` 目录（CalmBar 官方网站重构）。
-> 技术栈：Astro + Vue Islands + Tailwind CSS v4 + MDX + shadcn-vue。
+> 范围：本文件只约束 `web/` 目录（檐下官方网站）。
+> 技术栈：Astro + Vue Islands + Tailwind CSS v4 + MDX + shadcn-vue，语义 token 与 `bujic-movie/web` 同源（琥珀强调色 + 亮暗双主题）。
 > 旧静态站 `site/` 已删除（页面内容并入 `web/`，图片已迁移到 `web/public/images/`）；Swift 主工程 `app/` 不受本文件约束。
-> 信息架构参考：`/Users/guojc/Downloads/参考/LightC — Windows C 盘智能清理工具 _ 官方网站.html`（干净的产品官网风、双渠道下载区、FAQ 手风琴、作者与鸣谢区）。
 
 ## 🚫 硬性红线（违反即错）
 
@@ -51,7 +50,7 @@
 
 5. **顺序交付**
 
-- 按版块顺序推进并可独立验收：导航 → Hero → 产品截图 → 功能介绍 → 信任背书 → 下载 → FAQ → 作者介绍 → 页脚
+- 按版块顺序推进并可独立验收：导航 → Hero → 它解决什么 → 核心功能 → 面板一览 → 安全边界 → 技术选型 → 下载 → FAQ → 关于作者 → 页脚
 - 每完成一个版块即跑一次 `npm run check` + `npm run build`
 
 6. **事实可追溯**
@@ -104,11 +103,12 @@
 
 6. **设计风格：干净的产品官网（参考 LightC）**
 
-- 浅色为主：页面底 `--background` 用中性浅灰，内容卡用白；不使用大面积深色 Keynote 底
-- 单一品牌强调色取自旧站 Token：主色 `#0071e3`，悬停 `#0077ed`，亮色 `#2997ff`；禁止第二个强调色
-- 文字层级：标题 `#1d1d1f`，正文 `#1d1d1f`，次要 `#86868b`，分隔线 `rgba(0,0,0,0.08)`
-- 版面：8px 间距栅格；内容最大宽 `1200px`；圆角 `12 / 16 / 20`（`--radius` 起底）
-- 克制装饰：禁止装饰性渐变、光斑、3D 插画；只用细边框、轻阴影、留白建立层级
+- 浅色为主：页面底 `--background` 用白，内容卡用白 + `ring-1`；深色主题另有独立一套 token（`.dark`），不是简单反色
+- 单一品牌强调色：琥珀 `--primary`（亮色 `oklch(0.55 0.14 62)`、暗色 `oklch(0.77 0.16 74)`），禁止第二个强调色；参考 `bujic-movie/web` 的语义 token
+- 文字层级靠 `--foreground` / `--muted-foreground` 两级，分隔线用 `--border`，不要写死灰阶
+- 版面：容器 `max-w-7xl`，卡片圆角 `--radius`（`0.625rem`），间距走 4px 倍数
+- 装饰只允许三样，都定义在 `globals.css`：`.grid-bg`（首屏网格底纹）、`.hero-glow`（顶部径向光）、`.panel-frame`（窗口外框）；其余位置不加渐变、光斑与 3D 插画
+- 主题：默认跟随系统，`ThemeToggle` 只在亮/暗之间切换并写 `localStorage.theme`；首帧脚本必须留在 `BaseLayout`，否则暗色用户会先看到一帧白屏
 - 进入动效（渐入）只允许两项：首屏 `.hero-enter` / `.hero-enter-media` 一次性渐入，其余版块用 `.reveal` 随滚动渐入；两者都定义在 `globals.css`，不得再新增别名动画类
 - 动效实现写死为 CSS：`@supports (animation-timeline: view())` + `animation-range`，**禁止引入动画库**（GSAP / motion / AOS 等），禁止用 JS IntersectionObserver 复刻
 - 动画只允许改 `opacity` 与 `transform`，时长 0.6–0.8s、位移 ≤ 18px、缓动固定 `var(--ease-reveal)`；禁止改 height/width/color 等触发布局的属性
@@ -120,24 +120,27 @@
 
 | 版块         | 锚点         | 目标与内容                                                                 | 组件（shadcn-vue）                         | 内容来源                                  |
 |--------------|--------------|------------------------------------------------------------------------------|--------------------------------------------|-------------------------------------------|
-| 导航         | `#top`       | 品牌 + 锚点导航（功能 / 安全 / 下载 / FAQ / 关于）+ GitHub 与下载按钮          | `navigation-menu` `sheet` `button`         | —                                         |
-| Hero 首屏    | `#hero`      | 版本 pill、主标题「让你的 Mac 更冷静，更从容。」、一句卖点、双 CTA、快捷键条、主控制台弹窗截图（右侧，按真实尺寸约 `300px` 宽，**不加窗口外框**） | `badge` `button` `kbd`                    | `README.md` 简介与徽章                    |
-| 核心功能与界面 | `#features` | 15 项能力归并为 5 个分组，全部铺开（不用标签页）；每组标题行右侧一个带数量角标的「查看截图」按钮，截图**默认不铺在页面上**；Dialog 里按全局顺序连续翻看**全部 10 张**（每组 2 张），支持「上一张 / 下一张」+ `n / 10` 计数 + ←/→ 键（回环） | `card` `button` `dialog` | `README.md` 核心功能各节、`doc/images/`   |
-| 安全边界     | `#trust`     | 4 个数字做成一条数据带 + 6 条「写在代码里的硬约束」，末尾一行带许可与版本；**不铺开成长文** | `card`                     | `README.md`、`doc/release/RELEASE.md`             |
+| 导航         | `#top`       | 品牌「檐下」+ 拉丁名 + 锚点导航（核心功能 / 面板一览 / 安全边界 / 下载 / 常见问题 / 关于作者）+ 主题切换、GitHub 与下载按钮 | `navigation-menu` `sheet` `button`         | —                                         |
+| Hero 首屏    | `#hero`      | 版本 pill、主标题「菜单栏下方，一片可以歇脚的屋檐」、一句卖点、双 CTA、三行规格、4 个数据卡、8 组快捷键卡、主面板 GIF（右侧约 `300px` 宽，**不加窗口外框**）；首屏带 `.grid-bg` 与 `.hero-glow` | `badge` `button` `kbd`                    | `README.md` 简介与徽章                    |
+| 它解决什么   | `#why`       | 4 个日常痛点卡：风扇策略、电池常满、菜单栏拥挤、卸载残留                                     | `card`                                     | `README.md` 功能一览                       |
+| 核心功能     | `#features`  | 17 项能力归并为 6 个分组，全部铺开（不用标签页）；每组标题行右侧显示条目数，卡片为图标 + 标题 + 一行描述 | `card`                                   | `README.md` 核心功能各节                  |
+| 面板一览     | `#preview`   | `PreviewGallery`：线型 Tabs 切 5 个分区（温控/守护/工具/监控/声音），左侧真实面板截图（约 300px，`.panel-frame` 外框），右侧标题 + 描述 + 3 条要点 | `tabs` `badge`                 | 真实运行截图 `public/images/screenshots/`  |
+| 安全边界     | `#trust`     | 4 个数字做成一条数据带 + 7 条「写在代码里的硬约束」，末尾一行带许可与版本；**不铺开成长文** | `card`                     | `README.md`、`doc/release/RELEASE.md`             |
+| 技术选型     | —            | 6 格：Swift 6 / SwiftUI / AppKit / SMC / IOKit / Vision，一行说明「刻意只用系统自带的东西」 | `card`                                     | `app/AGENTS.md`、`README.md` 技术架构      |
 | 下载         | `#download`  | 双渠道卡 + 安装与首次运行（含去隔离命令块）+ 一行系统要求；**不放源码构建、不做独立部署版块** | `card` `button` `separator`   | `README.md` 安装说明与 Releases 链接      |
-| FAQ          | `#faq`       | 6 条：安装被拦截、权限需求、硬件安全、清理安全、是否联网、翻译服务端            | `accordion`                                | `src/lib/faq.ts`                          |
+| FAQ          | `#faq`       | 9 条：安装被拦截、权限需求、音频版本要求、硬件安全、清理安全、菜单栏收纳、局域网友好、是否联网、翻译服务端 | `accordion`                                | `src/lib/faq.ts`                          |
 | 关于作者     | `#about`     | 两列：左＝作者卡片 + 链接按钮，右＝技术取舍与反馈（MDX）；下方**整行一条赞赏条**（左说明 + 右两枚 104px 白底码，点击 Dialog 放大）；末尾一行致谢徽章 | `avatar` `card` `button` `dialog` | `README.md` 致谢与仓库信息                |
 |              |              | 注 1：作者头像固定用仓库内 `public/images/author-avatar.webp`（源取自 chao-eng 的 GitHub 头像，已本地化），禁止改回 `github.com/*.png` 外链 |             |                                           |
 |              |              | 注 2：reka 的 `AvatarImage` 在 SSR 水合后不会补发 `load`，会给已缓存的图片留内联 `display:none`，头像永远不显示；本项目用 `SiteAvatar.vue`（`Avatar` 容器 + 原生 `img`）绕开 |             |                                           |
 |              |              | 注：`avatar` 头像用 GitHub 头像地址；无法确认时用首字母占位，不得使用无关人像 |                                            |                                           |
 | 页脚         | —            | 三列：品牌 + 一行授权提示、页面导航、**开源协议**（`Apache License 2.0` + 3 条权限/义务 + 「查看协议原文」外链）；底部一行版权与渠道链接 | `separator`                                | `README.md`、仓库根 `LICENSE`              |
 
-- 页面长度预算：1440 视口下 `document.body.scrollHeight` ≤ 6000px（约 6.5 屏）。新增版块、恢复长文案或再拆出独立宣传区之前必须先确认；同类内容优先合并进现有版块，而不是新开一段
+- 页面长度预算：1440 视口下 `document.body.scrollHeight` ≤ 9000px（约 10 屏）。新增版块或恢复长文案之前必须先确认；同类内容优先合并进现有版块，而不是新开一段
 
 8. **内容分层与 SEO**
 
 - 长文只留 `src/content/about-author.mdx`（作者自述），在 `.astro` 里直接 import 渲染，不走内容集合
-- 其余内容全部是类型化数据：`src/lib/site.ts`（含 `SAFETY_BOUNDARIES`）、`src/lib/features.ts`（含每组截图）、`src/lib/faq.ts`
+- 其余内容全部是类型化数据：`src/lib/site.ts`（站点常量 / 导航 / 快捷键 / 痛点头 / 数据带 / 技术栈 / 安全边界 / 致谢）、`src/lib/features.ts`（功能分组）、`src/lib/faq.ts`、`src/components/site/PreviewGallery.vue` 的 `shots`（面板截图与要点）
 - MDX 禁止 import 第三方 npm 包或写内联脚本
 - **交互容器必须 `force-mount`**：Tabs / Accordion 的非激活内容默认不渲染，会让文案从 HTML 里消失；需要 `force-mount` + 隐藏态 CSS（Tabs 用 `data-[state=inactive]:hidden`）
 
@@ -192,30 +195,37 @@ web/
 ├── public/
 │   ├── _headers
 │   ├── robots.txt
-│   └── images/               # 由 doc/images 迁移并转 webp（迁移已完成）
+│   └── images/               # 站内图片资源（图标、头像、赞赏码、主面板 GIF）
+│       └── screenshots/      # 面板截图（WebP，来自真实运行实例，宽 640）
 └── src/
     ├── styles/
     │   └── globals.css       # @import "tailwindcss" + data-* 自定义变体 + @theme + shadcn 变量
+    ├── layouts/
+    │   └── BaseLayout.astro  # 站点外壳：首帧主题、SEO、页头页脚
     ├── lib/
     │   ├── utils.ts          # cn()
-    │   ├── site.ts           # 站点常量 / 导航 / 快捷键 / 信任数据 / 安全边界 / 致谢
-    │   ├── features.ts        # 功能介绍分组数据（含每组截图与图注）
+    │   ├── site.ts           # 站点常量 / 导航 / 快捷键 / 痛点 / 数据带 / 技术栈 / 安全边界 / 致谢
+    │   ├── features.ts        # 功能介绍分组数据
     │   └── faq.ts             # FAQ 结构化数据
     ├── components/
     │   ├── ui/               # shadcn-vue 生成物，禁止手改
     │   ├── site/
     │   │   ├── SiteHeader.astro
     │   │   ├── SiteFooter.astro
+    │   │   ├── ThemeToggle.astro    # 亮/暗切换，首帧主题由 BaseLayout 写入
     │   │   ├── MobileNav.vue        # Sheet 移动端抽屉（client:media）
     │   │   ├── LinkButton.vue       # Button + 链接的封装
     │   │   ├── SiteAvatar.vue       # Avatar 封装（带 alt）
     │   │   ├── CommandBlock.vue     # 带复制按钮的命令块（client:visible）
     │   │   ├── GitHubMark.vue       # GitHub 品牌标识（lucide 无品牌图标）
-    │   │   ├── FeatureIcon.vue      # FeatureIconKey → lucide 图标
-    │   │   ├── RewardCard.vue       # 赞赏码卡片 + 放大 Dialog（client:visible）
+    │   │   ├── FeatureIcon.vue      # FeatureIconKey → lucide 图标（Vue 版）
+    │   │   ├── FeatureIcon.astro    # 同上的 Astro 版，供 .astro 组件使用
+    │   │   ├── PreviewGallery.vue   # 面板一览：Tabs + 截图（client:visible）
+    │   │   └── RewardCard.vue       # 赞赏码卡片 + 放大 Dialog（client:visible）
     │   └── sections/
     │       ├── HeroSection.astro
-    │       ├── FeaturesSection.vue    # 功能与界面合并区（client:visible，含截图 Dialog）
+    │       ├── ProblemsSection.astro  # 它解决什么
+    │       ├── FeaturesSection.vue    # 功能分组（client:visible）
     │       ├── TrustSection.astro
     │       ├── DownloadSection.astro
     │       ├── FaqSection.vue         # 手风琴（client:visible）
@@ -251,20 +261,19 @@ web/
 | 改动后未跑 `npm run check` / `npm run build`                                    | 违反 RL-14                                                                        |
 | 删掉或改写 `globals.css` 里的 `data-open` / `data-closed` / `data-horizontal` 等自定义变体 | 违反约定 3，Dialog 动效与 Tabs 布局会静默失效（标签页横排成一列）                   |
 | Tabs / Accordion 用了 `force-mount` 但不给非激活内容加隐藏态 CSS                 | 违反约定 8，所有面板会同时铺开或全部答案可见                                       |
-| 给菜单栏弹窗截图套窗口外框、或放大到 500px 以上                                  | 违反约定 7，弹窗本身很小且不是独立窗口，Hero 应呈现真实尺寸约 300px 宽               |
+| 给菜单栏弹窗截图套窗口外框、或放大到 500px 以上                                  | 违反约定 7，弹窗本身很小且不是独立窗口，应呈现真实尺寸约 300px 宽                    |
 | 引入 GSAP / motion / AOS 或自写 IntersectionObserver 做渐入                       | 违反约定 6，渐入统一用 `globals.css` 的 `.reveal`（CSS scroll-driven，零 JS）        |
 | 动画里改 height / width / filter / color                                        | 违反约定 6，只允许 `opacity` + `transform`，否则触发布局与重绘                       |
 | 把 `.reveal` 加在 `position: sticky` 或 `overflow: hidden` 容器上                 | 违反约定 6，`view()` 时间轴在裁剪容器内会算错进度，元素可能停在半透明                |
-| 又新开一个独立「界面预览 / 功能演示」版块                                        | 违反约定 7，截图必须并进对应功能分组，同类内容不新开一段                            |
+| 在 `#why` 之外再开一个「痛点 / 背景」版块                                        | 违反约定 7，痛点固定 4 条，与「它解决什么」合并                                     |
+| 在 `#preview` 里再套一层截图 Dialog                                              | 违反约定 7，面板一览只用 Tabs 切换，点击放大不是必需                                 |
+| 在 `#features` 分组右侧挂常驻截图                                                | 违反约定 7，截图统一放 `#preview`，功能卡只写图标 + 一行描述                          |
 | Hero 副标题堆 10 项功能名、功能卡描述写到 3 行                                    | 违反约定 7 的长度预算，副标题 ≤ 6 项、每个功能描述 1 行                             |
-| 把安全边界铺成 9 条长文卡片、致谢排成 6 宫格                                      | 违反约定 7，信任区=数据带+6 条硬约束，致谢=一行徽章                                 |
-| 把功能截图常驻铺在每个分组右侧、做成 300px 窄条                                    | 违反约定 7，截图默认收起，只留「查看截图」按钮 + Dialog 放大查看                     |
-| 在 `.vue` 里 import `.astro` 组件（如 `FeatureIcon.astro`）                        | 违反约定 2，Astro 组件不能进 Vue；图标映射改写 `FeatureIcon.vue`                    |
+| 把安全边界铺成 9 条长文卡片、致谢排成 6 宫格                                      | 违反约定 7，信任区=数据带+硬约束，致谢=一行徽章                                     |
+| 在 `.vue` 里 import `.astro` 组件（如 `FeatureIcon.astro`）                        | 违反约定 2，Astro 组件不能进 Vue；`.astro` 侧用 `FeatureIcon.astro`，`.vue` 侧用 `FeatureIcon.vue` |
 | 赞赏码走外链、或用 `q ≤ 90` 压缩、或放在深色/透明底上                              | 违反约定 7，收款码必须是本地 `public/images/reward-*.webp`、`q ≥ 95`、白底展示，否则扫不出 |
 | 把赞赏卡提到首屏、下载区或页脚顶部                                                 | 违反约定 7，赞赏只出现在 `#about` 作者区，不占用首屏与转化路径                       |
 | 把赞赏卡塞进 `#about` 某一列（会让左右列高度失衡、右下留大片空白）                   | 违反约定 7，赞赏是 About 网格下方的整行横条，缩略图固定 104px 见方                    |
-| 截图 Dialog 只能看一张、或只在当前分组内翻页                                      | 违反约定 7，Dialog 按全局顺序连续翻看全部 10 张，计数为 `n / 10`                     |
-| 每组只配 1 张截图、漏掉电池 / 剪贴板 / 翻译 / 去隔离                               | 违反约定 7，5 个分组各配 2 张，共 10 张，截图集合见 `src/lib/features.ts`             |
 | 对外声称的协议与仓库实际不符（链接指向不存在的 `LICENSE`）                          | 违反 RL-03 / 约定 7，协议信息必须与仓库根 `LICENSE` 一致，官网链接要指向它            |
 | 把 `@keydown` 绑在 `<DialogContent>` 上做翻页                                     | 违反约定 6，reka 会二次下发 attrs，一次按键翻两页；必须用单个 window 监听            |
 | 头像写 `https://github.com/chao-eng.png` 等外链                                   | 违反约定 7，头像必须用本地 `author-avatar.webp`，避免国内加载不稳与额外外部请求      |

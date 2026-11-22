@@ -43,7 +43,7 @@ import LinkButton from './LinkButton.vue'
         </LinkButton>
         <LinkButton href="#download" class="w-full">
           <DownloadIcon />
-          下载 CalmBar
+          下载檐下
         </LinkButton>
       </div>
     </SheetContent>

@@ -1,4 +1,4 @@
-CalmBar 是个人项目，用 **Swift 6 + SwiftUI + AppKit** 写，源码按 **Apache License 2.0** 公开。
+檐下（CalmBar）是个人项目，用 **Swift 6 + SwiftUI + AppKit** 写，源码按 **Apache License 2.0** 公开。
 
 ## 技术上的取舍
 
@@ -6,6 +6,10 @@ CalmBar 是个人项目，用 **Swift 6 + SwiftUI + AppKit** 写，源码按 **A
 - 需要特权的能力单独拆出 `CalmBarHelper` 特权助手，处理 `/Applications` 下的操作不必反复输入密码。
 - 启动项管理走 `launchctl` 的现代子命令，`/System/Library` 下的系统核心项强制只读，改动前先存一份快照。
 - 误操作也有退路。温控在退出与休眠时自动交还 SMC 官方托管；清理统一移入系统废纸篓，误删可以放回。
+
+## 关于名字
+
+菜单栏像一排屋檐，图标挂在檐下。工具要做的事也就是让机器安静下来：风扇不乱转、屏幕该睡就睡、通知别乱跳。
 
 ## 反馈与协作
 

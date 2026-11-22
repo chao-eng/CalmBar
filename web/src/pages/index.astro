@@ -1,87 +1,109 @@
 ---
-import '@/styles/globals.css'
 import AboutSection from '@/components/sections/AboutSection.astro'
 import DownloadSection from '@/components/sections/DownloadSection.astro'
 import FaqSection from '@/components/sections/FaqSection.vue'
 import FeaturesSection from '@/components/sections/FeaturesSection.vue'
 import HeroSection from '@/components/sections/HeroSection.astro'
+import ProblemsSection from '@/components/sections/ProblemsSection.astro'
 import TrustSection from '@/components/sections/TrustSection.astro'
-import SiteFooter from '@/components/site/SiteFooter.astro'
-import SiteHeader from '@/components/site/SiteHeader.astro'
-import { SITE } from '@/lib/site'
-
-const canonical = new URL(Astro.url.pathname, Astro.site ?? `https://${SITE.domain}`).href
-const ogImage = new URL('/images/app_icon_512.png', Astro.site ?? `https://${SITE.domain}`).href
+import BaseLayout from '@/layouts/BaseLayout.astro'
+import PreviewGallery from '@/components/site/PreviewGallery.vue'
+import { SITE, STACK } from '@/lib/site'
 
 const structuredData = {
   '@context': 'https://schema.org',
   '@type': 'SoftwareApplication',
-  name: SITE.name,
+  name: `${SITE.name} ${SITE.latinName}`,
+  alternateName: SITE.latinName,
   applicationCategory: 'UtilitiesApplication',
   operatingSystem: SITE.osRequirement,
   softwareVersion: SITE.version,
   description: SITE.description,
   license: SITE.licenseUrl,
-  url: canonical,
   downloadUrl: SITE.releases,
-  offers: {
-    '@type': 'Offer',
-    price: '0',
-    priceCurrency: 'CNY',
-  },
-  author: {
-    '@type': 'Person',
-    name: 'chao-eng',
-    url: SITE.repo,
-  },
+  offers: { '@type': 'Offer', price: '0', priceCurrency: 'CNY' },
+  author: { '@type': 'Person', name: 'chao-eng', url: SITE.repo },
 }
 ---
 
-<!doctype html>
-<html lang={SITE.locale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <title>{SITE.title}</title>
-    <meta name="description" content={SITE.description} />
-    <meta name="keywords" content={SITE.keywords} />
-    <meta name="author" content="chao-eng" />
-    <meta name="robots" content="index, follow" />
-    <link rel="canonical" href={canonical} />
+<BaseLayout>
+  <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
 
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content={SITE.name} />
-    <meta property="og:locale" content="zh_CN" />
-    <meta property="og:title" content={SITE.title} />
-    <meta property="og:description" content={SITE.description} />
-    <meta property="og:url" content={canonical} />
-    <meta property="og:image" content={ogImage} />
+  <HeroSection />
+  <ProblemsSection />
+  <FeaturesSection client:visible />
 
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content={SITE.title} />
-    <meta name="twitter:description" content={SITE.description} />
-    <meta name="twitter:image" content={ogImage} />
+  <!-- ============ 面板一览 ============ -->
+  <section id="preview" class="section border-border/70 bg-muted/25 border-y" aria-labelledby="preview-title">
+    <div class="container-page">
+      <div class="reveal max-w-2xl">
+        <p class="eyebrow">面板一览</p>
+        <h2 id="preview-title" class="section-title">真实运行中的面板，不是效果图</h2>
+        <p class="section-desc">
+          下面每一张都是运行实例的截图。切换标签看不同分区，面板宽度固定 320，切换时只在内部做高度动画。
+        </p>
+      </div>
+      <div class="mt-8">
+        <PreviewGallery client:visible />
+      </div>
+    </div>
+  </section>
 
-    <link rel="icon" type="image/png" href="/images/favicon.png" />
-    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
-    <meta name="theme-color" content="#f5f5f7" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)" />
+  <TrustSection />
 
-    <script type="application/ld+json" set:html={JSON.stringify(structuredData)} />
+  <!-- ============ 技术选型 ============ -->
+  <section class="border-border/70 bg-muted/25 border-y" aria-labelledby="stack-title">
+    <div class="container-page py-14 sm:px-6">
+      <div class="reveal mx-auto max-w-2xl text-center">
+        <p class="eyebrow">技术选型</p>
+        <h2 id="stack-title" class="section-title">刻意只用系统自带的东西</h2>
+        <p class="section-desc">
+          没有 Electron，没有 WebView 容器，也不常驻脚本运行时。权限、读写与识别全部落在系统框架里。
+        </p>
+      </div>
+      <div class="reveal mt-8 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        {
+          STACK.map((item) => (
+            <div class="card-surface px-3 py-3 text-center">
+              <div class="text-sm font-semibold">{item.label}</div>
+              <div class="text-muted-foreground mt-0.5 text-[0.7rem] leading-4">{item.detail}</div>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
 
-    <!-- Umami 统计（沿用旧站配置，defer 加载不阻塞首屏） -->
-    <script is:inline defer src="https://um.bujic.cc/script.js" data-website-id="0bbb1ad6-dcc5-4af9-bd97-b6872c7ae869"></script>
-  </head>
-  <body id="top">
-    <SiteHeader />
-    <main>
-      <HeroSection />
-      <FeaturesSection client:visible />
-      <TrustSection />
-      <DownloadSection />
-      <FaqSection client:visible />
-      <AboutSection />
-    </main>
-    <SiteFooter />
-  </body>
-</html>
+  <DownloadSection />
+  <FaqSection client:visible />
+  <AboutSection />
+
+  <!-- ============ 结尾 CTA ============ -->
+  <section class="container-page pb-4">
+    <div class="panel-frame relative overflow-hidden px-6 py-12 text-center sm:px-10">
+      <div class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-48" aria-hidden="true"></div>
+      <div class="relative">
+        <h2 class="text-2xl font-bold tracking-tight sm:text-3xl">现在就把菜单栏收拾干净</h2>
+        <p class="text-muted-foreground mx-auto mt-3 max-w-xl text-sm leading-6 sm:text-base">
+          一个 DMG，拖进「应用程序」。温控、充电、剪贴板、录屏、互传与清理，都在那个图标下面。
+        </p>
+        <div class="mt-6 flex flex-col items-center justify-center gap-2.5 sm:flex-row">
+          <a
+            href="#download"
+            class="bg-primary text-primary-foreground hover:bg-primary/90 inline-flex h-10 items-center gap-2 rounded-lg px-5 text-sm font-medium transition-colors"
+          >
+            下载 {SITE.name}
+          </a>
+          <a
+            href={SITE.repo}
+            target="_blank"
+            rel="noopener noreferrer"
+            class="ring-foreground/15 hover:bg-muted/60 inline-flex h-10 items-center gap-2 rounded-lg px-5 text-sm font-medium ring-1 transition-colors"
+          >
+            先看源码
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+</BaseLayout>

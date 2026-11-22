@@ -1,0 +1,53 @@
+---
+/**
+ * 主题切换：按钮只在亮/暗之间切换。
+ * 「跟随系统」只作为首次访问的默认值，由 BaseLayout 的首帧脚本判定后写进 <html>。
+ */
+---
+
+<button
+  type="button"
+  id="theme-toggle"
+  class="text-muted-foreground hover:text-foreground hover:bg-muted focus-visible:ring-ring/50 inline-flex size-8 items-center justify-center rounded-lg transition-colors focus-visible:ring-3 focus-visible:outline-none"
+  aria-label="切换主题"
+  title="切换主题"
+>
+  <svg class="theme-icon size-4" data-icon="dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+  </svg>
+  <svg class="theme-icon size-4" data-icon="light" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="12" r="4"></circle>
+    <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+  </svg>
+</button>
+
+<style>
+  .theme-icon {
+    display: none;
+  }
+  /* 当前是亮色 → 显示月亮（点了就变暗）；当前是暗色 → 显示太阳。 */
+  :global(html:not(.dark)) .theme-icon[data-icon='dark'],
+  :global(html.dark) .theme-icon[data-icon='light'] {
+    display: block;
+  }
+</style>
+
+<script>
+  const media = window.matchMedia('(prefers-color-scheme: dark)')
+
+  const apply = (dark: boolean) => {
+    document.documentElement.classList.toggle('dark', dark)
+    document.documentElement.dataset.themeMode = dark ? 'dark' : 'light'
+    document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+    localStorage.setItem('theme', dark ? 'dark' : 'light')
+  }
+
+  document.getElementById('theme-toggle')?.addEventListener('click', () => {
+    apply(!document.documentElement.classList.contains('dark'))
+  })
+
+  // 只在用户没手动选过时跟随系统。
+  media.addEventListener('change', () => {
+    if (localStorage.getItem('theme') === 'system') apply(media.matches)
+  })
+</script>

@@ -1,59 +1,68 @@
 ---
-import { ArrowRightIcon, CircleCheckIcon, DownloadIcon } from '@lucide/vue'
+import { ArrowRightIcon, CloudOffIcon, CpuIcon, ShieldCheckIcon } from '@lucide/vue'
 import { Badge } from '@/components/ui/badge'
 import { Kbd } from '@/components/ui/kbd'
 import GitHubMark from '@/components/site/GitHubMark.vue'
 import LinkButton from '@/components/site/LinkButton.vue'
-import { SITE, SHORTCUTS } from '@/lib/site'
+import { HERO_STATS, SITE, SHORTCUTS } from '@/lib/site'
 
 const announcement = `${SITE.name} ${SITE.version} 已发布 · 适配 ${SITE.osRequirement}`
 ---
 
-<section id="hero" class="section pb-16 pt-12 sm:pt-16 lg:pt-20" aria-labelledby="hero-title">
-  <div class="container-page">
+<section id="hero" class="relative overflow-hidden" aria-labelledby="hero-title">
+  <div class="grid-bg pointer-events-none absolute inset-0" aria-hidden="true"></div>
+  <div class="hero-glow pointer-events-none absolute inset-x-0 top-0 h-[36rem]" aria-hidden="true"></div>
+
+  <div class="container-page relative pt-14 pb-10 sm:pt-20">
     <div class="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_auto] lg:gap-16">
       <div class="hero-enter text-center lg:text-left">
-        <Badge variant="secondary" class="h-6 gap-2 px-3 text-xs text-muted-foreground">
-          <span class="size-1.5 rounded-full bg-brand"></span>
-          {announcement}
+        <Badge
+          variant="secondary"
+          class="text-muted-foreground !h-auto max-w-full gap-2 whitespace-normal px-3 py-1 text-xs leading-5"
+        >
+          <span class="bg-primary size-1.5 shrink-0 rounded-full"></span>
+          <span class="text-left">{announcement}</span>
         </Badge>
 
-        <h1 id="hero-title" class="mt-6 text-4xl font-semibold tracking-tight sm:text-5xl">
-          让你的 Mac<br />
-          <span class="text-primary">更冷静，更从容。</span>
+        <h1 id="hero-title" class="mt-5 text-4xl font-extrabold tracking-tight text-balance sm:text-5xl">
+          菜单栏下方，
+          <span class="text-primary">一片可以歇脚的屋檐</span>
         </h1>
 
-        <p class="mx-auto mt-6 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg lg:mx-0">
+        <p class="text-muted-foreground mx-auto mt-5 max-w-2xl text-base leading-7 text-pretty sm:text-lg lg:mx-0">
           {SITE.subheadline}
         </p>
 
-        <div class="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row lg:justify-start">
-          <LinkButton href="#download" size="lg" class="w-full px-6 sm:w-auto">
-            <DownloadIcon />
+        <div class="mt-7 flex flex-col items-center justify-center gap-2.5 sm:flex-row lg:justify-start">
+          <LinkButton href="#download" size="lg" class="h-10 w-full px-5 sm:w-auto">
             下载 {SITE.name}
+            <ArrowRightIcon data-icon="inline-end" />
           </LinkButton>
           <LinkButton
             href={SITE.repo}
             external
             variant="outline"
             size="lg"
-            class="w-full px-6 sm:w-auto"
+            class="h-10 w-full px-5 sm:w-auto"
           >
             <GitHubMark :size="16" />
             GitHub 源码
-            <ArrowRightIcon data-icon="inline-end" />
           </LinkButton>
         </div>
 
-        <ul class="mt-6 flex flex-wrap items-center justify-center gap-x-5 gap-y-2 text-sm text-muted-foreground lg:justify-start">
-          {
-            SITE.specs.map((spec) => (
-              <li class="inline-flex items-center gap-1.5">
-                <CircleCheckIcon class="size-4 text-primary" />
-                {spec}
-              </li>
-            ))
-          }
+        <ul class="text-muted-foreground mt-4 flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs lg:justify-start">
+          <li class="inline-flex items-center gap-1.5">
+            <CpuIcon class="size-3.5" />
+            {SITE.specs[0]}
+          </li>
+          <li class="inline-flex items-center gap-1.5">
+            <ShieldCheckIcon class="size-3.5" />
+            {SITE.specs[1]}
+          </li>
+          <li class="inline-flex items-center gap-1.5">
+            <CloudOffIcon class="size-3.5" />
+            {SITE.specs[2]}
+          </li>
         </ul>
       </div>
 
@@ -61,16 +70,30 @@ const announcement = `${SITE.name} ${SITE.version} 已发布 · 适配 ${SITE.os
         <img
           src="/images/popover_main.gif"
           width="640"
-          height="952"
-          alt="CalmBar 菜单栏主控制台演示，切换温控、守护、工具与监控分区"
+          height="972"
+          alt="檐下菜单栏主面板演示，切换温控、守护、工具、监控与声音分区"
           decoding="async"
           class="h-auto w-full max-w-[300px]"
         />
       </div>
     </div>
 
-    <div class="reveal mt-16">
-      <p class="text-center text-sm font-medium text-muted-foreground">八组全局快捷键，覆盖最高频的操作</p>
+    <dl class="reveal mt-12 grid grid-cols-2 gap-3 sm:grid-cols-4">
+      {
+        HERO_STATS.map((stat) => (
+          <div class="card-surface bg-card/60 px-4 py-3">
+            <dt class="text-2xl font-bold tracking-tight">{stat.value}</dt>
+            <dd class="text-sm font-medium">{stat.label}</dd>
+            <p class="text-muted-foreground mt-0.5 text-xs leading-5">{stat.hint}</p>
+          </div>
+        ))
+      }
+    </dl>
+
+    <div class="reveal mt-10">
+      <p class="text-muted-foreground text-center text-sm font-medium">
+        八组全局快捷键，覆盖最高频的操作
+      </p>
       <ul class="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {
           SHORTCUTS.map((shortcut) => (
@@ -82,7 +105,7 @@ const announcement = `${SITE.name} ${SITE.version} 已发布 · 适配 ${SITE.os
               </span>
               <span class="min-w-0">
                 <span class="block text-sm font-medium">{shortcut.name}</span>
-                <span class="mt-0.5 block text-xs leading-relaxed text-muted-foreground">
+                <span class="text-muted-foreground mt-0.5 block text-xs leading-relaxed">
                   {shortcut.description}
                 </span>
               </span>

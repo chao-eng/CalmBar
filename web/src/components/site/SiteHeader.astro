@@ -3,27 +3,29 @@ import { NAV_ITEMS, SITE } from '@/lib/site'
 import GitHubMark from './GitHubMark.vue'
 import LinkButton from './LinkButton.vue'
 import MobileNav from './MobileNav.vue'
+import ThemeToggle from './ThemeToggle.astro'
 ---
 
-<header class="sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md">
-  <div class="container-page flex h-14 items-center justify-between gap-4">
-    <a href="#top" class="flex items-center gap-2 rounded-md" aria-label="CalmBar 首页">
+<header class="border-border/70 bg-background/85 sticky top-0 z-50 border-b backdrop-blur-xl">
+  <div class="mx-auto flex h-14 max-w-7xl items-center gap-3 px-4 sm:px-6">
+    <a href="#top" class="flex shrink-0 items-center gap-2 rounded-lg" aria-label={`${SITE.name} 首页`}>
       <img
         src="/images/app_icon_512.png"
         alt=""
         width="28"
         height="28"
-        class="size-7 rounded-md"
+        class="ring-border size-7 rounded-md ring-1"
       />
-      <span class="text-base font-semibold tracking-tight">CalmBar</span>
+      <span class="text-primary text-[1.05rem] font-bold tracking-wide">{SITE.name}</span>
+      <span class="text-muted-foreground hidden text-xs sm:inline">{SITE.latinName}</span>
     </a>
 
-    <nav class="hidden items-center gap-0.5 lg:flex" aria-label="主导航">
+    <nav class="ml-4 hidden items-center gap-1 lg:flex" aria-label="主导航">
       {
         NAV_ITEMS.map((item) => (
           <a
             href={item.href}
-            class="rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            class="text-muted-foreground hover:text-foreground hover:bg-muted/60 rounded-lg px-2.5 py-1.5 text-sm transition-colors"
           >
             {item.label}
           </a>
@@ -31,12 +33,13 @@ import MobileNav from './MobileNav.vue'
       }
     </nav>
 
-    <div class="flex items-center gap-1.5">
+    <div class="ml-auto flex items-center gap-1.5">
+      <ThemeToggle />
       <a
         href={SITE.repo}
         target="_blank"
         rel="noopener noreferrer"
-        class="hidden rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground sm:block"
+        class="text-muted-foreground hover:text-foreground hover:bg-muted hidden size-8 items-center justify-center rounded-lg transition-colors sm:inline-flex"
         aria-label="在 GitHub 查看源码"
       >
         <GitHubMark :size="16" />

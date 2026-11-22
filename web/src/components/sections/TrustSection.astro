@@ -3,11 +3,11 @@ import { CircleCheckIcon, ShieldCheckIcon } from '@lucide/vue'
 import { SAFETY_BOUNDARIES, SITE, TRUST_STATS } from '@/lib/site'
 ---
 
-<section id="trust" class="section border-y border-border bg-card" aria-labelledby="trust-title">
+<section id="trust" class="section" aria-labelledby="trust-title">
   <div class="container-page">
-    <div class="reveal mx-auto max-w-2xl text-center">
-      <p class="section-eyebrow">安全边界</p>
-      <h2 id="trust-title" class="section-title mt-2">为什么可以放心装进 Mac</h2>
+    <div class="reveal max-w-2xl">
+      <p class="eyebrow">安全边界</p>
+      <h2 id="trust-title" class="section-title">为什么可以放心装进 Mac</h2>
       <p class="section-desc">
         这个工具要读写 SMC、拦系统事件，还要删文件。权限给出去之前，先看它拿这些权限做什么、做到哪一步。
       </p>
@@ -16,30 +16,31 @@ import { SAFETY_BOUNDARIES, SITE, TRUST_STATS } from '@/lib/site'
     <ul class="reveal mt-8 grid grid-cols-2 gap-3 lg:grid-cols-4">
       {
         TRUST_STATS.map((stat) => (
-          <li class="card-surface bg-background px-4 py-3 text-center">
-            <p class="text-2xl font-semibold tracking-tight text-primary">{stat.value}</p>
-            <p class="mt-1 text-xs text-muted-foreground">{stat.label}</p>
+          <li class="card-surface px-4 py-3">
+            <p class="text-primary text-2xl font-bold tracking-tight">{stat.value}</p>
+            <p class="mt-1 text-sm font-medium">{stat.label}</p>
+            <p class="text-muted-foreground mt-0.5 text-xs leading-5">{stat.hint}</p>
           </li>
         ))
       }
     </ul>
 
-    <div class="reveal card-surface mt-6 bg-background p-5 sm:p-6">
-      <h3 class="flex items-center gap-2 text-base font-medium">
-        <ShieldCheckIcon class="size-4 text-primary" />
+    <div class="reveal card-surface mt-4 p-5 sm:p-6">
+      <h3 class="flex items-center gap-2 text-base font-semibold">
+        <ShieldCheckIcon class="text-primary size-4" />
         写在代码里的硬约束
       </h3>
       <ul class="mt-4 grid gap-x-6 gap-y-2.5 sm:grid-cols-2">
         {
           SAFETY_BOUNDARIES.map((item) => (
-            <li class="flex gap-2.5 text-sm leading-relaxed text-muted-foreground">
-              <CircleCheckIcon class="mt-0.5 size-4 shrink-0 text-primary" />
+            <li class="text-muted-foreground flex gap-2.5 text-sm leading-6">
+              <CircleCheckIcon class="text-primary mt-0.5 size-4 shrink-0" />
               <span>{item}</span>
             </li>
           ))
         }
       </ul>
-      <p class="mt-5 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
+      <p class="text-muted-foreground border-border mt-4 border-t pt-4 text-xs leading-6">
         基于 {SITE.license} 开源，全部源码公开可审计；当前版本 {SITE.version}，要求 {SITE.osRequirement}。
       </p>
     </div>

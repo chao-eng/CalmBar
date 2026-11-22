@@ -1,0 +1,86 @@
+---
+import '@/styles/globals.css'
+import SiteFooter from '@/components/site/SiteFooter.astro'
+import SiteHeader from '@/components/site/SiteHeader.astro'
+import { SITE } from '@/lib/site'
+
+export interface Props {
+  title?: string
+  description?: string
+}
+
+const {
+  title = SITE.title,
+  description = SITE.description,
+} = Astro.props
+
+const canonical = new URL(Astro.url.pathname, Astro.site ?? `https://${SITE.domain}`).href
+const ogImage = new URL('/images/app_icon_512.png', Astro.site ?? `https://${SITE.domain}`).href
+---
+
+<!doctype html>
+<html lang={SITE.locale} class="scroll-smooth">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="keywords" content={SITE.keywords} />
+    <meta name="author" content="chao-eng" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={canonical} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="icon" type="image/png" href="/images/favicon.png" />
+    <link rel="apple-touch-icon" href="/images/apple-touch-icon.png" />
+    <meta name="theme-color" content="#fafafa" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0a0a0a" media="(prefers-color-scheme: dark)" />
+
+    <!--
+      首帧主题：在样式表加载前就把 .dark 打到 <html> 上，
+      否则暗色用户会先看到一帧白屏。与 ThemeToggle 的存储键保持一致。
+    -->
+    <script is:inline>
+      ;(() => {
+        try {
+          const stored = localStorage.getItem('theme')
+          const mode = stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system'
+          const dark = mode === 'dark' || (mode === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+          document.documentElement.classList.toggle('dark', dark)
+          document.documentElement.dataset.themeMode = mode
+          document.documentElement.style.colorScheme = dark ? 'dark' : 'light'
+        } catch {
+          /* localStorage 不可用时按亮色渲染 */
+        }
+      })()
+    </script>
+
+    <!-- Umami 统计（沿用旧站配置，defer 加载不阻塞首屏） -->
+    <script is:inline defer src="https://um.bujic.cc/script.js" data-website-id="0bbb1ad6-dcc5-4af9-bd97-b6872c7ae869"></script>
+  </head>
+  <body id="top" class="bg-background text-foreground min-h-screen">
+    <a
+      href="#main"
+      class="bg-primary text-primary-foreground focus-visible:ring-ring sr-only rounded-md px-3 py-2 text-sm focus:not-sr-only focus:absolute focus:top-3 focus:left-3 focus:z-50"
+    >
+      跳到正文
+    </a>
+    <SiteHeader />
+    <main id="main">
+      <slot />
+    </main>
+    <SiteFooter />
+  </body>
+</html>
