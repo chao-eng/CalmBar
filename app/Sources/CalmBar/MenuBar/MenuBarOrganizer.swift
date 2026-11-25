@@ -10,11 +10,18 @@ public final class MenuBarOrganizer: ObservableObject {
     // 1. Permanent toggle button (< / >) - NEVER expanded so it ALWAYS stays visible on the menu bar
     private let btnExpandCollapse = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
 
-    // 2. Separator item (/) - expands to 10,000pt when collapsed, pushing all items to its left off-screen
+    // 2. 分隔符（/）— 收纳时加宽，把左侧图标移出菜单栏布局
     private let btnSeparate = NSStatusBar.system.statusItem(withLength: 20.0)
 
     private let normalLength: CGFloat = 20.0
     private var collapseLength: CGFloat = 10_000.0
+    private var calibratedCollapseLength: CGFloat?
+    private var restingSeparatorArrowGap: CGFloat?
+    private var collapseCalibrationGeneration = 0
+    private var isCollapseCalibrating = false
+    private var isRecalibrationScheduled = false
+    private let collapseCalibrationInterval: TimeInterval = 0.25
+    private let collapseCalibrationTolerance: CGFloat = 8
 
     private var autoCollapseTimer: Timer?
     private var hoverMonitor: Any?
@@ -37,10 +44,19 @@ public final class MenuBarOrganizer: ObservableObject {
             queue: .main
         ) { [weak self] _ in
             Task { @MainActor in
-                self?.updateCollapseLength()
-                if self?.isCollapsed == true {
-                    self?.btnSeparate.length = self?.collapseLength ?? 10_000
-                }
+                self?.handleScreenParametersChanged()
+            }
+        }
+
+        // 切换前台应用会改变菜单栏可用空间；若分隔符被系统移出布局，重新校准。
+        NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 300_000_000)
+                self?.recalibrateCollapsedMenuBarIfSeparatorMoved()
             }
         }
 
@@ -144,39 +160,209 @@ public final class MenuBarOrganizer: ObservableObject {
     }
 
     public func collapseMenuBar() {
-        guard !isCollapsed else { return }
+        guard AppSettings.shared.menuBarOrganizerEnabled, !isCollapsed else { return }
         updateCollapseLength()
+        cancelCollapseCalibration()
 
-        // Expand separator to 10,000pt to push all items to its left off-screen
-        btnSeparate.length = collapseLength
-
-        // Toggle button stays permanently visible in place and updates arrow to >
-        if let button = btnExpandCollapse.button {
-            let img = NSImage(systemSymbolName: "chevron.right", accessibilityDescription: "Expand Menu Bar")
-            img?.isTemplate = true
-            button.image = img
-        }
+        // macOS 27 会移除超长状态项；首次收纳先保持展开宽度，再探测系统接受的上限。
+        btnSeparate.length = calibratedCollapseLength ?? (needsCollapseLengthCalibration ? normalLength : collapseLength)
+        setCollapseButtonImage(collapsed: true)
 
         isCollapsed = true
         autoCollapseTimer?.invalidate()
         autoCollapseTimer = nil
+
+        if needsCollapseLengthCalibration && calibratedCollapseLength == nil {
+            beginCollapseCalibration()
+        }
     }
 
     public func expandMenuBar() {
         guard isCollapsed else { return }
+        cancelCollapseCalibration()
 
-        // Restore separator width to 20pt
         btnSeparate.length = normalLength
-
-        // Update toggle button arrow back to <
-        if let button = btnExpandCollapse.button {
-            let img = NSImage(systemSymbolName: "chevron.left", accessibilityDescription: "Collapse Menu Bar")
-            img?.isTemplate = true
-            button.image = img
-        }
-
+        setCollapseButtonImage(collapsed: false)
         isCollapsed = false
         startAutoCollapseTimerIfNeeded()
+    }
+
+    private var needsCollapseLengthCalibration: Bool {
+        if #available(macOS 27.0, *) { return true }
+        return false
+    }
+
+    private func setCollapseButtonImage(collapsed: Bool) {
+        guard let button = btnExpandCollapse.button else { return }
+        let symbol = collapsed ? "chevron.right" : "chevron.left"
+        let description = collapsed ? "Expand Menu Bar" : "Collapse Menu Bar"
+        let image = NSImage(systemSymbolName: symbol, accessibilityDescription: description)
+        image?.isTemplate = true
+        button.image = image
+    }
+
+    private func beginCollapseCalibration() {
+        cancelCollapseCalibration()
+        Task { [weak self] in
+            await self?.calibrateCollapseLength()
+        }
+    }
+
+    private func calibrateCollapseLength() async {
+        let generation = collapseCalibrationGeneration
+        var restingGap: CGFloat?
+
+        // 刚启动或切换屏幕时，状态项可能还没拿到菜单栏位置；短暂重试而不是从 x=0 误判。
+        for _ in 0..<12 {
+            guard isCollapseCalibrationCurrent(generation) else { return }
+            if let gap = separatorArrowGap(), isSeparatorPlaced() {
+                restingGap = gap
+                break
+            }
+            await waitForMenuBarLayout()
+        }
+
+        guard let restingGap else {
+            finishCollapseCalibrationWithoutAcceptedLength(reason: "separator is not laid out")
+            return
+        }
+
+        restingSeparatorArrowGap = restingGap
+        var search = MenuBarCollapseLengthSearch(expandedLength: normalLength, upperBound: collapseLength)
+        isCollapseCalibrating = true
+
+        while let probe = search.nextProbe() {
+            btnSeparate.length = probe
+            await waitForMenuBarLayout()
+            guard isCollapseCalibrationCurrent(generation), isCollapseCalibrating else { return }
+
+            let accepted: Bool
+            if let gap = separatorArrowGap() {
+                accepted = abs(gap - restingGap) <= collapseCalibrationTolerance
+            } else {
+                accepted = false
+            }
+            search.record(accepted: accepted)
+        }
+
+        await finishCollapseCalibration(search: search, generation: generation)
+    }
+
+    private func finishCollapseCalibration(search: MenuBarCollapseLengthSearch, generation: Int) async {
+        isCollapseCalibrating = false
+
+        guard search.foundInflatedLength else {
+            finishCollapseCalibrationWithoutAcceptedLength(reason: "all inflated lengths were rejected")
+            return
+        }
+
+        let length = search.calibratedLength
+        calibratedCollapseLength = length
+        btnSeparate.length = length
+
+        // 最终安全余量也要复核一次；若刚好被拒绝则恢复展开并重新校准。
+        await waitForMenuBarLayout()
+        guard isCollapseCalibrationCurrent(generation),
+              let gap = separatorArrowGap(),
+              let restingGap = restingSeparatorArrowGap else { return }
+
+        if abs(gap - restingGap) <= collapseCalibrationTolerance {
+            NSLog("[MenuBarOrganizer] macOS 27 收纳宽度校准完成：%.1fpt，探测 %d 次", length, search.probeCount)
+        } else {
+            calibratedCollapseLength = nil
+            recalibrateCollapsedMenuBar()
+        }
+    }
+
+    private func waitForMenuBarLayout() async {
+        try? await Task.sleep(nanoseconds: UInt64(collapseCalibrationInterval * 1_000_000_000))
+    }
+
+    private func isCollapseCalibrationCurrent(_ generation: Int) -> Bool {
+        needsCollapseLengthCalibration && collapseCalibrationGeneration == generation && isCollapsed
+    }
+
+    private func finishCollapseCalibrationWithoutAcceptedLength(reason: String) {
+        cancelCollapseCalibration()
+        calibratedCollapseLength = nil
+        restingSeparatorArrowGap = nil
+        btnSeparate.length = normalLength
+        setCollapseButtonImage(collapsed: false)
+        isCollapsed = false
+        NSLog("[MenuBarOrganizer] macOS 27 收纳宽度校准失败：%@", reason)
+        startAutoCollapseTimerIfNeeded()
+    }
+
+    private func cancelCollapseCalibration() {
+        collapseCalibrationGeneration += 1
+        isCollapseCalibrating = false
+    }
+
+    private func separatorArrowGap() -> CGFloat? {
+        guard let separatorFrame = btnSeparate.button?.window?.frame,
+              let arrowFrame = btnExpandCollapse.button?.window?.frame,
+              separatorFrame.width > 0,
+              arrowFrame.width > 0 else { return nil }
+
+        if NSApp.userInterfaceLayoutDirection == .leftToRight {
+            return abs(separatorFrame.maxX - arrowFrame.minX)
+        }
+        return abs(arrowFrame.maxX - separatorFrame.minX)
+    }
+
+    private func isSeparatorPlaced() -> Bool {
+        guard let frame = btnSeparate.button?.window?.frame else { return false }
+        return NSScreen.screens.contains { screen in
+            frame.minX >= screen.frame.minX + max(frame.width, 1)
+                && frame.maxX <= screen.frame.maxX + collapseCalibrationTolerance
+                && frame.minY >= screen.visibleFrame.maxY - collapseCalibrationTolerance
+                && frame.midY <= screen.frame.maxY + collapseCalibrationTolerance
+        }
+    }
+
+    private func handleScreenParametersChanged() {
+        updateCollapseLength()
+        guard needsCollapseLengthCalibration, AppSettings.shared.menuBarOrganizerEnabled else { return }
+        calibratedCollapseLength = nil
+        restingSeparatorArrowGap = nil
+        recalibrateCollapsedMenuBar()
+    }
+
+    private func recalibrateCollapsedMenuBarIfSeparatorMoved() {
+        guard needsCollapseLengthCalibration,
+              AppSettings.shared.menuBarOrganizerEnabled,
+              isCollapsed,
+              !isCollapseCalibrating,
+              !isRecalibrationScheduled,
+              let gap = separatorArrowGap(),
+              let restingGap = restingSeparatorArrowGap,
+              abs(gap - restingGap) > collapseCalibrationTolerance else { return }
+
+        recalibrateCollapsedMenuBar()
+    }
+
+    private func recalibrateCollapsedMenuBar() {
+        guard needsCollapseLengthCalibration,
+              AppSettings.shared.menuBarOrganizerEnabled,
+              !isRecalibrationScheduled else { return }
+
+        isRecalibrationScheduled = true
+        calibratedCollapseLength = nil
+        restingSeparatorArrowGap = nil
+        if isCollapsed {
+            expandMenuBar()
+        } else {
+            cancelCollapseCalibration()
+        }
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) { [weak self] in
+            Task { @MainActor in
+                guard let self else { return }
+                self.isRecalibrationScheduled = false
+                guard AppSettings.shared.menuBarOrganizerEnabled else { return }
+                self.collapseMenuBar()
+            }
+        }
     }
 
     public func startAutoCollapseTimerIfNeeded() {
